@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ScriptClip</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --ink: #1a1714;
+    --accent: #c84b2f;
+    --accent2: #e8a020;
+    --muted: #8a8278;
+    --surface: #ede8de;
+    --border: #d4cfc4;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+background: var(–bg);
+color: var(–ink);
+font-family: ‘Epilogue’, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+min-height: -webkit-fill-available;
+padding: 32px 24px;
+position: relative;
+}
+
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘300’ height=‘300’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘300’ height=‘300’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 0;
+opacity: 0.6;
+}
+
+body::after {
+content: ‘’;
+position: fixed;
+top: 20px; left: 20px;
+right: 20px; bottom: 20px;
+border: 1px solid var(–border);
+border-radius: 2px;
+pointer-events: none;
+z-index: 0;
+}
+
+.container {
+position: relative;
+z-index: 1;
+width: 100%;
+max-width: 360px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+.logo-wrap {
+margin-bottom: 52px;
+text-align: center;
+opacity: 0;
+animation: appear 0.5s ease 0.1s forwards;
+}
+
+.logo-mark {
+display: inline-flex;
+align-items: center;
+gap: 3px;
+margin-bottom: 10px;
+}
+
+.logo-mark-bar {
+height: 28px;
+border-radius: 2px;
+background: var(–ink);
+}
+
+.logo-mark-bar:nth-child(1) { width: 5px; }
+.logo-mark-bar:nth-child(2) { width: 5px; height: 20px; background: var(–accent); }
+.logo-mark-bar:nth-child(3) { width: 5px; height: 14px; }
+.logo-mark-bar:nth-child(4) { width: 5px; height: 22px; background: var(–accent2); }
+.logo-mark-bar:nth-child(5) { width: 5px; }
+
+.logo-name {
+font-family: ‘Syne’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(–ink);
+}
+
+.logo-name span { color: var(–accent); }
+
+.btn-wrap {
+width: 100%;
+opacity: 0;
+animation: appear 0.5s ease 0.25s forwards;
+}
+
+.main-btn {
+width: 100%;
+background: var(–ink);
+color: var(–bg);
+border: none;
+border-radius: 4px;
+padding: 22px 24px;
+font-family: ‘Syne’, sans-serif;
+font-size: 15px;
+font-weight: 700;
+letter-spacing: 2px;
+text-transform: uppercase;
+cursor: pointer;
+position: relative;
+overflow: hidden;
+transition: transform 0.12s ease, background 0.25s ease;
+-webkit-appearance: none;
+}
+
+.main-btn:active:not(:disabled) { transform: scale(0.97); }
+.main-btn:disabled { cursor: default; }
+.main-btn.success { background: var(–accent); }
+
+.btn-inner {
+position: relative;
+z-index: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+}
+
+.status-wrap {
+margin-top: 24px;
+min-height: 36px;
+text-align: center;
+width: 100%;
+opacity: 0;
+animation: appear 0.5s ease 0.35s forwards;
+}
+
+.status-line {
+font-size: 12px;
+color: var(–muted);
+line-height: 1.6;
+opacity: 0;
+transition: opacity 0.25s ease;
+}
+
+.status-line.show { opacity: 1; }
+.status-line.ok { color: var(–accent); font-weight: 500; }
+.status-line.bad { color: #c84b2f; }
+
+.instructions {
+margin-top: 52px;
+width: 100%;
+opacity: 0;
+animation: appear 0.5s ease 0.45s forwards;
+}
+
+.instructions-title {
+font-family: ‘Syne’, sans-serif;
+font-size: 9px;
+letter-spacing: 2.5px;
+text-transform: uppercase;
+color: var(–border);
+margin-bottom: 16px;
+text-align: center;
+}
+
+.steps-row {
+display: flex;
+align-items: flex-start;
+justify-content: center;
+}
+
+.step-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 8px;
+flex: 1;
+max-width: 90px;
+}
+
+.step-num {
+width: 22px;
+height: 22px;
+border: 1px solid var(–border);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-family: ‘Syne’, sans-serif;
+font-size: 10px;
+font-weight: 700;
+color: var(–muted);
+flex-shrink: 0;
+}
+
+.step-label {
+font-size: 10px;
+color: var(–muted);
+text-align: center;
+line-height: 1.5;
+}
+
+.step-connector {
+height: 1px;
+background: var(–border);
+flex: 1;
+margin-top: 11px;
+max-width: 20px;
+flex-shrink: 0;
+}
+
+.dots {
+display: inline-flex;
+gap: 5px;
+align-items: center;
+}
+
+.dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(–bg);
+animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+40% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes appear {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.footer {
+position: fixed;
+bottom: 28px;
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–border);
+font-family: ‘Syne’, sans-serif;
+text-transform: uppercase;
+z-index: 1;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+  <div class="logo-wrap">
+    <div class="logo-mark">
+      <div class="logo-mark-bar"></div>
+      <div class="logo-mark-bar"></div>
+      <div class="logo-mark-bar"></div>
+      <div class="logo-mark-bar"></div>
+      <div class="logo-mark-bar"></div>
+    </div>
+    <div class="logo-name">Script<span>Clip</span></div>
+  </div>
+
+  <div class="btn-wrap">
+    <button class="main-btn" id="mainBtn" onclick="handleClick()">
+      <div class="btn-inner" id="btnInner">
+        <span>⌘</span>
+        <span>Build Study Prompt</span>
+      </div>
+    </button>
+  </div>
+
+  <div class="status-wrap">
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <div class="instructions">
+    <div class="instructions-title">How it works</div>
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-label">Copy YouTube transcript</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-label">Tap the button</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-label">Paste into Claude</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">ScriptClip</div>
+
+<script>
+const PROMPT = `Here is a YouTube transcript. Transform it into structured study notes using this exact format:
+
+**Key Terms** — pull out important vocabulary/concepts and bold them, followed by a concise definition. If any non-English scripts appear (Japanese, Chinese, Arabic, Greek, etc.), always include the romanized/phonetic pronunciation in parentheses immediately after every instance throughout the entire document — not just in the Key Terms section.
+
+**Core Ideas** — 3-5 bullet points capturing the main takeaways of the video
+
+**Detailed Notes** — organized by topic/section as it flows through the video. Under each section, include sub-bullets with supporting details, examples, and explanations. Every non-English word or phrase must have its romanized pronunciation in parentheses beside it every single time it appears.
+
+**Summary** — 2-3 sentence plain-english recap of the whole video
+
+Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time. Never show a non-English character without its pronunciation beside it.
+
+Here is the transcript:
+
+`;
+
+function setStatus(msg, type) {
+  const el = document.getElementById('statusLine');
+  el.textContent = msg;
+  el.className = 'status-line show' + (type ? ' ' + type : '');
+}
+
+function setBtn(state) {
+  const btn = document.getElementById('mainBtn');
+  const inner = document.getElementById('btnInner');
+  btn.className = 'main-btn';
+  btn.disabled = false;
+
+  if (state === 'loading') {
+    btn.disabled = true;
+    inner.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+  } else if (state === 'success') {
+    btn.classList.add('success');
+    inner.innerHTML = '<span>✓</span><span>Copied — Open Claude</span>';
+  } else {
+    inner.innerHTML = '<span>⌘</span><span>Build Study Prompt</span>';
+  }
+}
+
+async function handleClick() {
+  setBtn('loading');
+
+  let transcript = '';
+
+  try {
+    transcript = await navigator.clipboard.readText();
+  } catch(e) {
+    setBtn('default');
+    setStatus('Tap Allow when Safari asks to read your clipboard, then try again.', 'bad');
+    return;
+  }
+
+  if (!transcript || transcript.trim().length < 50) {
+    setBtn('default');
+    setStatus('Nothing useful on clipboard. Copy your YouTube transcript first, then tap.', 'bad');
+    return;
+  }
+
+  const full = PROMPT + transcript.trim();
+
+  try {
+    await navigator.clipboard.writeText(full);
+    setBtn('success');
+    setStatus('Study prompt ready. Open Claude and paste.', 'ok');
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = full;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try {
+      document.execCommand('copy');
+      setBtn('success');
+      setStatus('Study prompt ready. Open Claude and paste.', 'ok');
+    } catch(e2) {
+      setBtn('default');
+      setStatus('Clipboard write failed. Try again or use desktop Safari.', 'bad');
+    }
+    document.body.removeChild(ta);
+  }
+}
+</script>
+
+</body>
+</html>
