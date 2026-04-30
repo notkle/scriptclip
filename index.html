@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ScriptClip</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Epilogue:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f0e8;
@@ -15,309 +13,540 @@
     --accent: #c84b2f;
     --accent2: #e8a020;
     --muted: #8a8278;
-    --surface: #ede8de;
     --border: #d4cfc4;
+    --surface: #edeae2;
+
+    --n-heading: #2c4a6e;
+    --n-term: #1a6b8a;
+    --n-bullet: #3a3530;
+    --n-romaji: #7a5c8a;
+    --n-summary-bg: #eef4f8;
+    --n-summary-border: #2c4a6e;
+    --n-summary-text: #2c4a6e;
+    --n-table-head-bg: #e8e4dc;
+    --n-table-row-alt: #f0ece4;
   }
 
-- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [data-theme="dark"] {
+    --bg: #111210;
+    --ink: #e8e4dc;
+    --accent: #e8714a;
+    --accent2: #f0b840;
+    --muted: #6b6860;
+    --border: #2a2926;
+    --surface: #1a1918;
 
-html, body { height: 100%; overflow: hidden; }
+    /* each role gets a unique color — no two roles share a hue family */
+    --n-h1: #f0ece4;          /* warm near-white — size does the work */
+    --n-h2: #d4a84b;          /* amber gold — warm authority */
+    --n-h3: #7a94a8;          /* slate blue-gray — cool, tertiary */
+    --n-term: #4ecdc4;        /* vivid teal — "this is vocab", pops */
+    --n-romaji: #c4907a;      /* dusty terracotta — warm, soft, supplementary */
+    --n-bullet-marker: #e07b54; /* warm coral — structural but subordinate */
+    --n-bullet: #c8c4bc;      /* warm off-white body text — neutral */
+    --n-summary-bg: #0f1a12;  /* very dark sage */
+    --n-summary-border: #7dba84; /* sage green — unique, conclusive */
+    --n-summary-text: #7dba84;
+    --n-table-head-bg: #1e1c1a;
+    --n-table-row-alt: #161412;
 
-body {
-background: var(–bg);
-color: var(–ink);
-font-family: ‘Epilogue’, sans-serif;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-min-height: 100vh;
-min-height: -webkit-fill-available;
-padding: 32px 24px;
-position: relative;
-}
+    /* legacy alias so shared rules still work */
+    --n-heading: #d4a84b;
+  }
 
-body::before {
-content: ‘’;
-position: fixed;
-inset: 0;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘300’ height=‘300’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘300’ height=‘300’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
-pointer-events: none;
-z-index: 0;
-opacity: 0.6;
-}
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { height: 100%; }
 
-body::after {
-content: ‘’;
-position: fixed;
-top: 20px; left: 20px;
-right: 20px; bottom: 20px;
-border: 1px solid var(–border);
-border-radius: 2px;
-pointer-events: none;
-z-index: 0;
-}
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Epilogue', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s, color 0.3s;
+  }
 
-.container {
-position: relative;
-z-index: 1;
-width: 100%;
-max-width: 360px;
-display: flex;
-flex-direction: column;
-align-items: center;
-}
+  .frame {
+    position: fixed;
+    top: 14px; left: 14px; right: 14px; bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 100;
+    transition: border-color 0.3s;
+  }
 
-.logo-wrap {
-margin-bottom: 52px;
-text-align: center;
-opacity: 0;
-animation: appear 0.5s ease 0.1s forwards;
-}
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px 0;
+    flex-shrink: 0;
+  }
 
-.logo-mark {
-display: inline-flex;
-align-items: center;
-gap: 3px;
-margin-bottom: 10px;
-}
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-bars { display: flex; align-items: center; gap: 2px; }
+  .logo-bar { border-radius: 2px; background: var(--ink); transition: background 0.3s; }
+  .logo-bar:nth-child(1) { width: 4px; height: 22px; }
+  .logo-bar:nth-child(2) { width: 4px; height: 16px; background: var(--accent); }
+  .logo-bar:nth-child(3) { width: 4px; height: 11px; }
+  .logo-bar:nth-child(4) { width: 4px; height: 18px; background: var(--accent2); }
+  .logo-bar:nth-child(5) { width: 4px; height: 22px; }
 
-.logo-mark-bar {
-height: 28px;
-border-radius: 2px;
-background: var(–ink);
-}
+  .logo-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 3.5px; text-transform: uppercase;
+    color: var(--ink); transition: color 0.3s;
+  }
+  .logo-name span { color: var(--accent); }
 
-.logo-mark-bar:nth-child(1) { width: 5px; }
-.logo-mark-bar:nth-child(2) { width: 5px; height: 20px; background: var(–accent); }
-.logo-mark-bar:nth-child(3) { width: 5px; height: 14px; }
-.logo-mark-bar:nth-child(4) { width: 5px; height: 22px; background: var(–accent2); }
-.logo-mark-bar:nth-child(5) { width: 5px; }
+  .theme-toggle {
+    background: none; border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px;
+    font-family: 'Syne', sans-serif; font-size: 9px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
-.logo-name {
-font-family: ‘Syne’, sans-serif;
-font-size: 13px;
-font-weight: 700;
-letter-spacing: 4px;
-text-transform: uppercase;
-color: var(–ink);
-}
+  /* TABS */
+  .tabs {
+    display: flex;
+    padding: 20px 28px 0;
+    border-bottom: 1px solid var(--border);
+    margin-top: 16px;
+    flex-shrink: 0;
+    transition: border-color 0.3s;
+  }
 
-.logo-name span { color: var(–accent); }
+  .tab {
+    font-family: 'Syne', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); padding: 0 0 12px; margin-right: 28px;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
 
-.btn-wrap {
-width: 100%;
-opacity: 0;
-animation: appear 0.5s ease 0.25s forwards;
-}
+  /* PANELS */
+  .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; }
+  .panel.active { display: flex; }
 
-.main-btn {
-width: 100%;
-background: var(–ink);
-color: var(–bg);
-border: none;
-border-radius: 4px;
-padding: 22px 24px;
-font-family: ‘Syne’, sans-serif;
-font-size: 15px;
-font-weight: 700;
-letter-spacing: 2px;
-text-transform: uppercase;
-cursor: pointer;
-position: relative;
-overflow: hidden;
-transition: transform 0.12s ease, background 0.25s ease;
--webkit-appearance: none;
-}
+  /* BUILDER */
+  .builder-inner { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; }
 
-.main-btn:active:not(:disabled) { transform: scale(0.97); }
-.main-btn:disabled { cursor: default; }
-.main-btn.success { background: var(–accent); }
+  .main-btn {
+    width: 100%; background: #2e2c2a; color: #c8c4bc;
+    border: 1px solid #3e3c38;
+    border-radius: 4px; padding: 20px 24px;
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    transition: transform 0.12s ease, background 0.25s ease, color 0.25s, border-color 0.25s;
+    -webkit-appearance: none;
+  }
+  [data-theme="dark"] .main-btn {
+    background: #2e2c2a; color: #c8c4bc; border-color: #3e3c38;
+  }
+  :root:not([data-theme="dark"]) .main-btn {
+    background: var(--ink); color: var(--bg); border-color: transparent;
+  }
+  .main-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
+  [data-theme="dark"] .main-btn:hover:not(:disabled) { border-color: var(--accent); color: #e8e4dc; }
+  .main-btn:active:not(:disabled) { transform: scale(0.97); }
+  .main-btn:disabled { cursor: default; opacity: 0.6; }
+  .main-btn.success { background: var(--accent); color: #fff; border-color: transparent; }
 
-.btn-inner {
-position: relative;
-z-index: 1;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 10px;
-}
+  .btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-.status-wrap {
-margin-top: 24px;
-min-height: 36px;
-text-align: center;
-width: 100%;
-opacity: 0;
-animation: appear 0.5s ease 0.35s forwards;
-}
+  .status-line {
+    margin-top: 18px; font-size: 11px; color: var(--muted);
+    text-align: center; min-height: 18px; opacity: 0;
+    transition: opacity 0.25s; letter-spacing: 0.3px;
+  }
+  .status-line.show { opacity: 1; }
+  .status-line.ok { color: var(--accent); font-weight: 500; }
+  .status-line.bad { color: #c84b2f; }
 
-.status-line {
-font-size: 12px;
-color: var(–muted);
-line-height: 1.6;
-opacity: 0;
-transition: opacity 0.25s ease;
-}
+  .steps-wrap { margin-top: 48px; width: 100%; }
+  .steps-label {
+    font-family: 'Syne', sans-serif; font-size: 8px;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); text-align: center; margin-bottom: 16px; transition: color 0.3s;
+  }
+  .steps-row { display: flex; align-items: flex-start; justify-content: center; }
+  .step-item { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: 1; max-width: 90px; }
+  .step-num {
+    width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 700;
+    color: var(--ink); flex-shrink: 0; transition: border-color 0.3s, color 0.3s;
+  }
+  .step-label { font-size: 9px; color: var(--ink); text-align: center; line-height: 1.5; opacity: 0.6; transition: color 0.3s, opacity 0.3s; }
+  .step-connector { height: 1px; background: var(--muted); flex: 1; margin-top: 10px; max-width: 20px; flex-shrink: 0; opacity: 0.4; transition: background 0.3s; }
 
-.status-line.show { opacity: 1; }
-.status-line.ok { color: var(–accent); font-weight: 500; }
-.status-line.bad { color: #c84b2f; }
+  /* NOTES PANEL */
+  .notes-panel { justify-content: flex-start; align-items: stretch; padding: 24px 28px 28px; }
 
-.instructions {
-margin-top: 52px;
-width: 100%;
-opacity: 0;
-animation: appear 0.5s ease 0.45s forwards;
-}
+  .notes-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; flex-shrink: 0; }
 
-.instructions-title {
-font-family: ‘Syne’, sans-serif;
-font-size: 9px;
-letter-spacing: 2.5px;
-text-transform: uppercase;
-color: var(–border);
-margin-bottom: 16px;
-text-align: center;
-}
+  .tool-btn {
+    background: none; border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px 14px; font-family: 'Syne', sans-serif; font-size: 9px;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn.primary {
+    background: #2e2c2a; color: #c8c4bc; border: 1px solid #3e3c38;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+  }
+  :root:not([data-theme="dark"]) .tool-btn.primary {
+    background: var(--ink); color: var(--bg); border-color: var(--ink);
+  }
+  .tool-btn.primary:hover { border-color: var(--accent); color: var(--ink); opacity: 1; }
+  [data-theme="dark"] .tool-btn.primary:hover { color: #e8e4dc; }
 
-.steps-row {
-display: flex;
-align-items: flex-start;
-justify-content: center;
-}
+  .render-btn {
+    width: 100%; background: #2e2c2a; color: #c8c4bc;
+    border: 1px solid #3e3c38; border-radius: 4px; padding: 15px;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.12s; flex-shrink: 0;
+  }
+  :root:not([data-theme="dark"]) .render-btn {
+    background: var(--n-heading); color: #fff; border-color: transparent;
+  }
+  .render-btn:hover { border-color: var(--accent); color: var(--accent); }
+  :root:not([data-theme="dark"]) .render-btn:hover { opacity: 0.88; color: #fff; border-color: transparent; }
+  .render-btn:active { transform: scale(0.98); }
 
-.step-item {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 8px;
-flex: 1;
-max-width: 90px;
-}
+  .notes-input-area { display: flex; flex-direction: column; gap: 10px; flex: 1; }
 
-.step-num {
-width: 22px;
-height: 22px;
-border: 1px solid var(–border);
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-font-family: ‘Syne’, sans-serif;
-font-size: 10px;
-font-weight: 700;
-color: var(–muted);
-flex-shrink: 0;
-}
+  .notes-textarea {
+    width: 100%; min-height: 200px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px; padding: 16px;
+    font-family: 'Epilogue', sans-serif; font-size: 13px; color: var(--ink);
+    resize: vertical; outline: none; line-height: 1.6;
+    transition: border-color 0.2s, background 0.3s, color 0.3s; flex-shrink: 0;
+  }
+  .notes-textarea:focus { border-color: var(--n-heading); }
+  .notes-textarea::placeholder { color: var(--muted); font-style: italic; font-size: 12px; }
+  .render-btn:hover { opacity: 0.88; }
+  .render-btn:active { transform: scale(0.98); }
 
-.step-label {
-font-size: 10px;
-color: var(–muted);
-text-align: center;
-line-height: 1.5;
-}
+  /* RENDERED */
+  .notes-rendered { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .notes-rendered.visible { display: flex; }
 
-.step-connector {
-height: 1px;
-background: var(–border);
-flex: 1;
-margin-top: 11px;
-max-width: 20px;
-flex-shrink: 0;
-}
+  .notes-rendered-toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; flex-shrink: 0; }
 
-.dots {
-display: inline-flex;
-gap: 5px;
-align-items: center;
-}
+  .notes-content {
+    flex: 1; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 32px 28px; background: var(--bg);
+    line-height: 1.8; font-size: 14px;
+    transition: background 0.3s, border-color 0.3s;
+  }
 
-.dot {
-width: 5px;
-height: 5px;
-border-radius: 50%;
-background: var(–bg);
-animation: dotPulse 1.2s ease-in-out infinite;
-}
+  /* ── NOTE TYPOGRAPHY ── */
+  .notes-content h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.3px; text-transform: none;
+    color: var(--n-heading);
+    margin: 36px 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.2;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  [data-theme="dark"] .notes-content h1 { color: var(--n-h1); }
+  .notes-content h1:first-child { margin-top: 0; }
 
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
+  .notes-content h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--ink); margin: 24px 0 10px;
+    letter-spacing: -0.2px;
+    transition: color 0.3s;
+  }
+  [data-theme="dark"] .notes-content h2 { color: var(--n-h2); }
 
-@keyframes dotPulse {
-0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
-40% { opacity: 1; transform: scale(1); }
-}
+  .notes-content h3 {
+    font-family: 'Epilogue', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--muted); margin: 16px 0 8px;
+    transition: color 0.3s;
+  }
+  [data-theme="dark"] .notes-content h3 { color: var(--n-h3); }
 
-@keyframes appear {
-from { opacity: 0; transform: translateY(10px); }
-to { opacity: 1; transform: translateY(0); }
-}
+  .notes-content p { margin: 6px 0; color: var(--n-bullet); line-height: 1.75; transition: color 0.3s; }
 
-.footer {
-position: fixed;
-bottom: 28px;
-font-size: 9px;
-letter-spacing: 2px;
-color: var(–border);
-font-family: ‘Syne’, sans-serif;
-text-transform: uppercase;
-z-index: 1;
-}
+  .notes-content ul { margin: 6px 0; padding: 0; list-style: none; }
+  .notes-content ul li {
+    position: relative;
+    padding-left: 22px;
+    margin: 5px 0;
+    color: var(--n-bullet);
+    line-height: 1.7;
+    transition: color 0.3s;
+  }
+  .notes-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0.55em;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--n-heading);
+    transition: background 0.3s;
+  }
+  [data-theme="dark"] .notes-content ul li::before { background: var(--n-bullet-marker); }
+
+  /* nested — indented more, smaller hollow circle */
+  .notes-content ul ul { margin: 4px 0 4px 32px; }
+  .notes-content ul ul li::before {
+    width: 5px; height: 5px;
+    top: 0.6em;
+    background: none;
+    border: 1.5px solid var(--muted);
+  }
+  [data-theme="dark"] .notes-content ul ul li::before {
+    border-color: var(--n-h3);
+  }
+
+  /* third level — indented further, tiny dot */
+  .notes-content ul ul ul { margin: 3px 0 3px 32px; }
+  .notes-content ul ul ul li::before {
+    width: 3px; height: 3px;
+    top: 0.65em;
+    background: var(--muted);
+    border: none;
+  }
+
+  .notes-content .term {
+    font-weight: 600; color: var(--n-term); transition: color 0.3s;
+  }
+
+  .notes-content .romaji {
+    color: var(--n-romaji); font-style: italic; font-size: 0.93em; transition: color 0.3s;
+  }
+  [data-theme="dark"] .notes-content .romaji { color: var(--n-romaji); }
+
+  .notes-content .summary-block {
+    margin: 10px 0;
+    padding: 18px 22px;
+    background: var(--n-summary-bg);
+    border-left: 3px solid var(--n-summary-border);
+    border-radius: 0 6px 6px 0;
+    color: var(--n-summary-text);
+    font-style: italic; font-size: 13.5px; line-height: 1.8;
+    transition: all 0.3s;
+  }
+
+  /* TABLES */
+  .notes-content table {
+    width: 100%; border-collapse: collapse;
+    margin: 14px 0; font-size: 13px;
+    border-radius: 6px; overflow: hidden;
+  }
+  .notes-content th {
+    background: var(--n-table-head-bg);
+    color: var(--n-heading);
+    font-family: 'Syne', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 10px 14px; text-align: left;
+    border-bottom: 2px solid var(--border);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+  }
+  .notes-content td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--n-bullet);
+    transition: color 0.3s, background 0.3s, border-color 0.3s;
+    line-height: 1.6;
+  }
+  .notes-content tr:nth-child(even) td { background: var(--n-table-row-alt); }
+  .notes-content tr:last-child td { border-bottom: none; }
+
+  .notes-content hr {
+    border: none; border-top: 1px solid var(--border);
+    margin: 22px 0; transition: border-color 0.3s;
+  }
+
+  /* SAVE MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 200;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px; width: 100%; max-width: 320px;
+    transition: background 0.3s;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--ink); margin-bottom: 16px; transition: color 0.3s;
+  }
+
+  .modal-filename-wrap { margin-bottom: 16px; }
+  .modal-filename-label {
+    display: block;
+    font-family: 'Syne', sans-serif; font-size: 8px;
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 7px; transition: color 0.3s;
+  }
+  .modal-filename-input {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 5px;
+    padding: 10px 12px; font-family: 'Epilogue', sans-serif;
+    font-size: 13px; color: var(--ink); outline: none;
+    transition: border-color 0.2s, background 0.3s, color 0.3s;
+  }
+  .modal-filename-input:focus { border-color: var(--n-h2); }
+  .modal-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .modal-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; transition: all 0.2s;
+  }
+  .modal-opt:hover { border-color: var(--n-heading); }
+  .modal-opt.selected { border-color: var(--n-heading); background: color-mix(in srgb, var(--n-heading) 8%, transparent); }
+  .modal-opt-icon { font-size: 18px; }
+  .modal-opt-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--ink); transition: color 0.3s; }
+  .modal-opt-desc { font-size: 10px; color: var(--muted); margin-top: 2px; transition: color 0.3s; }
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-cancel {
+    flex: 1; padding: 11px; background: none; border: 1px solid var(--border);
+    border-radius: 4px; font-family: 'Syne', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .modal-save {
+    flex: 2; padding: 11px; background: var(--n-heading); border: none;
+    border-radius: 4px; font-family: 'Syne', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #fff; cursor: pointer; transition: background 0.3s;
+  }
+  .modal-save:hover { opacity: 0.85; }
+
+  /* dots */
+  .dots { display: inline-flex; gap: 4px; align-items: center; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg); animation: dotP 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotP { 0%,80%,100%{opacity:.25;transform:scale(.75)} 40%{opacity:1;transform:scale(1)} }
+
+  .notes-content::-webkit-scrollbar { width: 4px; }
+  .notes-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
-
 </head>
 <body>
 
-<div class="container">
+<div class="frame"></div>
 
-  <div class="logo-wrap">
-    <div class="logo-mark">
-      <div class="logo-mark-bar"></div>
-      <div class="logo-mark-bar"></div>
-      <div class="logo-mark-bar"></div>
-      <div class="logo-mark-bar"></div>
-      <div class="logo-mark-bar"></div>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-bars">
+      <div class="logo-bar"></div><div class="logo-bar"></div>
+      <div class="logo-bar"></div><div class="logo-bar"></div>
+      <div class="logo-bar"></div>
     </div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
+</div>
 
-  <div class="btn-wrap">
-    <button class="main-btn" id="mainBtn" onclick="handleClick()">
-      <div class="btn-inner" id="btnInner">
-        <span>⌘</span>
-        <span>Build Study Prompt</span>
-      </div>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('builder')" id="tab-builder">① Prompt</button>
+  <button class="tab" onclick="switchTab('notes')" id="tab-notes">② Colorize</button>
+</div>
+
+<!-- PANEL 1 -->
+<div class="panel active" id="panel-builder">
+  <div class="builder-inner">
+    <button class="main-btn" id="mainBtn" onclick="handleBuild()">
+      <div class="btn-inner" id="btnInner"><span>⌘</span><span>Build Study Prompt</span></div>
     </button>
-  </div>
-
-  <div class="status-wrap">
     <div class="status-line" id="statusLine"></div>
-  </div>
-
-  <div class="instructions">
-    <div class="instructions-title">How it works</div>
-    <div class="steps-row">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-label">Copy YouTube transcript</div>
-      </div>
-      <div class="step-connector"></div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-label">Tap the button</div>
-      </div>
-      <div class="step-connector"></div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-label">Paste into Claude</div>
+    <div class="steps-wrap">
+      <div class="steps-label">How it works</div>
+      <div class="steps-row">
+        <div class="step-item"><div class="step-num">1</div><div class="step-label">Copy YouTube transcript</div></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-label">Tap the button</div></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-label">Paste into Claude</div></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-label">Colorize in tab ②</div></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PANEL 2 -->
+<div class="panel notes-panel" id="panel-notes">
+
+  <div class="notes-input-area" id="notesInputArea">
+    <div class="notes-toolbar">
+      <button class="tool-btn primary" onclick="pasteFromClipboard()">⌘ Paste from Clipboard</button>
+    </div>
+    <textarea class="notes-textarea" id="notesTextarea"
+      placeholder="Paste your Claude study notes here, then tap Colorize.&#10;&#10;Tip: use the copy button at the top of Claude's response to grab everything at once."></textarea>
+    <button class="render-btn" onclick="renderNotes()">✦ Colorize Notes</button>
+  </div>
+
+  <div class="notes-rendered" id="notesRendered">
+    <div class="notes-rendered-toolbar">
+      <button class="tool-btn" onclick="backToEdit()">← Edit</button>
+      <button class="tool-btn" onclick="openSaveModal()">↓ Save</button>
+      <button class="tool-btn primary" onclick="copyRenderedText()">⌘ Copy Text</button>
+    </div>
+    <div class="notes-content" id="notesContent"></div>
   </div>
 
 </div>
 
-<div class="footer">ScriptClip</div>
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Save As</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">File Name</label>
+      <input type="text" id="filenameInput" class="modal-filename-input" placeholder="filename" spellcheck="false" autocorrect="off" autocapitalize="off" />
+    </div>
+    <div class="modal-options">
+      <div class="modal-opt" onclick="selectFormat('pdf')" id="opt-pdf">
+        <span class="modal-opt-icon">📄</span>
+        <div><div class="modal-opt-label">PDF</div><div class="modal-opt-desc">Printable, keeps all colors</div></div>
+      </div>
+      <div class="modal-opt selected" onclick="selectFormat('html')" id="opt-html">
+        <span class="modal-opt-icon">🌐</span>
+        <div><div class="modal-opt-label">HTML File</div><div class="modal-opt-desc">Opens in browser, fully styled</div></div>
+      </div>
+      <div class="modal-opt" onclick="selectFormat('txt')" id="opt-txt">
+        <span class="modal-opt-icon">📝</span>
+        <div><div class="modal-opt-label">Plain Text</div><div class="modal-opt-desc">No formatting, maximum compatibility</div></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeSaveModal()">Cancel</button>
+      <button class="modal-save" onclick="doSave()">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const PROMPT = `Here is a YouTube transcript. Transform it into structured study notes using this exact format:
@@ -336,6 +565,28 @@ Here is the transcript:
 
 `;
 
+// THEME
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : '');
+  document.getElementById('themeBtn').textContent = isDark ? '☾ Dark' : '☀ Light';
+}
+// init dark
+document.documentElement.setAttribute('data-theme', 'dark');
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('themeBtn').textContent = '☾ Dark';
+});
+
+// TABS
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// BUILDER
 function setStatus(msg, type) {
   const el = document.getElementById('statusLine');
   el.textContent = msg;
@@ -345,9 +596,7 @@ function setStatus(msg, type) {
 function setBtn(state) {
   const btn = document.getElementById('mainBtn');
   const inner = document.getElementById('btnInner');
-  btn.className = 'main-btn';
-  btn.disabled = false;
-
+  btn.className = 'main-btn'; btn.disabled = false;
   if (state === 'loading') {
     btn.disabled = true;
     inner.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
@@ -359,49 +608,297 @@ function setBtn(state) {
   }
 }
 
-async function handleClick() {
+async function handleBuild() {
   setBtn('loading');
-
   let transcript = '';
-
-  try {
-    transcript = await navigator.clipboard.readText();
-  } catch(e) {
-    setBtn('default');
-    setStatus('Tap Allow when Safari asks to read your clipboard, then try again.', 'bad');
-    return;
-  }
-
+  try { transcript = await navigator.clipboard.readText(); }
+  catch(e) { setBtn('default'); setStatus('Tap Allow when asked to read clipboard, then try again.', 'bad'); return; }
   if (!transcript || transcript.trim().length < 50) {
-    setBtn('default');
-    setStatus('Nothing useful on clipboard. Copy your YouTube transcript first, then tap.', 'bad');
-    return;
+    setBtn('default'); setStatus('Clipboard too short. Copy your transcript first.', 'bad'); return;
   }
-
   const full = PROMPT + transcript.trim();
-
   try {
     await navigator.clipboard.writeText(full);
-    setBtn('success');
-    setStatus('Study prompt ready. Open Claude and paste.', 'ok');
+    setBtn('success'); setStatus('Prompt ready. Paste into Claude, then bring notes to tab ②.', 'ok');
   } catch(e) {
     const ta = document.createElement('textarea');
-    ta.value = full;
-    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    try {
-      document.execCommand('copy');
-      setBtn('success');
-      setStatus('Study prompt ready. Open Claude and paste.', 'ok');
-    } catch(e2) {
-      setBtn('default');
-      setStatus('Clipboard write failed. Try again or use desktop Safari.', 'bad');
-    }
+    ta.value = full; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); setBtn('success'); setStatus('Prompt ready. Paste into Claude.', 'ok'); }
+    catch(e2) { setBtn('default'); setStatus('Clipboard write failed. Try again.', 'bad'); }
     document.body.removeChild(ta);
   }
 }
-</script>
 
+// NOTES
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('notesTextarea').value = text;
+  } catch(e) { alert('Tap Allow when Safari asks to read clipboard, then try again.'); }
+}
+
+function backToEdit() {
+  document.getElementById('notesRendered').classList.remove('visible');
+  document.getElementById('notesInputArea').style.display = 'flex';
+}
+
+function renderNotes() {
+  const raw = document.getElementById('notesTextarea').value.trim();
+  if (!raw) { alert('Paste your Claude notes first.'); return; }
+  document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
+  document.getElementById('notesInputArea').style.display = 'none';
+  document.getElementById('notesRendered').classList.add('visible');
+}
+
+// ── MARKDOWN PARSER ──
+function parseMarkdown(md) {
+  const lines = md.split('\n');
+  let html = '';
+  let i = 0;
+  let inUL = false;
+  let inSummary = false;
+  let summaryBuffer = '';
+
+  function flushList() {
+    if (inUL) { html += '</ul>'; inUL = false; }
+  }
+
+  function flushSummary() {
+    if (inSummary) {
+      html += `<div class="summary-block">${summaryBuffer}</div>`;
+      inSummary = false; summaryBuffer = '';
+    }
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // blank line — just spacing, no hr
+    if (!trimmed) {
+      flushList();
+      i++; continue;
+    }
+
+    // explicit horizontal rule --- or *** or ___
+    if (/^[-*_]{3,}$/.test(trimmed)) {
+      flushList(); flushSummary();
+      html += '<hr>';
+      i++; continue;
+    }
+
+    // TABLE — detect pipe rows
+    if (trimmed.startsWith('|')) {
+      flushList(); flushSummary();
+      // collect all table lines
+      const tableLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      html += buildTable(tableLines);
+      continue;
+    }
+
+    // HEADINGS
+    const h3m = trimmed.match(/^###\s+(.+)/);
+    const h2m = trimmed.match(/^##\s+(.+)/);
+    const h1m = trimmed.match(/^#\s+(.+)/);
+
+    if (h3m) {
+      flushList(); flushSummary();
+      html += `<h2>${applyInline(h3m[1])}</h2>`;
+      i++; continue;
+    }
+    if (h2m) {
+      flushList(); flushSummary();
+      html += `<h1>${applyInline(h2m[1])}</h1>`;
+      i++; continue;
+    }
+    if (h1m) {
+      flushList(); flushSummary();
+      html += `<h1>${applyInline(h1m[1])}</h1>`;
+      i++; continue;
+    }
+
+    // **Heading** standalone (bold-only line = section heading)
+    if (/^\*\*[^*]+\*\*\s*$/.test(trimmed)) {
+      flushList(); flushSummary();
+      const text = trimmed.replace(/\*\*/g, '');
+      // detect summary section
+      if (/summary/i.test(text)) {
+        html += `<h1>${text}</h1>`;
+        inSummary = true;
+        i++; continue;
+      }
+      html += `<h1>${applyInline(trimmed)}</h1>`;
+      i++; continue;
+    }
+
+    // **Heading** — with em dash description (e.g. **Key Terms** — ...)
+    if (/^\*\*[^*]+\*\*\s*[—\-–]/.test(trimmed)) {
+      flushList(); flushSummary();
+      const text = trimmed.replace(/^\*\*([^*]+)\*\*\s*[—\-–]\s*(.*)$/, (_, h, rest) => {
+        if (/summary/i.test(h)) { inSummary = true; return `<h1>${h}</h1>`; }
+        return `<h1>${h}</h1>${rest ? `<p>${applyInline(rest)}</p>` : ''}`;
+      });
+      html += text;
+      i++; continue;
+    }
+
+    // BULLETS — track nesting via indent level
+    const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)/);
+    if (bulletMatch) {
+      flushSummary();
+      const content = applyInline(bulletMatch[2]);
+      if (!inUL) { html += '<ul>'; inUL = true; }
+      // detect sub-indent (4+ spaces or 1+ tab)
+      const indentLen = bulletMatch[1].length;
+      if (indentLen >= 4) {
+        html += `<ul><li>${content}</li></ul>`;
+      } else if (indentLen >= 2) {
+        html += `<ul><li>${content}</li></ul>`;
+      } else {
+        html += `<li>${content}</li>`;
+      }
+      i++; continue;
+    }
+
+    // regular paragraph
+    flushList();
+    if (inSummary) {
+      summaryBuffer += `<p>${applyInline(trimmed)}</p>`;
+    } else {
+      html += `<p>${applyInline(trimmed)}</p>`;
+    }
+    i++;
+  }
+
+  flushList();
+  flushSummary();
+  return html;
+}
+
+function buildTable(rows) {
+  if (rows.length < 2) return '';
+  let html = '<table>';
+  rows.forEach((row, idx) => {
+    // separator row (---|---|---)
+    if (/^\|[-|\s:]+\|$/.test(row)) return;
+    const cells = row.split('|').filter((_, ci) => ci > 0 && ci < row.split('|').length - 1);
+    const tag = idx === 0 ? 'th' : 'td';
+    html += '<tr>' + cells.map(c => `<${tag}>${applyInline(c.trim())}</${tag}>`).join('') + '</tr>';
+  });
+  html += '</table>';
+  return html;
+}
+
+function applyInline(text) {
+  // romaji — words in parens that are latin/phonetic
+  text = text.replace(/(\([a-zA-ZāīūēōĀĪŪĒŌàèìòùáéíóú\s,'\-&]+\))/g,
+    '<span class="romaji">$1</span>');
+  // **bold** → term
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="term">$1</span>');
+  // *italic*
+  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  return text;
+}
+
+async function copyRenderedText() {
+  const content = document.getElementById('notesContent').innerText;
+  try {
+    await navigator.clipboard.writeText(content);
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => btn.textContent = orig, 1500);
+  } catch(e) {}
+}
+
+function getSmartTitle() {
+  const h1 = document.querySelector('#notesContent h1');
+  if (h1) {
+    return h1.innerText
+      .trim()
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .substring(0, 40) || 'ScriptClip-Notes';
+  }
+  return 'ScriptClip-Notes';
+}
+let saveFormat = 'html';
+function openSaveModal() {
+  document.getElementById('filenameInput').value = getSmartTitle();
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('filenameInput').select(), 50);
+}
+function closeSaveModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function selectFormat(fmt) {
+  saveFormat = fmt;
+  document.querySelectorAll('.modal-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById('opt-' + fmt).classList.add('selected');
+}
+
+function doSave() {
+  closeSaveModal();
+  const content = document.getElementById('notesContent');
+  const inputVal = document.getElementById('filenameInput').value.trim();
+  const title = inputVal || getSmartTitle();
+  if (saveFormat === 'pdf') {
+    window.print();
+  } else if (saveFormat === 'html') {
+    const dark = isDark;
+    const s = dark ? {
+      bg:'#111210', ink:'#c8c4bc',
+      h1:'#f0ece4', h2:'#d4a84b', h3:'#7a94a8',
+      term:'#4ecdc4', romaji:'#c4907a',
+      bulletMarker:'#e07b54', bullet:'#c8c4bc',
+      sumBg:'#0f1a12', sumBorder:'#7dba84', sumText:'#7dba84',
+      border:'#2a2926', thBg:'#1e1c1a', rowAlt:'#161412'
+    } : {
+      bg:'#f5f0e8', ink:'#1a1714',
+      h1:'#2c4a6e', h2:'#2c4a6e', h3:'#5a6e8a',
+      term:'#1a6b8a', romaji:'#7a5c8a',
+      bulletMarker:'#2c4a6e', bullet:'#3a3530',
+      sumBg:'#eef4f8', sumBorder:'#2c4a6e', sumText:'#2c4a6e',
+      border:'#d4cfc4', thBg:'#e8e4dc', rowAlt:'#f0ece4'
+    };
+    const css = `body{background:${s.bg};color:${s.ink};font-family:Georgia,serif;padding:40px;max-width:820px;margin:auto;line-height:1.8}
+h1{font-size:22px;font-weight:800;color:${s.h1};margin:36px 0 14px;padding-bottom:10px;border-bottom:1px solid ${s.border};line-height:1.2}
+h1:first-child{margin-top:0}
+h2{font-size:16px;font-weight:700;color:${s.h2};margin:24px 0 10px}
+h3{font-size:14px;font-weight:600;color:${s.h3};margin:16px 0 8px}
+p{margin:6px 0;color:${s.bullet}}ul{list-style:none;margin:6px 0;padding:0}
+li{padding-left:22px;margin:5px 0;color:${s.bullet};position:relative;line-height:1.7}
+li::before{content:'';position:absolute;left:4px;top:0.55em;width:7px;height:7px;border-radius:50%;background:${s.bulletMarker}}
+ul ul{margin:4px 0 4px 18px}ul ul li::before{width:5px;height:5px;top:0.6em;background:none;border:1.5px solid ${s.h3}}
+ul ul ul{margin:3px 0 3px 16px}ul ul ul li::before{width:3px;height:3px;top:0.65em;background:${s.h3};border:none}
+.term{color:${s.term};font-weight:600}.romaji{color:${s.romaji};font-style:italic;font-size:0.93em}
+.summary-block{border-left:3px solid ${s.sumBorder};padding:16px 20px;background:${s.sumBg};color:${s.sumText};font-style:italic;border-radius:0 6px 6px 0;margin:10px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:${s.thBg};color:${s.h2};font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid ${s.border}}
+td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth-child(even) td{background:${s.rowAlt}}`;
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style></head><body>${content.innerHTML}</body></html>`], {type:'text/html'});
+    triggerDownload(URL.createObjectURL(blob), title+'.html');
+  } else {
+    const blob = new Blob([content.innerText], {type:'text/plain'});
+    triggerDownload(URL.createObjectURL(blob), title+'.txt');
+  }
+}
+
+function triggerDownload(url, filename) {
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSaveModal();
+});
+</script>
 </body>
 </html>
