@@ -884,7 +884,8 @@
   <div class="quiz-setup" id="quizSetup">
     <div class="quiz-setup-inner">
       <div class="quiz-setup-title">Generate a Quiz</div>
-      <div class="quiz-setup-sub">Drop your saved HTML file or paste notes below — 10 questions generated automatically</div>
+      <div class="quiz-setup-sub">Drop a file, paste notes, or load from a notebook</div>
+      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--n-h2)';this.style.color='var(--n-h2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📓 Load from Notebook</button>
 
       <!-- COMBINED DROP + PASTE AREA -->
       <div id="quizDropArea" class="quiz-drop-area">
@@ -971,7 +972,7 @@
   <div class="nb-view" id="nbListView">
     <div class="nb-header">
       <div class="nb-title">My Notebooks</div>
-      <button onclick="if(typeof window.createNotebook==='function'){window.createNotebook()}" id="nbCreateBtn">+</button>
+      <button onclick="window.createNotebook()" id="nbCreateBtn">+</button>
     </div>
     <div class="nb-list" id="nbList"></div>
     <div class="nb-empty" id="nbEmpty">No notebooks yet. Create one to start saving notes.</div>
@@ -1025,7 +1026,21 @@
 </div>
 
 
-<script>console.log("[SC] Script starting");
+<script>
+window.toast = function(msg) {
+  var el = document.getElementById('scToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'scToast';
+    el.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:6px;font-size:12px;font-family:system-ui,sans-serif;z-index:9999;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+};
+
 
 // Safe dispatcher - queues calls if main script hasn't loaded yet
 window.switchTab = function(name) {
@@ -1064,7 +1079,6 @@ window.toggleTheme = function toggleTheme() {
 
 // TABS
 window.switchTab = function switchTab(name) {
-  console.log("[SC] switchTab called:", name);
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -1125,7 +1139,7 @@ window.pasteFromClipboard = async function pasteFromClipboard() {
   try {
     const text = await navigator.clipboard.readText();
     document.getElementById('notesTextarea').value = text;
-  } catch(e) { alert('Tap Allow when Safari asks to read clipboard, then try again.'); }
+  } catch(e) { window.toast('Tap Allow when Safari asks to read clipboard, then try again.'); }
 }
 
 window.backToEdit = function backToEdit() {
@@ -1134,9 +1148,8 @@ window.backToEdit = function backToEdit() {
 }
 
 window.renderNotes = function renderNotes() {
-  console.log("[SC] renderNotes called");
   const raw = document.getElementById('notesTextarea').value.trim();
-  if (!raw) { alert('Paste your Claude notes first.'); return; }
+  if (!raw) { window.toast('Paste your Claude notes first.'); return; }
   document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
   document.getElementById('notesInputArea').style.display = 'none';
   document.getElementById('notesRendered').classList.add('visible');
@@ -1373,10 +1386,51 @@ th{background:${s.thBg};color:${s.h2};font-size:9px;letter-spacing:1.5px;text-tr
 td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth-child(even) td{background:${s.rowAlt}}`;
     const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style>
 </head><body>${content.innerHTML}
+<!-- NOTEBOOK NAME MODAL -->
+<div class="modal-overlay" id="nbNameOverlay">
+  <div class="modal">
+    <div class="modal-title">New Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Name</label>
+      <input type="text" id="nbNameInput" class="modal-filename-input" placeholder="e.g. Japanese Lessons" autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="window.closeNbNameModal()">Cancel</button>
+      <button class="modal-save" onclick="window.confirmNbName()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTEBOOK PICKER MODAL -->
+<div class="modal-overlay" id="nbPickerOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">Load from Notebook</div>
+    <div id="nbPickerContent" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="window.closeNotebookPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+</body></html>`], {type:'text/html'});
+    triggerDownload(URL.createObjectURL(blob), title+'.html');
+  } else {
+    const blob2 = new Blob([content.innerText], {type:'text/plain'});
+    triggerDownload(URL.createObjectURL(blob2), title+'.txt');
+  }
+}
+
+function triggerDownload(url, filename) {
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // ── NOTEBOOK ──
 const NB_KEY = 'sc_notebooks';
 
-function nbLoad() { console.log("[SC] nbLoad called"); {
+function nbLoad() {
   try { return JSON.parse(localStorage.getItem(NB_KEY) || '{}'); } catch(e) { return {}; }
 }
 function nbSave(data) { localStorage.setItem(NB_KEY, JSON.stringify(data)); }
@@ -1386,7 +1440,6 @@ let reorderActive = false;
 let dragSrcIdx = null;
 
 window.showNotebookList = function() {
-  console.log("[SC] showNotebookList called");
   document.getElementById('nbListView').style.display = 'flex';
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'none';
@@ -1394,7 +1447,7 @@ window.showNotebookList = function() {
   setTimeout(setupNbDropZone, 50);
 };
 
-function renderNotebookList() { console.log("[SC] renderNotebookList called"); {
+function renderNotebookList() {
   const data = nbLoad();
   const list = document.getElementById('nbList');
   const empty = document.getElementById('nbEmpty');
@@ -1413,13 +1466,33 @@ function renderNotebookList() { console.log("[SC] renderNotebookList called"); {
 }
 
 window.createNotebook = function() {
-  console.log("[SC] createNotebook called");
-  const name = prompt('Notebook name:');
-  if (!name || !name.trim()) return;
+  document.getElementById('nbNameInput').value = '';
+  document.getElementById('nbNameOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('nbNameInput').focus(); }, 50);
+};
+
+window.closeNbNameModal = function() {
+  document.getElementById('nbNameOverlay').classList.remove('open');
+};
+
+window.confirmNbName = function() {
+  const name = document.getElementById('nbNameInput').value.trim();
+  if (!name) return;
+  const mode = document.getElementById('nbNameInput').dataset.mode;
+  window.closeNbNameModal();
   const data = nbLoad();
   const id = 'nb_' + Date.now();
-  data[id] = { name: name.trim(), pages: [], created: Date.now() };
+  data[id] = { name: name, pages: [], created: Date.now() };
   nbSave(data);
+  if (mode === 'quick') {
+    // also add to the select dropdown if open
+    const sel = document.getElementById('nbSelect');
+    if (sel) {
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = name; sel.appendChild(opt); sel.value = id;
+    }
+    document.getElementById('nbNameInput').dataset.mode = '';
+  }
   renderNotebookList();
 };
 
@@ -1546,7 +1619,9 @@ window.loadPageToQuiz = function(idx) {
 
 window.openSaveToNotebook = function() {
   const html = document.getElementById('notesContent').innerHTML;
-  if (!html || html.trim().length < 50) { alert('Nothing to save — colorize some notes first.'); return; }
+  console.log('[NB] openSaveToNotebook, html length:', html ? html.trim().length : 0);
+  if (!html || html.trim().length < 5) {
+ return; }
   const h1 = document.querySelector('#notesContent h1');
   document.getElementById('nbPageNameInput').value = h1 ? h1.innerText.trim().substring(0, 60) : 'Untitled Page';
   const data = nbLoad();
@@ -1561,29 +1636,28 @@ window.openSaveToNotebook = function() {
 window.closeSaveToNotebook = function() { document.getElementById('saveToNbOverlay').classList.remove('open'); };
 
 window.quickCreateNotebook = function() {
-  const name = prompt('New notebook name:');
-  if (!name || !name.trim()) return;
-  const data = nbLoad();
-  const id = 'nb_' + Date.now();
-  data[id] = { name: name.trim(), pages: [], created: Date.now() };
-  nbSave(data);
-  const sel = document.getElementById('nbSelect');
-  const opt = document.createElement('option');
-  opt.value = id; opt.textContent = name.trim(); sel.appendChild(opt); sel.value = id;
+  document.getElementById('nbNameInput').value = '';
+  document.getElementById('nbNameInput').dataset.mode = 'quick';
+  document.getElementById('nbNameOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('nbNameInput').focus(); }, 50);
 };
 
 window.doSaveToNotebook = function() {
   const nbId = document.getElementById('nbSelect').value;
   const pageName = document.getElementById('nbPageNameInput').value.trim();
-  if (!nbId) { alert('Please create a notebook first.'); return; }
-  if (!pageName) { alert('Please enter a page name.'); return; }
+  if (!nbId) {
+ return; }
+  if (!pageName) {
+ return; }
   const html = document.getElementById('notesContent').innerHTML;
   const data = nbLoad();
-  if (!data[nbId]) { alert('Notebook not found.'); return; }
+  console.log('[NB] data keys:', Object.keys(data));
+  if (!data[nbId]) {
+ return; }
   data[nbId].pages.push({ name: pageName, html: html, saved: Date.now() });
   nbSave(data);
   window.closeSaveToNotebook();
-  const btn = document.querySelector('[onclick="if(typeof window.openSaveToNotebook==='function'){window.openSaveToNotebook()}"]');
+  const btn = document.querySelector('#notesRendered .tool-btn:nth-child(3)');
   if (btn) { const orig = btn.textContent; btn.textContent = '✓ Saved'; setTimeout(() => btn.textContent = orig, 1500); }
 };
 
@@ -1608,12 +1682,12 @@ function setupNbDropZone() {
     const file = e.dataTransfer.files[0];
     if (!file) return;
     if (!file.name.endsWith('.html') && !file.name.endsWith('.txt')) {
-      alert('Please drop an HTML or text file.'); return;
+      window.toast('Please drop an HTML or text file.'); return;
     }
     const data = nbLoad();
     const ids = Object.keys(data);
     if (ids.length === 0) {
-      alert('Create a notebook first, then drop the file.');
+      window.toast('Create a notebook first, then drop the file.');
       return;
     }
     const reader = new FileReader();
@@ -1644,7 +1718,7 @@ function setupNbDropZone() {
         const names = ids.map(id => data[id].name);
         const choice = prompt('Save to which notebook?\n' + ids.map((id, i) => (i+1) + '. ' + data[id].name).join('\n') + '\n\nType the number:');
         const idx = parseInt(choice) - 1;
-        if (isNaN(idx) || idx < 0 || idx >= ids.length) { alert('Invalid choice.'); return; }
+        if (isNaN(idx) || idx < 0 || idx >= ids.length) { window.toast('Invalid choice.'); return; }
         targetId = ids[idx];
         const pageName = prompt('Page name:', defaultName) || defaultName;
         data[targetId].pages.push({ name: pageName, html, saved: Date.now() });
@@ -1689,14 +1763,6 @@ function setupNbDropZone() {
   }
 })();
 
-
-</body></html>`], {type:'text/html'});
-    triggerDownload(URL.createObjectURL(blob), title+'.html');
-  } else {
-    const blob = new Blob([content.innerText], {type:'text/plain'});
-    triggerDownload(URL.createObjectURL(blob), title+'.txt');
-  }
-}
 
 function triggerDownload(url, filename) {
   const a = document.createElement('a');
@@ -1762,7 +1828,7 @@ async function callWorker(payload) {
 window.generateQuiz = async function generateQuiz() {
   const notes = getNotesText();
   if (!notes || notes.length < 100) {
-    alert('Please add notes first — paste text or drop a file above.');
+    window.toast('Please add notes first — paste text or drop a file above.');
     return;
   }
   const btn = document.getElementById('quizGenerateBtn');
@@ -1958,7 +2024,92 @@ window.resetQuiz = function resetQuiz() {
   btn.disabled = false;
   document.getElementById('quizGenerateBtnInner').textContent = 'GENERATE QUIZ';
 }
-console.log("[SC] Script fully loaded. createNotebook type:", typeof window.createNotebook);
+document.addEventListener('DOMContentLoaded', function() {
+  var nbpo = document.getElementById('nbPickerOverlay');
+  if (nbpo) nbpo.addEventListener('click', function(e){ if(e.target===this) window.closeNotebookPicker(); });
+  var inp = document.getElementById('nbNameInput');
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') window.confirmNbName(); });
+  var ov = document.getElementById('nbNameOverlay');
+  if (ov) ov.addEventListener('click', function(e){ if(e.target===this) window.closeNbNameModal(); });
+});
+
+window.openNotebookPicker = function() {
+  const data = nbLoad();
+  const ids = Object.keys(data);
+  const container = document.getElementById('nbPickerContent');
+  container.innerHTML = '';
+
+  if (ids.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No notebooks yet. Save some notes first.</div>';
+    document.getElementById('nbPickerOverlay').classList.add('open');
+    return;
+  }
+
+  ids.forEach(id => {
+    const nb = data[id];
+    if (!nb.pages || nb.pages.length === 0) return;
+
+    const section = document.createElement('div');
+    section.innerHTML = '<div style="font-family:system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 0 6px">' + nb.name + '</div>';
+
+    nb.pages.forEach((page, pageIdx) => {
+      const btn = document.createElement('div');
+      btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;';
+      btn.innerHTML = '<span style="font-size:14px">📄</span><div style="flex:1;min-width:0"><div style="font-family:system-ui,sans-serif;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + page.name + '</div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + new Date(page.saved).toLocaleDateString() + '</div></div>';
+      btn.onmouseover = function() { this.style.borderColor = 'var(--n-h2)'; };
+      btn.onmouseout = function() { this.style.borderColor = 'var(--border)'; };
+      btn.onclick = function() { window.loadNotebookPageToQuiz(id, pageIdx); };
+      section.appendChild(btn);
+    });
+
+    container.appendChild(section);
+  });
+
+  document.getElementById('nbPickerOverlay').classList.add('open');
+};
+
+window.closeNotebookPicker = function() {
+  document.getElementById('nbPickerOverlay').classList.remove('open');
+};
+
+window.loadNotebookPageToQuiz = function(nbId, pageIdx) {
+  const data = nbLoad();
+  const page = data[nbId] && data[nbId].pages[pageIdx];
+  if (!page) return;
+  const div = document.createElement('div');
+  div.innerHTML = page.html;
+  const text = div.innerText;
+  document.getElementById('quizPasteArea').value = text;
+  document.getElementById('quizSourceStatus').textContent = '✓ Loaded: ' + page.name;
+  window.closeNotebookPicker();
+};
+
 </script>
+
+<!-- NOTEBOOK NAME MODAL -->
+<div class="modal-overlay" id="nbNameOverlay">
+  <div class="modal">
+    <div class="modal-title">New Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Name</label>
+      <input type="text" id="nbNameInput" class="modal-filename-input" placeholder="e.g. Japanese Lessons" autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="window.closeNbNameModal()">Cancel</button>
+      <button class="modal-save" onclick="window.confirmNbName()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTEBOOK PICKER MODAL -->
+<div class="modal-overlay" id="nbPickerOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">Load from Notebook</div>
+    <div id="nbPickerContent" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="window.closeNotebookPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
