@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -123,14 +123,17 @@
   }
 
   .tab {
-    font-family: 'Syne', sans-serif; font-size: 10px;
-    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--muted); padding: 0 0 12px; margin-right: 28px;
+    font-family: 'Syne', sans-serif; font-size: 13px;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); padding: 0 0 14px; margin-right: 32px;
     cursor: pointer; border-bottom: 2px solid transparent;
     transition: color 0.2s, border-color 0.2s;
     background: none; border-top: none; border-left: none; border-right: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    vertical-align: middle; line-height: 1;
   }
   .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--ink); }
 
   /* PANELS */
   .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; }
@@ -686,6 +689,17 @@
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
+<script>
+// Pre-define tab switcher immediately so onclick works even if main script is still parsing
+window.switchTab = function(name) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  var tab = document.getElementById('tab-' + name);
+  var panel = document.getElementById('panel-' + name);
+  if (tab) tab.classList.add('active');
+  if (panel) panel.classList.add('active');
+};
+</script>
 </head>
 <body>
 
@@ -700,19 +714,19 @@
     </div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
-  <button class="theme-toggle" data-action="toggleTheme" id="themeBtn">☀ Light</button>
+  <button class="theme-toggle" onclick="window.toggleTheme()" id="themeBtn">☀ Light</button>
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-action="switchTab" data-tab="builder" id="tab-builder">① Prompt</button>
-  <button class="tab" data-action="switchTab" data-tab="notes" id="tab-notes">② Colorize</button>
-  <button class="tab" data-action="switchTab" data-tab="quiz" id="tab-quiz">③ Quiz</button>
+  <button class="tab active" onclick="window.switchTab('builder')" id="tab-builder">Prompt</button>
+  <button class="tab" onclick="window.switchTab('notes')" id="tab-notes">Colorize</button>
+  <button class="tab" onclick="window.switchTab('quiz')" id="tab-quiz">Quiz</button>
 </div>
 
 <!-- PANEL 1 -->
 <div class="panel active" id="panel-builder">
   <div class="builder-inner">
-    <button class="main-btn" id="mainBtn" data-action="handleBuild">
+    <button class="main-btn" id="mainBtn" onclick="window.handleBuild()">
       <div class="btn-inner" id="btnInner"><span>⌘</span><span>Build Study Prompt</span></div>
     </button>
     <div class="status-line" id="statusLine"></div>
@@ -736,18 +750,18 @@
 
   <div class="notes-input-area" id="notesInputArea">
     <div class="notes-toolbar">
-      <button class="tool-btn primary" data-action="pasteFromClipboard">⌘ Paste from Clipboard</button>
+      <button class="tool-btn primary" onclick="window.pasteFromClipboard()">⌘ Paste from Clipboard</button>
     </div>
     <textarea class="notes-textarea" id="notesTextarea"
       placeholder="Paste your Claude study notes here, then tap Colorize.&#10;&#10;Tip: use the copy button at the top of Claude's response to grab everything at once."></textarea>
-    <button class="render-btn" data-action="renderNotes">✦ Colorize Notes</button>
+    <button class="render-btn" onclick="window.renderNotes()">✦ Colorize Notes</button>
   </div>
 
   <div class="notes-rendered" id="notesRendered">
     <div class="notes-rendered-toolbar">
-      <button class="tool-btn" data-action="backToEdit">← Edit</button>
-      <button class="tool-btn" data-action="openSaveModal">↓ Save</button>
-      <button class="tool-btn primary" data-action="copyRenderedText">⌘ Copy Text</button>
+      <button class="tool-btn" onclick="window.backToEdit()">← Edit</button>
+      <button class="tool-btn" onclick="window.openSaveModal()">↓ Save</button>
+      <button class="tool-btn primary" onclick="window.copyRenderedText(event)">⌘ Copy Text</button>
     </div>
     <div class="notes-content" id="notesContent"></div>
   </div>
@@ -766,7 +780,7 @@
       <!-- COMBINED DROP + PASTE AREA -->
       <div id="quizDropArea" class="quiz-drop-area">
         <div class="quiz-drop-inner" id="quizDropInner">
-          <div class="quiz-drop-icon">⬆</div>
+          
           <div class="quiz-drop-label">Drag your saved HTML file here</div>
           <div class="quiz-drop-sub">or</div>
           <label class="quiz-drop-btn">
@@ -782,7 +796,7 @@
 
       <div id="quizSourceStatus" class="quiz-source-status"></div>
 
-      <button class="quiz-generate-btn" id="quizGenerateBtn" data-action="generateQuiz">
+      <button class="quiz-generate-btn" id="quizGenerateBtn" onclick="window.generateQuiz()">
         <span id="quizGenerateBtnInner">GENERATE QUIZ</span>
       </button>
       <div class="quiz-gen-status" id="quizGenStatus"></div>
@@ -792,11 +806,11 @@
   <!-- QUIZ STATE -->
   <div class="quiz-active" id="quizActive" style="display:none">
     <div class="quiz-active-toolbar">
-      <button class="tool-btn" data-action="resetQuiz">← New Quiz</button>
+      <button class="tool-btn" onclick="window.resetQuiz()">← New Quiz</button>
       <span id="quizProgressText" class="quiz-progress-text"></span>
     </div>
     <div class="quiz-questions" id="quizQuestions"></div>
-    <button class="quiz-submit-btn" id="quizSubmitBtn" data-action="submitQuiz">Submit for Grading</button>
+    <button class="quiz-submit-btn" id="quizSubmitBtn" onclick="window.submitQuiz()">Submit for Grading</button>
   </div>
 
   <!-- RESULTS STATE -->
@@ -809,7 +823,7 @@
       <div id="scoreLabel" class="quiz-score-label"></div>
     </div>
     <div class="quiz-feedback-list" id="quizFeedbackList"></div>
-    <button class="quiz-generate-btn" data-action="resetQuiz" style="margin-top:20px">↩ Try Again</button>
+    <button class="quiz-generate-btn" onclick="window.resetQuiz()" style="margin-top:20px">↩ Try Again</button>
   </div>
 
 </div>
@@ -823,22 +837,22 @@
       <input type="text" id="filenameInput" class="modal-filename-input" placeholder="filename" spellcheck="false" autocorrect="off" autocapitalize="off" />
     </div>
     <div class="modal-options">
-      <div class="modal-opt" data-action="selectFormat" data-fmt="pdf" id="opt-pdf">
+      <div class="modal-opt" onclick="window.selectFormat('pdf')" id="opt-pdf">
         <span class="modal-opt-icon">📄</span>
         <div><div class="modal-opt-label">PDF</div><div class="modal-opt-desc">Printable, keeps all colors</div></div>
       </div>
-      <div class="modal-opt selected" data-action="selectFormat" data-fmt="html" id="opt-html">
+      <div class="modal-opt selected" onclick="window.selectFormat('html')" id="opt-html">
         <span class="modal-opt-icon">🌐</span>
         <div><div class="modal-opt-label">HTML File</div><div class="modal-opt-desc">Opens in browser, fully styled</div></div>
       </div>
-      <div class="modal-opt" data-action="selectFormat" data-fmt="txt" id="opt-txt">
+      <div class="modal-opt" onclick="window.selectFormat('txt')" id="opt-txt">
         <span class="modal-opt-icon">📝</span>
         <div><div class="modal-opt-label">Plain Text</div><div class="modal-opt-desc">No formatting, maximum compatibility</div></div>
       </div>
     </div>
     <div class="modal-actions">
-      <button class="modal-cancel" data-action="closeSaveModal">Cancel</button>
-      <button class="modal-save" data-action="doSave">Save</button>
+      <button class="modal-cancel" onclick="window.closeSaveModal()">Cancel</button>
+      <button class="modal-save" onclick="window.doSave()">Save</button>
     </div>
   </div>
 </div>
@@ -862,53 +876,59 @@ Here is the transcript:
 
 // THEME
 let isDark = true;
-function toggleTheme() {
+window.toggleTheme = function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : '');
   document.getElementById('themeBtn').textContent = isDark ? '☾ Dark' : '☀ Light';
 }
-// init dark
-document.documentElement.setAttribute('data-theme', 'dark');
+// init — runs immediately, no load event needed
+(function() {
+  document.documentElement.setAttribute('data-theme', 'dark');
 
-// Central setup — event delegation so everything works in sandboxed iframes
-window.addEventListener('load', function() {
-  // set theme button label
-  var tb = document.getElementById('themeBtn');
-  if (tb) tb.textContent = '\u263e Dark';
+  // Wire everything once DOM is ready
+  function init() {
+    // dark mode label
+    var tb = document.getElementById('themeBtn');
+    if (tb) tb.textContent = '\u263e Dark';
 
-  // setup quiz drop zone
-  setupDropZone();
+    setupDropZone();
 
-  // modal overlay click to close
-  var overlay = document.getElementById('modalOverlay');
-  if (overlay) overlay.addEventListener('click', function(e) {
-    if (e.target === this) closeSaveModal();
-  });
+    var overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.addEventListener('click', function(e) {
+      if (e.target === this) closeSaveModal();
+    });
 
-  // single delegated click handler for all buttons
-  document.body.addEventListener('click', function(e) {
-    var el = e.target.closest('[data-action]');
-    if (!el) return;
-    var action = el.dataset.action;
-    if (action === 'toggleTheme') toggleTheme();
-    else if (action === 'switchTab') switchTab(el.dataset.tab);
-    else if (action === 'handleBuild') handleBuild();
-    else if (action === 'pasteFromClipboard') pasteFromClipboard();
-    else if (action === 'renderNotes') renderNotes();
-    else if (action === 'backToEdit') backToEdit();
-    else if (action === 'openSaveModal') openSaveModal();
-    else if (action === 'copyRenderedText') copyRenderedText(e);
-    else if (action === 'generateQuiz') generateQuiz();
-    else if (action === 'resetQuiz') resetQuiz();
-    else if (action === 'submitQuiz') submitQuiz();
-    else if (action === 'selectFormat') selectFormat(el.dataset.fmt);
-    else if (action === 'closeSaveModal') closeSaveModal();
-    else if (action === 'doSave') doSave();
-  });
-});
+    // Central delegated click handler
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('[data-action]');
+      if (!el) return;
+      var action = el.dataset.action;
+      if (action === 'toggleTheme') toggleTheme();
+      else if (action === 'switchTab') switchTab(el.dataset.tab);
+      else if (action === 'handleBuild') handleBuild();
+      else if (action === 'pasteFromClipboard') pasteFromClipboard();
+      else if (action === 'renderNotes') renderNotes();
+      else if (action === 'backToEdit') backToEdit();
+      else if (action === 'openSaveModal') openSaveModal();
+      else if (action === 'copyRenderedText') copyRenderedText(e);
+      else if (action === 'generateQuiz') generateQuiz();
+      else if (action === 'resetQuiz') resetQuiz();
+      else if (action === 'submitQuiz') submitQuiz();
+      else if (action === 'selectFormat') selectFormat(el.dataset.fmt);
+      else if (action === 'closeSaveModal') closeSaveModal();
+      else if (action === 'doSave') doSave();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
 // TABS
-function switchTab(name) {
+window.switchTab = function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -916,13 +936,13 @@ function switchTab(name) {
 }
 
 // BUILDER
-function setStatus(msg, type) {
+window.setStatus = function setStatus(msg, type) {
   const el = document.getElementById('statusLine');
   el.textContent = msg;
   el.className = 'status-line show' + (type ? ' ' + type : '');
 }
 
-function setBtn(state) {
+window.setBtn = function setBtn(state) {
   const btn = document.getElementById('mainBtn');
   const inner = document.getElementById('btnInner');
   btn.className = 'main-btn'; btn.disabled = false;
@@ -937,7 +957,7 @@ function setBtn(state) {
   }
 }
 
-async function handleBuild() {
+async window.handleBuild = function handleBuild() {
   setBtn('loading');
   let transcript = '';
   try { transcript = await navigator.clipboard.readText(); }
@@ -960,19 +980,19 @@ async function handleBuild() {
 }
 
 // NOTES
-async function pasteFromClipboard() {
+async window.pasteFromClipboard = function pasteFromClipboard() {
   try {
     const text = await navigator.clipboard.readText();
     document.getElementById('notesTextarea').value = text;
   } catch(e) { alert('Tap Allow when Safari asks to read clipboard, then try again.'); }
 }
 
-function backToEdit() {
+window.backToEdit = function backToEdit() {
   document.getElementById('notesRendered').classList.remove('visible');
   document.getElementById('notesInputArea').style.display = 'flex';
 }
 
-function renderNotes() {
+window.renderNotes = function renderNotes() {
   const raw = document.getElementById('notesTextarea').value.trim();
   if (!raw) { alert('Paste your Claude notes first.'); return; }
   document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
@@ -1134,7 +1154,7 @@ function applyInline(text) {
   return text;
 }
 
-async function copyRenderedText() {
+window.copyRenderedText = async window.copyRenderedText = function copyRenderedText() {
   const content = document.getElementById('notesContent').innerText;
   try {
     await navigator.clipboard.writeText(content);
@@ -1145,7 +1165,7 @@ async function copyRenderedText() {
   } catch(e) {}
 }
 
-function getSmartTitle() {
+window.getSmartTitle = function getSmartTitle() {
   const h1 = document.querySelector('#notesContent h1');
   if (h1) {
     return h1.innerText
@@ -1158,19 +1178,19 @@ function getSmartTitle() {
   return 'ScriptClip-Notes';
 }
 let saveFormat = 'html';
-function openSaveModal() {
+window.openSaveModal = function openSaveModal() {
   document.getElementById('filenameInput').value = getSmartTitle();
   document.getElementById('modalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('filenameInput').select(), 50);
 }
-function closeSaveModal() { document.getElementById('modalOverlay').classList.remove('open'); }
-function selectFormat(fmt) {
+window.closeSaveModal = function closeSaveModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+window.selectFormat = function selectFormat(fmt) {
   saveFormat = fmt;
   document.querySelectorAll('.modal-opt').forEach(o => o.classList.remove('selected'));
   document.getElementById('opt-' + fmt).classList.add('selected');
 }
 
-function doSave() {
+window.doSave = function doSave() {
   closeSaveModal();
   const content = document.getElementById('notesContent');
   const inputVal = document.getElementById('filenameInput').value.trim();
@@ -1209,7 +1229,8 @@ ul ul ul{margin:3px 0 3px 16px}ul ul ul li::before{width:3px;height:3px;top:0.65
 table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
 th{background:${s.thBg};color:${s.h2};font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid ${s.border}}
 td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth-child(even) td{background:${s.rowAlt}}`;
-    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style></head><body>${content.innerHTML}</body></html>`], {type:'text/html'});
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style>
+</head><body>${content.innerHTML}</body></html>`], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title+'.html');
   } else {
     const blob = new Blob([content.innerText], {type:'text/plain'});
@@ -1278,7 +1299,7 @@ async function callWorker(payload) {
   return res.json();
 }
 
-async function generateQuiz() {
+window.generateQuiz = async function generateQuiz() {
   const notes = getNotesText();
   if (!notes || notes.length < 100) {
     alert('Please add notes first — paste text or drop a file above.');
@@ -1289,7 +1310,7 @@ async function generateQuiz() {
   const statusEl = document.getElementById('quizGenStatus');
   btn.disabled = true;
   btnInner.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
-  statusEl.textContent = 'Generating 10 questions…';
+  statusEl.textContent = 'Loading quiz…';
 
   const prompt = `You are a quiz generator. Based on the study notes below, generate exactly 10 quiz questions that genuinely test understanding — not just surface recall.
 
@@ -1326,7 +1347,7 @@ ${notes.substring(0, 12000)}`;
   }
 }
 
-function renderQuiz(questions) {
+window.renderQuiz = function renderQuiz(questions) {
   const container = document.getElementById('quizQuestions');
   container.innerHTML = '';
   document.getElementById('quizProgressText').textContent = `${questions.length} questions`;
@@ -1372,7 +1393,7 @@ window.selectTF = function(qIdx, val) {
   document.querySelector(`.quiz-q[data-idx="${qIdx}"] .quiz-tf-btn[data-val="${val}"]`).classList.add('selected');
 }
 
-async function submitQuiz() {
+window.submitQuiz = async function submitQuiz() {
   const submitBtn = document.getElementById('quizSubmitBtn');
   submitBtn.disabled = true; submitBtn.textContent = 'Grading…';
   const userAnswers = quizData.map((q, idx) => {
@@ -1395,18 +1416,13 @@ async function submitQuiz() {
   });
   const aiQueue = quizData.map((q, idx) => (q.type !== 'mc' && q.type !== 'tf') ? { idx, q, userAnswer: userAnswers[idx] } : null).filter(Boolean);
   if (aiQueue.length > 0) {
-    const gradingPrompt = `Grade these answers. Return ONLY a JSON array, one object per question in order:
-[{ "correct": true/false, "explanation": "2-3 sentence feedback on what was right/wrong and the actual concept" }]
-
-${aiQueue.map((item, i) => `${i+1}. Type: ${item.q.type}\nQuestion: ${item.q.question}\nCorrect: ${item.q.answer}\nStudent: ${item.userAnswer || '(blank)'}`).join('\n\n')}
-
-Lenient on spelling/romanization, strict on meaning. Short answer: grade conceptual understanding.`;
-    try {
+    const gradingPrompt = `Grade these answers. Return ONLY a JSON array, one object per question in order:\n[{ "score": 1-10, "explanation": "2-3 sentence feedback on what was right/wrong and the actual concept" }]\n\nScore 1-10: 10=perfect, 7+ means essentially correct (accept close paraphrases, near-synonyms, valid alternatives), below 7=incorrect or missing key meaning.\n\n${aiQueue.map((item, i) => `${i+1}. Type: ${item.q.type}\\nQuestion: ${item.q.question}\\nCorrect: ${item.q.answer}\\nStudent: ${item.userAnswer || '(blank)'}`).join('\\n\\n')}\n\nBe lenient on spelling/romanization. For short answer grade conceptual understanding not exact wording.`;\n    try {
       const data = await callWorker({ action: 'grade', prompt: gradingPrompt });
       let raw = (data.text || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
       const aiRes = JSON.parse(raw);
       aiQueue.forEach((item, i) => {
-        results[item.idx] = { correct: aiRes[i]?.correct || false, explanation: aiRes[i]?.explanation || item.q.explanation };
+        const score = aiRes[i]?.score ?? 0;
+        results[item.idx] = { correct: score >= 7, score, explanation: aiRes[i]?.explanation || item.q.explanation };
       });
     } catch(e) {
       aiQueue.forEach(item => { results[item.idx] = { correct: false, explanation: item.q.explanation }; });
@@ -1416,7 +1432,7 @@ Lenient on spelling/romanization, strict on meaning. Short answer: grade concept
   submitBtn.disabled = false; submitBtn.textContent = 'Submit for Grading';
 }
 
-function showResults(results, userAnswers) {
+window.showResults = function showResults(results, userAnswers) {
   const score = results.filter(r => r.correct).length;
   const total = results.length;
   const pct = Math.round((score/total)*100);
@@ -1430,22 +1446,22 @@ function showResults(results, userAnswers) {
     const q = quizData[idx];
     const item = document.createElement('div');
     item.className = `quiz-feedback-item ${r.correct ? 'pass' : 'fail'}`;
+    const scoreTag = r.score !== undefined ? `<span class="quiz-score-tag" style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-left:8px;background:${r.correct ? 'color-mix(in srgb,var(--n-summary-border) 15%,transparent)' : 'color-mix(in srgb,var(--accent) 15%,transparent)'};color:${r.correct ? 'var(--n-summary-text)' : 'var(--accent)'}">${r.score}/10</span>` : '';
     item.innerHTML = `
-      <div class="quiz-feedback-header" onclick="toggleFeedback(${idx})">
+      <div class="quiz-feedback-header" onclick="window.toggleFeedback(${idx})">
         <span class="quiz-feedback-icon">${r.correct ? '✓' : '✗'}</span>
-        <span class="quiz-feedback-q">${idx+1}. ${q.question}</span>
+        <span class="quiz-feedback-q">${idx+1}. ${q.question}${scoreTag}</span>
         <span class="quiz-feedback-toggle" id="ftoggle-${idx}">▼</span>
       </div>
       <div class="quiz-feedback-body" id="fbody-${idx}">
         <div class="quiz-feedback-your">Your answer: <span>${userAnswers[idx] || '(no answer)'}</span></div>
-        ${!r.correct ? `<div class="quiz-feedback-correct">Correct answer: <span>${q.answer}</span></div>` : ''}
+        <div class="quiz-feedback-correct">Correct answer: <span>${q.answer}</span></div>
         <div class="quiz-feedback-explain">${r.explanation}</div>
       </div>`;
     list.appendChild(item);
-    if (!r.correct) {
-      document.getElementById(`fbody-${idx}`).classList.add('open');
-      document.getElementById(`ftoggle-${idx}`).classList.add('open');
-    }
+    // auto-expand all
+    document.getElementById(`fbody-${idx}`).classList.add('open');
+    document.getElementById(`ftoggle-${idx}`).classList.add('open');
   });
   document.getElementById('quizActive').style.display = 'none';
   document.getElementById('quizResults').style.display = 'block';
@@ -1456,7 +1472,7 @@ window.toggleFeedback = function(idx) {
   document.getElementById(`ftoggle-${idx}`).classList.toggle('open');
 }
 
-function resetQuiz() {
+window.resetQuiz = function resetQuiz() {
   quizData = null;
   document.getElementById('quizPasteArea').value = '';
   document.getElementById('quizSourceStatus').textContent = '';
