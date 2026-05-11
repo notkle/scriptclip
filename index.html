@@ -475,15 +475,17 @@
   }
   .nb-new-btn:hover { border-color: var(--accent); color: var(--accent); }
   #nbCreateBtn {
-    font-size: 26px; font-weight: 200; padding: 0; flex-shrink: 0;
+    font-size: 18px; font-weight: 400; padding: 0 10px; flex-shrink: 0;
+    height: 30px; line-height: 30px;
     background: none; cursor: pointer;
-    border: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
     color: var(--muted);
     font-family: system-ui, -apple-system, sans-serif;
-    transition: color 0.2s;
-    line-height: 1;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
   }
-  #nbCreateBtn:hover { color: var(--accent); }
+  #nbCreateBtn:hover { border-color: var(--accent); color: var(--accent); }
 
   .nb-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
   .nb-empty { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; font-style: italic; }
@@ -968,9 +970,10 @@
 
   <!-- NOTEBOOK LIST VIEW -->
   <div class="nb-view" id="nbListView">
-    <div class="nb-header">
-      
-      <button onclick="window.createNotebook()" id="nbCreateBtn">+</button>
+    <div class="nb-header" style="justify-content:flex-end;gap:10px">
+      <input type="file" id="nbImportInput" accept=".json" style="display:none"/>
+      <button class="tool-btn" onclick="if(typeof window.triggerNbImport==='function'){window.triggerNbImport()}" title="Import notebook">↑ Import</button>
+      <button onclick="window.createNotebook()" id="nbCreateBtn"><span style="margin-bottom:1px">+</span></button>
     </div>
     <div class="nb-list" id="nbList"></div>
     <div class="nb-empty" id="nbEmpty">No notebooks yet. Create one to start saving notes.</div>
@@ -983,7 +986,8 @@
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
       <button class="tool-btn" onclick="if(typeof window.showNotebookList==='function'){window.showNotebookList()}">← Back</button>
-      <div class="nb-title" id="nbPagesTitle"></div>
+      <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
+      <button class="nb-new-btn" onclick="if(typeof window.exportNotebook==='function'){window.exportNotebook()}" title="Export" style="margin-right:6px">↓ Export</button>
       <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
     </div>
     <div class="nb-pages-list" id="nbPagesList"></div>
@@ -1025,6 +1029,18 @@
 
 
 <script>
+window.scConfirmResolve = null;
+window.scConfirm = function(msg) {
+  return new Promise(function(resolve) {
+    document.getElementById('scConfirmMsg').textContent = msg;
+    document.getElementById('scConfirmOverlay').classList.add('open');
+    window.scConfirmResolve = function(val) {
+      document.getElementById('scConfirmOverlay').classList.remove('open');
+      resolve(val);
+    };
+  });
+};
+
 const NB_COLORS = [
   '#d4a84b','#4ecdc4','#e07b54','#7dba84','#7a94a8','#c4907a',
   '#9b8ec4','#e8714a','#5ab8e0','#c84b2f','#6b9e6b','#d4627a',
@@ -1487,6 +1503,18 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
     </div>
   </div>
 </div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="scConfirmOverlay">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title" id="scConfirmTitle">Are you sure?</div>
+    <div id="scConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:20px;font-family:system-ui,sans-serif"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="window.scConfirmResolve(false)">Cancel</button>
+      <button class="modal-save" style="background:var(--accent)" onclick="window.scConfirmResolve(true)">Delete</button>
+    </div>
+  </div>
+</div>
 </body></html>`], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title+'.html');
   } else {
@@ -1520,7 +1548,6 @@ window.showNotebookList = function() {
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'none';
   renderNotebookList();
-  setTimeout(setupNbDropZone, 50);
 };
 
 function renderNotebookList() {
@@ -1550,8 +1577,14 @@ function renderNotebookList() {
 
 window.createNotebook = function() {
   document.getElementById('nbNameInput').value = '';
+  document.getElementById('nbNameInput').dataset.mode = '';
+  document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'New Notebook';
   document.getElementById('nbNameOverlay').classList.add('open');
   setTimeout(function(){ document.getElementById('nbNameInput').focus(); }, 50);
+};
+
+window.triggerNbImport = function() {
+  document.getElementById('nbImportInput').click();
 };
 
 window.closeNbNameModal = function() {
@@ -1705,15 +1738,15 @@ window.openPage = function(idx) {
   document.getElementById('nbPageView').style.display = 'flex';
 };
 
-window.deletePage = function(idx) {
-  if (!confirm('Delete this page?')) return;
+window.deletePage = async function(idx) {
+  if (!await window.scConfirm('Delete this page? This cannot be undone.')) return;
   const data = nbLoad();
   data[currentNotebookId].pages.splice(idx, 1);
   nbSave(data); renderPagesList();
 };
 
-window.deleteCurrentNotebook = function() {
-  if (!confirm('Delete this entire notebook and all its pages?')) return;
+window.deleteCurrentNotebook = async function() {
+  if (!await window.scConfirm('Delete this notebook and all its pages? This cannot be undone.')) return;
   const data = nbLoad();
   delete data[currentNotebookId];
   nbSave(data); currentNotebookId = null; window.showNotebookList();
@@ -1794,8 +1827,12 @@ function setupNbDropZone() {
     zone.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
     if (!file) return;
+    if (file.name.endsWith('.json')) {
+      window.importNotebook(file);
+      return;
+    }
     if (!file.name.endsWith('.html') && !file.name.endsWith('.txt')) {
-      window.toast('Please drop an HTML or text file.'); return;
+      window.toast('Please drop an HTML, text, or .scriptclip.json file.'); return;
     }
     const data = nbLoad();
     const ids = Object.keys(data);
@@ -1903,7 +1940,12 @@ function setupDropZone() {
 
 window.handleFileUpload = function(e) {
   const file = e.target.files[0];
-  if (file) readQuizFile(file);
+  if (!file) return;
+  if (file.name.endsWith('.json')) {
+    window.importNotebook(file);
+    return;
+  }
+  readQuizFile(file);
 }
 
 function readQuizFile(file) {
@@ -2141,6 +2183,15 @@ document.addEventListener('DOMContentLoaded', function() {
   var nbpo = document.getElementById('nbPickerOverlay');
   var nbco = document.getElementById('nbColorOverlay');
   if (nbco) nbco.addEventListener('click', function(e){ if(e.target===this) window.closeNbColor(); });
+  setupNbDropZone();
+  // Import file input handler
+  var sco = document.getElementById('scConfirmOverlay');
+  if (sco) sco.addEventListener('click', function(e){ if(e.target===this && window.scConfirmResolve) window.scConfirmResolve(false); });
+  var nbii = document.getElementById('nbImportInput');
+  if (nbii) nbii.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) { window.importNotebook(file); e.target.value = ''; }
+  });
   if (nbpo) nbpo.addEventListener('click', function(e){ if(e.target===this) window.closeNotebookPicker(); });
   var inp = document.getElementById('nbNameInput');
   if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') window.confirmNbName(); });
@@ -2222,6 +2273,64 @@ window.renamePage = function(idx) {
   document.getElementById('nbNameOverlay').classList.add('open');
   setTimeout(function(){ document.getElementById('nbNameInput').select(); }, 50);
 };
+
+// ── NOTEBOOK EXPORT / IMPORT ──
+window.exportNotebook = function() {
+  const data = nbLoad();
+  const nb = data[currentNotebookId];
+  if (!nb) return;
+  const exportObj = {
+    _scriptclip: true,
+    version: 1,
+    notebook: nb
+  };
+  const json = JSON.stringify(exportObj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  // Smart filename from notebook name
+  const filename = nb.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '-') + '.scriptclip.json';
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.toast('Exported: ' + filename);
+};
+
+window.importNotebook = function(file) {
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const obj = JSON.parse(ev.target.result);
+      if (!obj._scriptclip || !obj.notebook) {
+        window.toast('Not a valid ScriptClip notebook file.');
+        return;
+      }
+      const nb = obj.notebook;
+      const data = nbLoad();
+      // Check if a notebook with same name exists
+      const existingId = Object.keys(data).find(id => data[id].name === nb.name);
+      if (existingId) {
+        // Append pages to existing notebook rather than duplicate
+        data[existingId].pages = data[existingId].pages.concat(nb.pages || []);
+        if (nb.color) data[existingId].color = nb.color;
+        if (nb.icon) data[existingId].icon = nb.icon;
+        nbSave(data);
+        window.toast('Merged into existing notebook: ' + nb.name);
+      } else {
+        const id = 'nb_' + Date.now();
+        data[id] = nb;
+        nbSave(data);
+        window.toast('Imported: ' + nb.name + ' (' + (nb.pages || []).length + ' pages)');
+      }
+      renderNotebookList();
+    } catch(e) {
+      window.toast('Failed to read file: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+};
+
 </script>
 
 <!-- NOTEBOOK NAME MODAL -->
@@ -2257,6 +2366,18 @@ window.renamePage = function(idx) {
     <div id="nbColorGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="window.closeNbColor()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="scConfirmOverlay">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title" id="scConfirmTitle">Are you sure?</div>
+    <div id="scConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:20px;font-family:system-ui,sans-serif"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="window.scConfirmResolve(false)">Cancel</button>
+      <button class="modal-save" style="background:var(--accent)" onclick="window.scConfirmResolve(true)">Delete</button>
     </div>
   </div>
 </div>
