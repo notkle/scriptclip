@@ -452,6 +452,123 @@
   .notes-content::-webkit-scrollbar { width: 4px; }
   .notes-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+
+  /* ── NOTEBOOK ── */
+  .nb-panel { justify-content: flex-start; align-items: stretch; padding: 0; }
+  .nb-view { display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 24px 28px 28px; }
+  #nbListView { display: flex; }
+
+  .nb-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; flex-shrink: 0;
+  }
+  .nb-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--ink); flex: 1; transition: color 0.3s;
+  }
+  .nb-new-btn {
+    background: none; border: 1px solid var(--border); border-radius: 4px;
+    padding: 7px 14px; font-family: system-ui,-apple-system,sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .nb-new-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #nbCreateBtn {
+    width: 36px; height: 36px; border-radius: 50%;
+    font-size: 26px; font-weight: 200; line-height: 32px;
+    text-align: center; padding: 0; flex-shrink: 0;
+    background: none; cursor: pointer;
+    border: 1px solid var(--muted);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, sans-serif;
+    text-transform: none; letter-spacing: 0;
+    transition: all 0.2s;
+  }
+  #nbCreateBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .nb-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
+  .nb-empty { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; font-style: italic; }
+
+  /* Notebook cards */
+  .nb-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px;
+    cursor: pointer; transition: all 0.2s; user-select: none;
+  }
+  .nb-card:hover { border-color: var(--n-h2); }
+  .nb-card-icon { font-size: 20px; flex-shrink: 0; }
+  .nb-card-info { flex: 1; min-width: 0; }
+  .nb-card-name {
+    font-family: system-ui,-apple-system,sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    transition: color 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .nb-card-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .nb-card-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; }
+
+  /* Page items */
+  .nb-pages-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
+
+  .nb-page-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 16px;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; user-select: none;
+  }
+  .nb-page-item:hover { border-color: var(--n-h2); }
+  .nb-page-item:hover .nb-drag-handle { opacity: 1; }
+  .nb-page-item.dragging { opacity: 0.4; border-style: dashed; }
+  .nb-page-item.drag-over { border-color: var(--n-h2); background: color-mix(in srgb, var(--n-h2) 8%, transparent); }
+  .nb-page-item.wiggle { animation: wiggle 0.5s ease infinite alternate; }
+
+  @keyframes wiggle {
+    from { transform: rotate(-0.8deg); }
+    to { transform: rotate(0.8deg); }
+  }
+
+  .nb-drag-handle {
+    color: var(--muted); font-size: 14px; cursor: grab;
+    opacity: 0; transition: opacity 0.2s; flex-shrink: 0;
+    touch-action: none;
+  }
+  .nb-reorder-active .nb-drag-handle { opacity: 1; }
+
+  .nb-page-icon { font-size: 16px; flex-shrink: 0; }
+  .nb-page-info { flex: 1; min-width: 0; }
+  .nb-page-name {
+    font-family: system-ui,-apple-system,sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.3s;
+  }
+  .nb-page-date { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .nb-page-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .nb-page-btn {
+    background: none; border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 8px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--muted); cursor: pointer;
+    transition: all 0.2s; font-family: system-ui,-apple-system,sans-serif;
+  }
+  .nb-page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nb-page-btn.quiz-btn:hover { border-color: var(--n-h2); color: var(--n-h2); }
+
+  /* reorder done button */
+  .nb-done-reorder {
+    margin-top: 14px; flex-shrink: 0;
+    background: none; border: 1px solid var(--n-h2); border-radius: 4px;
+    padding: 10px; font-family: system-ui,-apple-system,sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--n-h2); cursor: pointer; transition: all 0.2s; display: none;
+  }
+  .nb-done-reorder.visible { display: block; }
+  .nb-done-reorder:hover { background: color-mix(in srgb, var(--n-h2) 10%, transparent); }
+
+  .nb-page-content { flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 28px; }
+
   /* ── QUIZ PANEL ── */
   .quiz-panel { justify-content: flex-start; align-items: stretch; padding: 0; overflow: hidden; }
 
@@ -690,7 +807,16 @@
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
 <script>
-// Pre-define tab switcher immediately so onclick works even if main script is still parsing
+// Safe dispatcher - queues calls if main script hasn't loaded yet
+window._q = [];
+window._ready = false;
+window.sc = function(fn, args) {
+  if (window._ready && typeof window[fn] === 'function') {
+    window[fn].apply(null, args || []);
+  } else {
+    window._q.push([fn, args || []]);
+  }
+};
 window.switchTab = function(name) {
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
@@ -721,6 +847,7 @@ window.switchTab = function(name) {
   <button class="tab active" onclick="window.switchTab('builder')" id="tab-builder">Prompt</button>
   <button class="tab" onclick="window.switchTab('notes')" id="tab-notes">Colorize</button>
   <button class="tab" onclick="window.switchTab('quiz')" id="tab-quiz">Quiz</button>
+  <button class="tab" onclick="window.switchTab('notebook')" id="tab-notebook">Notebook</button>
 </div>
 
 <!-- PANEL 1 -->
@@ -761,6 +888,7 @@ window.switchTab = function(name) {
     <div class="notes-rendered-toolbar">
       <button class="tool-btn" onclick="window.backToEdit()">← Edit</button>
       <button class="tool-btn" onclick="window.openSaveModal()">↓ Save</button>
+      <button class="tool-btn" onclick="window.openSaveToNotebook()">＋ Notebook</button>
       <button class="tool-btn primary" onclick="window.copyRenderedText(event)">⌘ Copy Text</button>
     </div>
     <div class="notes-content" id="notesContent"></div>
@@ -857,7 +985,69 @@ window.switchTab = function(name) {
   </div>
 </div>
 
+
+<!-- PANEL 4: NOTEBOOK -->
+<div class="panel nb-panel" id="panel-notebook">
+
+  <!-- NOTEBOOK LIST VIEW -->
+  <div class="nb-view" id="nbListView">
+    <div class="nb-header">
+      <div class="nb-title">My Notebooks</div>
+      <button onclick="window.createNotebook()" id="nbCreateBtn">+</button>
+    </div>
+    <div class="nb-list" id="nbList"></div>
+    <div class="nb-empty" id="nbEmpty">No notebooks yet. Create one to start saving notes.</div>
+    <div class="nb-drop-zone" id="nbDropZone">
+      <div class="nb-drop-label">Drop HTML file here to add as a page</div>
+    </div>
+  </div>
+
+  <!-- PAGES VIEW -->
+  <div class="nb-view" id="nbPagesView" style="display:none">
+    <div class="nb-header">
+      <button class="tool-btn" onclick="window.showNotebookList()">← Back</button>
+      <div class="nb-title" id="nbPagesTitle"></div>
+      <button class="nb-new-btn" onclick="window.deleteCurrentNotebook()">Delete</button>
+    </div>
+    <div class="nb-pages-list" id="nbPagesList"></div>
+    <div class="nb-empty" id="nbPagesEmpty">No pages saved to this notebook yet.</div>
+  </div>
+
+  <!-- PAGE READ VIEW -->
+  <div class="nb-view" id="nbPageView" style="display:none">
+    <div class="nb-header">
+      <button class="tool-btn" onclick="window.showPagesView()">← Back</button>
+      <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    </div>
+    <div class="notes-content nb-page-content" id="nbPageContent"></div>
+  </div>
+
+</div>
+
+<!-- SAVE TO NOTEBOOK MODAL -->
+<div class="modal-overlay" id="saveToNbOverlay">
+  <div class="modal">
+    <div class="modal-title">Save to Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Page Name</label>
+      <input type="text" id="nbPageNameInput" class="modal-filename-input" placeholder="Page name" spellcheck="false" autocorrect="off" autocapitalize="off"/>
+    </div>
+    <div class="modal-filename-wrap" style="margin-top:14px">
+      <label class="modal-filename-label">Notebook</label>
+      <select id="nbSelect" class="modal-filename-input" style="cursor:pointer"></select>
+    </div>
+    <div style="margin-top:10px">
+      <button class="nb-new-btn" onclick="window.quickCreateNotebook()" style="font-size:10px;padding:6px 12px">+ New Notebook</button>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="window.closeSaveToNotebook()">Cancel</button>
+      <button class="modal-save" onclick="window.doSaveToNotebook()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
+
 const PROMPT = `Here is a YouTube transcript. Transform it into structured study notes using this exact format:
 
 **Key Terms** — pull out important vocabulary/concepts and bold them, followed by a concise definition. If any non-English scripts appear (Japanese, Chinese, Arabic, Greek, etc.), always include the romanized/phonetic pronunciation in parentheses immediately after every instance throughout the entire document — not just in the Key Terms section.
@@ -881,51 +1071,7 @@ window.toggleTheme = function toggleTheme() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : '');
   document.getElementById('themeBtn').textContent = isDark ? '☾ Dark' : '☀ Light';
 }
-// init — runs immediately, no load event needed
-(function() {
-  document.documentElement.setAttribute('data-theme', 'dark');
 
-  // Wire everything once DOM is ready
-  function init() {
-    // dark mode label
-    var tb = document.getElementById('themeBtn');
-    if (tb) tb.textContent = '\u263e Dark';
-
-    setupDropZone();
-
-    var overlay = document.getElementById('modalOverlay');
-    if (overlay) overlay.addEventListener('click', function(e) {
-      if (e.target === this) closeSaveModal();
-    });
-
-    // Central delegated click handler
-    document.addEventListener('click', function(e) {
-      var el = e.target.closest('[data-action]');
-      if (!el) return;
-      var action = el.dataset.action;
-      if (action === 'toggleTheme') toggleTheme();
-      else if (action === 'switchTab') switchTab(el.dataset.tab);
-      else if (action === 'handleBuild') handleBuild();
-      else if (action === 'pasteFromClipboard') pasteFromClipboard();
-      else if (action === 'renderNotes') renderNotes();
-      else if (action === 'backToEdit') backToEdit();
-      else if (action === 'openSaveModal') openSaveModal();
-      else if (action === 'copyRenderedText') copyRenderedText(e);
-      else if (action === 'generateQuiz') generateQuiz();
-      else if (action === 'resetQuiz') resetQuiz();
-      else if (action === 'submitQuiz') submitQuiz();
-      else if (action === 'selectFormat') selectFormat(el.dataset.fmt);
-      else if (action === 'closeSaveModal') closeSaveModal();
-      else if (action === 'doSave') doSave();
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
 
 // TABS
 window.switchTab = function switchTab(name) {
@@ -933,6 +1079,11 @@ window.switchTab = function switchTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'notebook') {
+    setTimeout(function() {
+      if (typeof window.showNotebookList === 'function') window.showNotebookList();
+    }, 10);
+  }
 }
 
 // BUILDER
@@ -1230,7 +1381,330 @@ table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
 th{background:${s.thBg};color:${s.h2};font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid ${s.border}}
 td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth-child(even) td{background:${s.rowAlt}}`;
     const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style>
-</head><body>${content.innerHTML}</body></html>`], {type:'text/html'});
+</head><body>${content.innerHTML}
+// ── NOTEBOOK ──
+const NB_KEY = 'sc_notebooks';
+
+function nbLoad() {
+  try { return JSON.parse(localStorage.getItem(NB_KEY) || '{}'); } catch(e) { return {}; }
+}
+function nbSave(data) { localStorage.setItem(NB_KEY, JSON.stringify(data)); }
+
+let currentNotebookId = null;
+let reorderActive = false;
+let dragSrcIdx = null;
+
+window.showNotebookList = function() {
+  document.getElementById('nbListView').style.display = 'flex';
+  document.getElementById('nbPagesView').style.display = 'none';
+  document.getElementById('nbPageView').style.display = 'none';
+  renderNotebookList();
+  setTimeout(setupNbDropZone, 50);
+};
+
+function renderNotebookList() {
+  const data = nbLoad();
+  const list = document.getElementById('nbList');
+  const empty = document.getElementById('nbEmpty');
+  const ids = Object.keys(data);
+  list.innerHTML = '';
+  if (ids.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  ids.forEach(id => {
+    const nb = data[id];
+    const card = document.createElement('div');
+    card.className = 'nb-card';
+    card.innerHTML = '<span class="nb-card-icon">📓</span><div class="nb-card-info"><div class="nb-card-name">' + nb.name + '</div><div class="nb-card-meta">' + (nb.pages||[]).length + ' page' + ((nb.pages||[]).length !== 1 ? 's' : '') + '</div></div><span class="nb-card-arrow">›</span>';
+    card.addEventListener('click', () => window.openNotebook(id));
+    list.appendChild(card);
+  });
+}
+
+window.createNotebook = function() {
+  const name = prompt('Notebook name:');
+  if (!name || !name.trim()) return;
+  const data = nbLoad();
+  const id = 'nb_' + Date.now();
+  data[id] = { name: name.trim(), pages: [], created: Date.now() };
+  nbSave(data);
+  renderNotebookList();
+};
+
+window.openNotebook = function(id) {
+  currentNotebookId = id;
+  const data = nbLoad();
+  const nb = data[id];
+  if (!nb) return;
+  document.getElementById('nbPagesTitle').textContent = nb.name;
+  document.getElementById('nbListView').style.display = 'none';
+  document.getElementById('nbPagesView').style.display = 'flex';
+  document.getElementById('nbPageView').style.display = 'none';
+  reorderActive = false;
+  renderPagesList();
+};
+
+window.showPagesView = function() {
+  document.getElementById('nbPageView').style.display = 'none';
+  document.getElementById('nbPagesView').style.display = 'flex';
+};
+
+function renderPagesList() {
+  const data = nbLoad();
+  const nb = data[currentNotebookId];
+  if (!nb) return;
+  const list = document.getElementById('nbPagesList');
+  const empty = document.getElementById('nbPagesEmpty');
+  list.innerHTML = '';
+  if ((nb.pages||[]).length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  if (reorderActive) list.classList.add('nb-reorder-active');
+  else list.classList.remove('nb-reorder-active');
+
+  nb.pages.forEach((page, idx) => {
+    const item = document.createElement('div');
+    item.className = 'nb-page-item' + (reorderActive ? ' wiggle' : '');
+    item.dataset.idx = idx;
+    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><span class="nb-page-icon">📄</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions"><button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button><button class="nb-page-btn del-btn" title="Delete">✕</button></div>';
+
+    item.querySelector('.quiz-btn').addEventListener('click', (e) => { e.stopPropagation(); window.loadPageToQuiz(idx); });
+    item.querySelector('.del-btn').addEventListener('click', (e) => { e.stopPropagation(); window.deletePage(idx); });
+
+    item.addEventListener('click', () => {
+      if (reorderActive) return;
+      window.openPage(idx);
+    });
+
+    let pressTimer = null;
+    item.addEventListener('touchstart', () => { pressTimer = setTimeout(() => activateReorder(), 600); });
+    item.addEventListener('touchend', () => clearTimeout(pressTimer));
+    item.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+    item.querySelector('.nb-drag-handle').addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if (!reorderActive) activateReorder();
+    });
+
+    item.draggable = true;
+    item.addEventListener('dragstart', () => { dragSrcIdx = idx; setTimeout(() => item.classList.add('dragging'), 0); });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+    item.addEventListener('dragover', (e) => { e.preventDefault(); item.classList.add('drag-over'); });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', (e) => {
+      e.preventDefault(); item.classList.remove('drag-over');
+      if (dragSrcIdx === null || dragSrcIdx === idx) return;
+      const d = nbLoad();
+      const pages = d[currentNotebookId].pages;
+      const moved = pages.splice(dragSrcIdx, 1)[0];
+      pages.splice(idx, 0, moved);
+      nbSave(d); dragSrcIdx = null; renderPagesList();
+    });
+
+    list.appendChild(item);
+  });
+
+  let doneB = document.getElementById('nbDoneReorder');
+  if (!doneB) {
+    doneB = document.createElement('button');
+    doneB.id = 'nbDoneReorder';
+    doneB.className = 'nb-done-reorder';
+    doneB.textContent = 'Done Reordering';
+    doneB.onclick = () => { reorderActive = false; renderPagesList(); };
+    list.parentNode.appendChild(doneB);
+  }
+  doneB.className = 'nb-done-reorder' + (reorderActive ? ' visible' : '');
+}
+
+function activateReorder() { reorderActive = true; renderPagesList(); }
+
+window.openPage = function(idx) {
+  const data = nbLoad();
+  const page = data[currentNotebookId].pages[idx];
+  if (!page) return;
+  document.getElementById('nbPageTitle').textContent = page.name;
+  document.getElementById('nbPageContent').innerHTML = page.html;
+  document.getElementById('nbPagesView').style.display = 'none';
+  document.getElementById('nbPageView').style.display = 'flex';
+};
+
+window.deletePage = function(idx) {
+  if (!confirm('Delete this page?')) return;
+  const data = nbLoad();
+  data[currentNotebookId].pages.splice(idx, 1);
+  nbSave(data); renderPagesList();
+};
+
+window.deleteCurrentNotebook = function() {
+  if (!confirm('Delete this entire notebook and all its pages?')) return;
+  const data = nbLoad();
+  delete data[currentNotebookId];
+  nbSave(data); currentNotebookId = null; window.showNotebookList();
+};
+
+window.loadPageToQuiz = function(idx) {
+  const data = nbLoad();
+  const page = data[currentNotebookId].pages[idx];
+  if (!page) return;
+  const div = document.createElement('div');
+  div.innerHTML = page.html;
+  document.getElementById('quizPasteArea').value = div.innerText;
+  document.getElementById('quizSourceStatus').textContent = '✓ Loaded: ' + page.name;
+  window.switchTab('quiz');
+};
+
+window.openSaveToNotebook = function() {
+  const html = document.getElementById('notesContent').innerHTML;
+  if (!html || html.trim().length < 50) { alert('Nothing to save — colorize some notes first.'); return; }
+  const h1 = document.querySelector('#notesContent h1');
+  document.getElementById('nbPageNameInput').value = h1 ? h1.innerText.trim().substring(0, 60) : 'Untitled Page';
+  const data = nbLoad();
+  const sel = document.getElementById('nbSelect');
+  sel.innerHTML = '';
+  const ids = Object.keys(data);
+  if (ids.length === 0) { sel.innerHTML = '<option value="">— No notebooks yet —</option>'; }
+  else { ids.forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.textContent = data[id].name; sel.appendChild(opt); }); }
+  document.getElementById('saveToNbOverlay').classList.add('open');
+};
+
+window.closeSaveToNotebook = function() { document.getElementById('saveToNbOverlay').classList.remove('open'); };
+
+window.quickCreateNotebook = function() {
+  const name = prompt('New notebook name:');
+  if (!name || !name.trim()) return;
+  const data = nbLoad();
+  const id = 'nb_' + Date.now();
+  data[id] = { name: name.trim(), pages: [], created: Date.now() };
+  nbSave(data);
+  const sel = document.getElementById('nbSelect');
+  const opt = document.createElement('option');
+  opt.value = id; opt.textContent = name.trim(); sel.appendChild(opt); sel.value = id;
+};
+
+window.doSaveToNotebook = function() {
+  const nbId = document.getElementById('nbSelect').value;
+  const pageName = document.getElementById('nbPageNameInput').value.trim();
+  if (!nbId) { alert('Please create a notebook first.'); return; }
+  if (!pageName) { alert('Please enter a page name.'); return; }
+  const html = document.getElementById('notesContent').innerHTML;
+  const data = nbLoad();
+  if (!data[nbId]) { alert('Notebook not found.'); return; }
+  data[nbId].pages.push({ name: pageName, html: html, saved: Date.now() });
+  nbSave(data);
+  window.closeSaveToNotebook();
+  const btn = document.querySelector('[onclick="window.openSaveToNotebook()"]');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Saved'; setTimeout(() => btn.textContent = orig, 1500); }
+};
+
+document.addEventListener('click', function(e) {
+  var o = document.getElementById('saveToNbOverlay');
+  if (o && e.target === o) window.closeSaveToNotebook();
+});
+
+// [notebook switchTab override removed]
+
+
+
+// Notebook drop zone — drag HTML file directly into a notebook
+function setupNbDropZone() {
+  const zone = document.getElementById('nbDropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (!file.name.endsWith('.html') && !file.name.endsWith('.txt')) {
+      alert('Please drop an HTML or text file.'); return;
+    }
+    const data = nbLoad();
+    const ids = Object.keys(data);
+    if (ids.length === 0) {
+      alert('Create a notebook first, then drop the file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      let html = ev.target.result;
+      let text = '';
+      // If it's an HTML file, extract the body content
+      if (file.name.endsWith('.html')) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        // Try to get just the body content for cleaner storage
+        const body = div.querySelector('body');
+        html = body ? body.innerHTML : div.innerHTML;
+      }
+      // Page name from filename (strip extension)
+      const defaultName = file.name.replace(/\.(html|txt)$/i, '');
+      // If only one notebook, save straight to it; otherwise prompt
+      let targetId;
+      if (ids.length === 1) {
+        targetId = ids[0];
+        const pageName = prompt('Page name:', defaultName) || defaultName;
+        data[targetId].pages.push({ name: pageName, html, saved: Date.now() });
+        nbSave(data);
+        renderNotebookList();
+        alert('Saved to "' + data[targetId].name + '"');
+      } else {
+        // Show notebook picker
+        const names = ids.map(id => data[id].name);
+        const choice = prompt('Save to which notebook?\n' + ids.map((id, i) => (i+1) + '. ' + data[id].name).join('\n') + '\n\nType the number:');
+        const idx = parseInt(choice) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= ids.length) { alert('Invalid choice.'); return; }
+        targetId = ids[idx];
+        const pageName = prompt('Page name:', defaultName) || defaultName;
+        data[targetId].pages.push({ name: pageName, html, saved: Date.now() });
+        nbSave(data);
+        renderNotebookList();
+        alert('Saved to "' + data[targetId].name + '"');
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// [nb dropzone override removed]
+
+
+// ── INIT ──
+(function() {
+  // Set dark mode immediately
+  document.documentElement.setAttribute('data-theme', 'dark');
+  
+  function init() {
+    var tb = document.getElementById('themeBtn');
+    if (tb) tb.textContent = '\u263e Dark';
+    
+    // Quiz drop zone
+    if (typeof setupDropZone === 'function') setupDropZone();
+    
+    // Notebook drop zone  
+    if (typeof setupNbDropZone === 'function') setupNbDropZone();
+    
+    // Modal overlay closers
+    var mo = document.getElementById('modalOverlay');
+    if (mo) mo.addEventListener('click', function(e) { if (e.target === this && window.closeSaveModal) window.closeSaveModal(); });
+    var sno = document.getElementById('saveToNbOverlay');
+    if (sno) sno.addEventListener('click', function(e) { if (e.target === this && window.closeSaveToNotebook) window.closeSaveToNotebook(); });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+// Signal that all functions are ready - flush queued calls
+window._ready = true;
+(window._q || []).forEach(function(item) {
+  if (typeof window[item[0]] === 'function') window[item[0]].apply(null, item[1]);
+});
+window._q = [];
+
+
+</body></html>`], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title+'.html');
   } else {
     const blob = new Blob([content.innerText], {type:'text/plain'});
@@ -1484,6 +1958,13 @@ window.resetQuiz = function resetQuiz() {
   btn.disabled = false;
   document.getElementById('quizGenerateBtnInner').textContent = 'GENERATE QUIZ';
 }
+
+
+
 </script>
+
+
+<!-- PANEL 4: NOTEBOOK -->
+
 </body>
 </html>
