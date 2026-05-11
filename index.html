@@ -1911,7 +1911,7 @@ window.doSaveToNotebook = function() {
   console.log('[NB] data keys:', Object.keys(data));
   if (!data[nbId]) {
  return; }
-  data[nbId].pages.push({ name: pageName, html: html, saved: Date.now() });
+  data[nbId].pages.push({ name: pageName, html: html, saved: Date.now(), theme: currentTheme });
   nbSave(data);
   window.closeSaveToNotebook();
   const btn = document.querySelector('#notesRendered .tool-btn:nth-child(3)');
