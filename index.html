@@ -1033,7 +1033,7 @@
       <button class="tool-btn" onclick="if(typeof window.showPagesView==='function'){window.showPagesView()}">← Back</button>
       <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <span class="notes-theme-label">Theme</span>
-      <select id="themeSelectPage" onchange="if(typeof window.setPageTheme==='function'){window.setPageTheme(this.value)}" class="notes-theme-select">
+      <select id="themeSelectPage" onchange="if(typeof window.setPageTheme==='function'){window.setPageTheme(this.value,true)}" class="notes-theme-select">
         <option value="dusk">Dusk</option>
         <option value="ember">Ember</option>
         <option value="syntax">Syntax</option>
@@ -1836,14 +1836,13 @@ window.openPage = function(idx) {
   const data = nbLoad();
   const page = data[currentNotebookId].pages[idx];
   if (!page) return;
+  window._currentPageIdx = idx;
   document.getElementById('nbPageTitle').textContent = page.name;
-  // Store the raw HTML — theme switching just swaps CSS vars, no re-parse needed
   window._currentPageHtml = page.html;
   document.getElementById('nbPageContent').innerHTML = page.html;
-  // Apply current theme CSS vars
-  window.setPageTheme(currentTheme);
-  const sel = document.getElementById('themeSelectPage');
-  if (sel) sel.value = currentTheme;
+  // Restore this page's saved theme, fall back to current colorize theme
+  const pageTheme = page.theme || currentTheme;
+  window.setPageTheme(pageTheme, false);
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'flex';
   nbPushState({ nbView: 'page', nbId: currentNotebookId });
@@ -2442,11 +2441,10 @@ window.importNotebook = function(file) {
   reader.readAsText(file);
 };
 
-window.setPageTheme = function(name) {
+window.setPageTheme = function(name, save) {
   if (!THEMES[name]) return;
   const sel = document.getElementById('themeSelectPage');
   if (sel) sel.value = name;
-  // Just swap CSS vars — the saved HTML already has correct class structure
   const th = THEMES[name];
   const root = document.documentElement;
   root.style.setProperty('--n-h1', th.h1);
@@ -2459,6 +2457,15 @@ window.setPageTheme = function(name) {
   root.style.setProperty('--n-summary-bg', th.sumBg);
   root.style.setProperty('--n-summary-border', th.sumBorder);
   root.style.setProperty('--n-summary-text', th.sumText);
+  // Persist theme choice to this page's data
+  if (save !== false && window._currentPageIdx !== undefined) {
+    const data = nbLoad();
+    const nb = data[currentNotebookId];
+    if (nb && nb.pages[window._currentPageIdx]) {
+      nb.pages[window._currentPageIdx].theme = name;
+      nbSave(data);
+    }
+  }
 };
 
 // ── HISTORY NAV ──
