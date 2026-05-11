@@ -1266,6 +1266,8 @@ window.switchTab = function switchTab(name) {
     setTimeout(function() {
       if (typeof window.showNotebookList === 'function') window.showNotebookList();
     }, 10);
+    // Push base state so first back press is instant
+    history.replaceState({ nbView: 'list' }, '');
   }
 }
 
@@ -1648,6 +1650,7 @@ window.showNotebookList = function() {
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'none';
   renderNotebookList();
+  history.replaceState({ nbView: 'list' }, '');
 };
 
 function renderNotebookList() {
@@ -1748,6 +1751,7 @@ window.openNotebook = function(id) {
   document.getElementById('nbPageView').style.display = 'none';
   reorderActive = false;
   renderPagesList();
+  nbPushState({ nbView: 'pages', nbId: id });
 };
 
 window.showPagesView = function() {
@@ -1842,6 +1846,7 @@ window.openPage = function(idx) {
   if (sel) sel.value = currentTheme;
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'flex';
+  nbPushState({ nbView: 'page', nbId: currentNotebookId });
 };
 
 window.deletePage = async function(idx) {
@@ -2455,6 +2460,30 @@ window.setPageTheme = function(name) {
   root.style.setProperty('--n-summary-border', th.sumBorder);
   root.style.setProperty('--n-summary-text', th.sumText);
 };
+
+// ── HISTORY NAV ──
+// Push a state whenever we navigate deeper in the notebook
+function nbPushState(state) {
+  history.pushState(state, '');
+}
+
+// Intercept browser back button
+window.addEventListener('popstate', function(e) {
+  // Determine where we are now and go one level up
+  const pageView = document.getElementById('nbPageView');
+  const pagesView = document.getElementById('nbPagesView');
+  const notebookTab = document.getElementById('panel-notebook');
+  if (!notebookTab || !notebookTab.classList.contains('active')) return;
+  if (pageView && pageView.style.display !== 'none') {
+    // currently on a page — go back to pages list
+    history.pushState({ nbView: 'pages' }, '');
+    window.showPagesView();
+  } else if (pagesView && pagesView.style.display !== 'none') {
+    // currently on pages list — go back to notebook list
+    history.pushState({ nbView: 'list' }, '');
+    window.showNotebookList();
+  }
+});
 
 </script>
 
