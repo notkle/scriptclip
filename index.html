@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ScriptClip</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Epilogue:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
 <style>
   :root {
     --bg: #f5f0e8;
@@ -60,7 +60,7 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: 'Epilogue', sans-serif;
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -96,7 +96,7 @@
   .logo-bar:nth-child(5) { width: 4px; height: 22px; }
 
   .logo-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
     font-size: 12px; font-weight: 700;
     letter-spacing: 3.5px; text-transform: uppercase;
     color: var(--ink); transition: color 0.3s;
@@ -106,7 +106,7 @@
   .theme-toggle {
     background: none; border: 1px solid var(--border);
     border-radius: 20px; padding: 5px 12px;
-    font-family: 'Syne', sans-serif; font-size: 9px;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 9px;
     letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s;
   }
@@ -123,7 +123,7 @@
   }
 
   .tab {
-    font-family: 'Syne', sans-serif; font-size: 13px;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 13px;
     font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--muted); padding: 0 0 14px; margin-right: 32px;
     cursor: pointer; border-bottom: 2px solid transparent;
@@ -146,7 +146,7 @@
     width: 100%; background: #2e2c2a; color: #c8c4bc;
     border: 1px solid #3e3c38;
     border-radius: 4px; padding: 20px 24px;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
     transition: transform 0.12s ease, background 0.25s ease, color 0.25s, border-color 0.25s;
     -webkit-appearance: none;
@@ -176,7 +176,7 @@
 
   .steps-wrap { margin-top: 48px; width: 100%; }
   .steps-label {
-    font-family: 'Syne', sans-serif; font-size: 8px;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 8px;
     letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--muted); text-align: center; margin-bottom: 16px; transition: color 0.3s;
   }
@@ -185,7 +185,7 @@
   .step-num {
     width: 20px; height: 20px; border: 1px solid var(--muted); border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 9px; font-weight: 700;
     color: var(--ink); flex-shrink: 0; transition: border-color 0.3s, color 0.3s;
   }
   .step-label { font-size: 9px; color: var(--ink); text-align: center; line-height: 1.5; opacity: 0.6; transition: color 0.3s, opacity 0.3s; }
@@ -198,7 +198,7 @@
 
   .tool-btn {
     background: none; border: 1px solid var(--border); border-radius: 4px;
-    padding: 8px 14px; font-family: 'Syne', sans-serif; font-size: 9px;
+    padding: 8px 14px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 9px;
     font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s; flex-shrink: 0;
   }
@@ -216,7 +216,7 @@
   .render-btn {
     width: 100%; background: #2e2c2a; color: #c8c4bc;
     border: 1px solid #3e3c38; border-radius: 4px; padding: 15px;
-    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
     transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.12s; flex-shrink: 0;
   }
@@ -232,7 +232,7 @@
   .notes-textarea {
     width: 100%; min-height: 200px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 6px; padding: 16px;
-    font-family: 'Epilogue', sans-serif; font-size: 13px; color: var(--ink);
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif; font-size: 13px; color: var(--ink);
     resize: vertical; outline: none; line-height: 1.6;
     transition: border-color 0.2s, background 0.3s, color 0.3s; flex-shrink: 0;
   }
@@ -257,7 +257,7 @@
 
   /* ── NOTE TYPOGRAPHY ── */
   .notes-content h1 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
     font-size: 22px; font-weight: 800;
     letter-spacing: -0.3px; text-transform: none;
     color: var(--n-heading);
@@ -271,7 +271,7 @@
   .notes-content h1:first-child { margin-top: 0; }
 
   .notes-content h2 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
     font-size: 16px; font-weight: 700;
     color: var(--ink); margin: 24px 0 10px;
     letter-spacing: -0.2px;
@@ -280,7 +280,7 @@
   [data-theme="dark"] .notes-content h2 { color: var(--n-h2); }
 
   .notes-content h3 {
-    font-family: 'Epilogue', sans-serif;
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
     font-size: 14px; font-weight: 600;
     color: var(--muted); margin: 16px 0 8px;
     transition: color 0.3s;
@@ -360,7 +360,7 @@
   .notes-content th {
     background: var(--n-table-head-bg);
     color: var(--n-heading);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
     font-size: 9px; font-weight: 700;
     letter-spacing: 1.5px; text-transform: uppercase;
     padding: 10px 14px; text-align: left;
@@ -396,7 +396,7 @@
     transition: background 0.3s;
   }
   .modal-title {
-    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 700;
     letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--ink); margin-bottom: 16px; transition: color 0.3s;
   }
@@ -404,14 +404,14 @@
   .modal-filename-wrap { margin-bottom: 16px; }
   .modal-filename-label {
     display: block;
-    font-family: 'Syne', sans-serif; font-size: 8px;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 8px;
     font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     color: var(--muted); margin-bottom: 7px; transition: color 0.3s;
   }
   .modal-filename-input {
     width: 100%; background: var(--surface);
     border: 1px solid var(--border); border-radius: 5px;
-    padding: 10px 12px; font-family: 'Epilogue', sans-serif;
+    padding: 10px 12px; font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
     font-size: 13px; color: var(--ink); outline: none;
     transition: border-color 0.2s, background 0.3s, color 0.3s;
   }
@@ -425,18 +425,18 @@
   .modal-opt:hover { border-color: var(--n-heading); }
   .modal-opt.selected { border-color: var(--n-heading); background: color-mix(in srgb, var(--n-heading) 8%, transparent); }
   .modal-opt-icon { font-size: 18px; }
-  .modal-opt-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--ink); transition: color 0.3s; }
+  .modal-opt-label { font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--ink); transition: color 0.3s; }
   .modal-opt-desc { font-size: 10px; color: var(--muted); margin-top: 2px; transition: color 0.3s; }
   .modal-actions { display: flex; gap: 8px; }
   .modal-cancel {
     flex: 1; padding: 11px; background: none; border: 1px solid var(--border);
-    border-radius: 4px; font-family: 'Syne', sans-serif; font-size: 10px;
+    border-radius: 4px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px;
     font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s;
   }
   .modal-save {
     flex: 2; padding: 11px; background: var(--n-heading); border: none;
-    border-radius: 4px; font-family: 'Syne', sans-serif; font-size: 10px;
+    border-radius: 4px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px;
     font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: #fff; cursor: pointer; transition: background 0.3s;
   }
@@ -459,7 +459,7 @@
   .quiz-setup-inner { max-width: 520px; margin: 0 auto; }
 
   .quiz-setup-title {
-    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 18px; font-weight: 800;
     color: var(--ink); margin-bottom: 6px; transition: color 0.3s;
   }
   [data-theme="dark"] .quiz-setup-title { color: var(--n-h1); }
@@ -467,7 +467,7 @@
   .quiz-setup-sub { font-size: 12px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
 
   .quiz-field-label {
-    font-family: 'Syne', sans-serif; font-size: 8px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 8px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase;
     color: var(--muted); margin-bottom: 8px; transition: color 0.3s;
   }
@@ -477,14 +477,14 @@
   .quiz-input {
     flex: 1; background: var(--surface); border: 1px solid var(--border);
     border-radius: 5px; padding: 11px 14px;
-    font-family: 'Epilogue', sans-serif; font-size: 13px; color: var(--ink);
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif; font-size: 13px; color: var(--ink);
     outline: none; transition: border-color 0.2s, background 0.3s, color 0.3s;
   }
   .quiz-input:focus { border-color: var(--n-h2); }
 
   .quiz-apikey-toggle {
     background: none; border: 1px solid var(--border); border-radius: 5px;
-    padding: 0 14px; font-family: 'Syne', sans-serif; font-size: 9px;
+    padding: 0 14px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 9px;
     font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
@@ -496,7 +496,7 @@
 
   .quiz-source-btn {
     background: none; border: 1px solid var(--border); border-radius: 4px;
-    padding: 8px 14px; font-family: 'Syne', sans-serif; font-size: 9px;
+    padding: 8px 14px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 9px;
     font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s;
   }
@@ -515,7 +515,7 @@
   .quiz-textarea {
     width: 100%; min-height: 160px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 6px; padding: 14px;
-    font-family: 'Epilogue', sans-serif; font-size: 13px; color: var(--ink);
+    font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif; font-size: 13px; color: var(--ink);
     resize: vertical; outline: none; line-height: 1.6; margin-bottom: 14px;
     transition: border-color 0.2s, background 0.3s, color 0.3s;
   }
@@ -529,11 +529,11 @@
   }
   .quiz-drop-area.dragover { border-color: var(--n-h2); background: color-mix(in srgb, var(--n-h2) 8%, transparent); }
   .quiz-drop-icon { font-size: 24px; margin-bottom: 8px; opacity: 0.5; }
-  .quiz-drop-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .quiz-drop-label { font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
   .quiz-drop-sub { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
   .quiz-drop-btn {
     display: inline-block; background: none; border: 1px solid var(--border);
-    border-radius: 4px; padding: 7px 16px; font-family: 'Syne', sans-serif;
+    border-radius: 4px; padding: 7px 16px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
     font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--muted); cursor: pointer; transition: all 0.2s;
   }
@@ -546,18 +546,18 @@
     width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 4px;
     background: none; color: var(--ink); font-size: 16px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; font-family: 'Syne', sans-serif;
+    transition: all 0.2s; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
   }
   .quiz-count-btn:hover { border-color: var(--n-h2); color: var(--n-h2); }
   .quiz-count-display {
-    font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: 800;
     color: var(--n-h2); min-width: 40px; text-align: center;
   }
 
   .quiz-generate-btn {
     width: 100%; background: #2e2c2a; color: #c8c4bc;
     border: 1px solid #3e3c38; border-radius: 4px; padding: 16px;
-    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
     transition: all 0.2s;
   }
@@ -570,7 +570,7 @@
   /* active quiz */
   .quiz-active { display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 20px 28px 28px; }
   .quiz-active-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-shrink: 0; }
-  .quiz-progress-text { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+  .quiz-progress-text { font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
 
   .quiz-questions { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; padding-right: 4px; }
 
@@ -580,7 +580,7 @@
   }
 
   .quiz-q-type {
-    font-family: 'Syne', sans-serif; font-size: 8px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 8px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
     transition: color 0.3s;
   }
@@ -603,14 +603,14 @@
   .quiz-mc-opt.correct { border-color: var(--n-summary-border); background: color-mix(in srgb, var(--n-summary-border) 10%, transparent); color: var(--n-summary-text); }
   .quiz-mc-opt.wrong { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
   .quiz-mc-letter {
-    font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px; font-weight: 700;
     color: var(--muted); flex-shrink: 0; margin-top: 1px;
   }
 
   /* fill in blank / short answer */
   .quiz-text-input {
     width: 100%; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 5px; padding: 10px 14px; font-family: 'Epilogue', sans-serif;
+    border-radius: 5px; padding: 10px 14px; font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
     font-size: 13px; color: var(--ink); outline: none;
     transition: border-color 0.2s, background 0.3s, color 0.3s;
   }
@@ -620,7 +620,7 @@
   .quiz-tf-wrap { display: flex; gap: 10px; }
   .quiz-tf-btn {
     flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
-    background: none; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    background: none; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase; color: var(--muted); cursor: pointer;
     transition: all 0.2s;
   }
@@ -632,7 +632,7 @@
   .quiz-submit-btn {
     margin-top: 20px; width: 100%; flex-shrink: 0;
     background: var(--accent); color: #fff; border: none; border-radius: 4px;
-    padding: 16px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    padding: 16px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
     transition: opacity 0.2s, transform 0.12s;
   }
@@ -644,10 +644,10 @@
   .quiz-results { flex: 1; overflow-y: auto; padding: 28px; }
   .quiz-results-header { text-align: center; margin-bottom: 28px; }
   .quiz-score-num {
-    font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 64px; font-weight: 800;
     color: var(--n-h2); line-height: 1;
   }
-  .quiz-score-denom { font-family: 'Syne', sans-serif; font-size: 28px; color: var(--muted); }
+  .quiz-score-denom { font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 28px; color: var(--muted); }
   .quiz-score-label { font-size: 13px; color: var(--muted); margin-top: 8px; font-style: italic; }
 
   .quiz-feedback-list { display: flex; flex-direction: column; gap: 16px; }
@@ -1446,7 +1446,7 @@ window.showResults = function showResults(results, userAnswers) {
     const q = quizData[idx];
     const item = document.createElement('div');
     item.className = `quiz-feedback-item ${r.correct ? 'pass' : 'fail'}`;
-    const scoreTag = r.score !== undefined ? `<span class="quiz-score-tag" style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-left:8px;background:${r.correct ? 'color-mix(in srgb,var(--n-summary-border) 15%,transparent)' : 'color-mix(in srgb,var(--accent) 15%,transparent)'};color:${r.correct ? 'var(--n-summary-text)' : 'var(--accent)'}">${r.score}/10</span>` : '';
+    const scoreTag = r.score !== undefined ? `<span class="quiz-score-tag" style="font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-left:8px;background:${r.correct ? 'color-mix(in srgb,var(--n-summary-border) 15%,transparent)' : 'color-mix(in srgb,var(--accent) 15%,transparent)'};color:${r.correct ? 'var(--n-summary-text)' : 'var(--accent)'}">${r.score}/10</span>` : '';
     item.innerHTML = `
       <div class="quiz-feedback-header" onclick="window.toggleFeedback(${idx})">
         <span class="quiz-feedback-icon">${r.correct ? '✓' : '✗'}</span>
