@@ -1038,6 +1038,7 @@
         <option value="ember">Ember</option>
         <option value="syntax">Syntax</option>
       </select>
+      <button class="tool-btn" onclick="if(typeof window.loadCurrentPageToQuiz==='function'){window.loadCurrentPageToQuiz()}">Quiz</button>
     </div>
     <div class="notes-content nb-page-content" id="nbPageContent"></div>
   </div>
@@ -2491,6 +2492,18 @@ window.addEventListener('popstate', function(e) {
     window.showNotebookList();
   }
 });
+
+window.loadCurrentPageToQuiz = function() {
+  if (!window._currentPageHtml) return;
+  const div = document.createElement('div');
+  div.innerHTML = window._currentPageHtml;
+  document.getElementById('quizPasteArea').value = div.innerText;
+  const data = nbLoad();
+  const nb = data[currentNotebookId];
+  const page = nb && nb.pages[window._currentPageIdx];
+  document.getElementById('quizSourceStatus').textContent = page ? '✓ Loaded: ' + page.name : '✓ Page loaded';
+  window.switchTab('quiz');
+};
 
 </script>
 
