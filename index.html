@@ -1833,14 +1833,11 @@ window.openPage = function(idx) {
   const page = data[currentNotebookId].pages[idx];
   if (!page) return;
   document.getElementById('nbPageTitle').textContent = page.name;
-  // Extract plain text from stored HTML to enable re-theming
-  const div = document.createElement('div');
-  div.innerHTML = page.html;
-  window._currentPageRaw = div.innerText;
-  // Render with current theme
-  document.getElementById('nbPageContent').innerHTML = parseMarkdown(window._currentPageRaw);
+  // Store the raw HTML — theme switching just swaps CSS vars, no re-parse needed
+  window._currentPageHtml = page.html;
+  document.getElementById('nbPageContent').innerHTML = page.html;
+  // Apply current theme CSS vars
   window.setPageTheme(currentTheme);
-  // Sync page theme dropdown to current theme
   const sel = document.getElementById('themeSelectPage');
   if (sel) sel.value = currentTheme;
   document.getElementById('nbPagesView').style.display = 'none';
@@ -2442,10 +2439,9 @@ window.importNotebook = function(file) {
 
 window.setPageTheme = function(name) {
   if (!THEMES[name]) return;
-  // Sync dropdown
   const sel = document.getElementById('themeSelectPage');
   if (sel) sel.value = name;
-  // Apply CSS vars
+  // Just swap CSS vars — the saved HTML already has correct class structure
   const th = THEMES[name];
   const root = document.documentElement;
   root.style.setProperty('--n-h1', th.h1);
@@ -2458,12 +2454,6 @@ window.setPageTheme = function(name) {
   root.style.setProperty('--n-summary-bg', th.sumBg);
   root.style.setProperty('--n-summary-border', th.sumBorder);
   root.style.setProperty('--n-summary-text', th.sumText);
-  // Re-parse page HTML through parseMarkdown to get clean re-colored output
-  // The page HTML was saved as rendered HTML — extract text and re-render
-  const nc = document.getElementById('nbPageContent');
-  if (nc && window._currentPageRaw) {
-    nc.innerHTML = parseMarkdown(window._currentPageRaw);
-  }
 };
 
 </script>
