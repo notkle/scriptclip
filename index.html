@@ -2948,7 +2948,8 @@ window.importFromPastedJson = function() {
 
   var inner = document.createElement('div');
   inner.id = 'scReaderContent';
-  inner.style.cssText = 'padding:28px 20px 48px;';
+  inner.className = 'notes-content';
+  inner.style.cssText = 'padding:28px 20px 48px;flex:none;border:none;border-radius:0;';
   overlay.appendChild(inner);
 
   function openReader(sourceId) {
@@ -2994,26 +2995,36 @@ window.importFromPastedJson = function() {
 
 // ── RESTORE STATE ON REFRESH ──
 function restoreSessionState() {
+  // Read all values FIRST before any function calls that might overwrite them
   const tab = sessionStorage.getItem('sc_tab') || 'builder';
   const nbView = sessionStorage.getItem('sc_nb_view');
   const nbId = sessionStorage.getItem('sc_nb_id');
   const pageIdx = sessionStorage.getItem('sc_page_idx');
 
-  // Switch to saved tab
-  window.switchTab(tab);
+  // Activate tab visually without triggering sessionStorage reset
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  var tabEl = document.getElementById('tab-' + tab);
+  var panelEl = document.getElementById('panel-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (panelEl) panelEl.classList.add('active');
 
-  if (tab === 'notebook' && nbId) {
-    // Restore notebook navigation depth
+  if (tab === 'notebook') {
     setTimeout(function() {
-      if (nbView === 'pages' || nbView === 'page') {
-        window.openNotebook(nbId);
-      }
-      if (nbView === 'page' && pageIdx !== null) {
+      if (typeof window.showNotebookList === 'function') window.showNotebookList();
+      if (nbId) {
         setTimeout(function() {
-          window.openPage(parseInt(pageIdx));
+          if (nbView === 'pages' || nbView === 'page') {
+            window.openNotebook(nbId);
+          }
+          if (nbView === 'page' && pageIdx !== null) {
+            setTimeout(function() {
+              window.openPage(parseInt(pageIdx));
+            }, 80);
+          }
         }, 50);
       }
-    }, 30);
+    }, 20);
   }
 }
 
