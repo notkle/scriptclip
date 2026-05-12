@@ -1910,7 +1910,7 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
 </div>
 
 <!-- AI HIGHLIGHT POPUP -->
-<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
   <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Highlight</button>
 </div>
 </body></html>`], {type:'text/html'});
@@ -3122,7 +3122,7 @@ window.importFromPastedJson = function() {
   var inner = document.createElement('div');
   inner.id = 'scReaderContent';
   inner.className = 'notes-content';
-  inner.style.cssText = 'padding:28px 20px 48px;flex:none;border:none;border-radius:0;';
+  inner.style.cssText = 'padding:28px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;';
   overlay.appendChild(inner);
 
   function openReader(sourceId) {
@@ -3417,14 +3417,25 @@ function showAiHighlightPopup(x, y, selected, context) {
   _aiHighlightContext = context;
   var popup = document.getElementById('aiHighlightPopup');
   popup.style.display = 'block';
-  // Position near selection, keep within viewport
-  var pw = 140, ph = 36;
-  var vw = window.innerWidth, vh = window.innerHeight;
-  var left = Math.min(x, vw - pw - 10);
-  var top = y - ph - 8;
-  if (top < 10) top = y + 20;
-  popup.style.left = left + 'px';
-  popup.style.top = top + 'px';
+  // On mobile: anchor to bottom center above iOS native toolbar
+  var vw = window.innerWidth;
+  var isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    popup.style.left = '50%';
+    popup.style.transform = 'translateX(-50%)';
+    popup.style.bottom = '90px';
+    popup.style.top = 'auto';
+  } else {
+    popup.style.transform = '';
+    popup.style.bottom = 'auto';
+    var pw = 160, ph = 36;
+    var vh = window.innerHeight;
+    var left = Math.min(x, vw - pw - 10);
+    var top = y - ph - 8;
+    if (top < 10) top = y + 20;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+  }
 }
 
 function hideAiHighlightPopup() {
@@ -3611,7 +3622,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- AI HIGHLIGHT POPUP -->
-<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
   <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Highlight</button>
 </div>
 </body>
