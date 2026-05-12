@@ -3290,7 +3290,11 @@ function ytUpdatePlayBtn() {
   var btn = document.getElementById('ytPlayBtn');
   if (btn) btn.textContent = ytPlaying ? '❙❙' : '▶';
   var tab = document.getElementById('ytTab');
-  if (tab) tab.textContent = document.getElementById('ytPlayerWrap').classList.contains('open') ? '◀' : '▶';
+  if (tab) {
+    tab.textContent = document.getElementById('ytPlayerWrap').classList.contains('open') ? '◀' : '▶';
+    tab.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
+    tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
+  }
 }
 
 window.ytLoad = function() {
