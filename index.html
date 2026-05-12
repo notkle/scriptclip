@@ -3293,6 +3293,7 @@ window.ytTogglePlay = function() {
   if (!ytVideoId) { window.ytLoad(); return; }
   if (ytPlaying) {
     // Pause: remove iframe, remember position
+    localStorage.setItem('sc_yt_pos', ytCurrentSec);
     document.getElementById('ytIframeWrap').innerHTML = '';
     ytPlaying = false;
     clearInterval(ytInterval);
@@ -3345,7 +3346,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (saved) {
     document.getElementById('ytUrlInput').value = saved;
     var id = extractYtId(saved);
-    if (id) { ytVideoId = id; }
+    if (id) {
+      ytVideoId = id;
+      var savedPos = localStorage.getItem('sc_yt_pos');
+      if (savedPos) ytCurrentSec = parseInt(savedPos) || 0;
+    }
   }
 
 
@@ -3354,6 +3359,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
       if (ytPlaying) {
+        localStorage.setItem('sc_yt_pos', ytCurrentSec);
         document.getElementById('ytIframeWrap').innerHTML = '';
         ytPlaying = false;
         ytUpdatePlayBtn();
