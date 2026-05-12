@@ -1908,6 +1908,11 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
     </div>
   </div>
 </div>
+
+<!-- AI HIGHLIGHT POPUP -->
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+  <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Highlight</button>
+</div>
 </body></html>`], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title+'.html');
   } else {
@@ -3391,6 +3396,107 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ── AI HIGHLIGHT ──
+var _aiHighlightText = '';
+var _aiHighlightContext = '';
+
+function getSelectionContext(selection) {
+  if (!selection || selection.isCollapsed) return '';
+  var range = selection.getRangeAt(0);
+  var container = range.commonAncestorContainer;
+  // Walk up to find a block-level parent for context
+  var block = container.nodeType === 3 ? container.parentElement : container;
+  while (block && !['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName)) {
+    block = block.parentElement;
+  }
+  return block ? block.innerText || block.textContent : '';
+}
+
+function showAiHighlightPopup(x, y, selected, context) {
+  _aiHighlightText = selected;
+  _aiHighlightContext = context;
+  var popup = document.getElementById('aiHighlightPopup');
+  popup.style.display = 'block';
+  // Position near selection, keep within viewport
+  var pw = 140, ph = 36;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var left = Math.min(x, vw - pw - 10);
+  var top = y - ph - 8;
+  if (top < 10) top = y + 20;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+}
+
+function hideAiHighlightPopup() {
+  document.getElementById('aiHighlightPopup').style.display = 'none';
+}
+
+window.aiHighlightCopy = function() {
+  var prompt = 'Explain the following term or phrase in simple terms:\n\n' +
+    '"' + _aiHighlightText.trim() + '"\n\n' +
+    (_aiHighlightContext && _aiHighlightContext.trim() !== _aiHighlightText.trim()
+      ? 'Context from study notes:\n"' + _aiHighlightContext.trim() + '"\n\n'
+      : '') +
+    'Give a clear, concise explanation of what this means and why it matters in this context. ' +
+    'If it is a foreign language term, include pronunciation and literal meaning.';
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt).then(function() {
+      window.toast('Prompt copied — paste into Claude or Gemini');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = prompt;
+    ta.style.cssText = 'position:fixed;top:-9999px';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    window.toast('Prompt copied — paste into Claude or Gemini');
+  }
+  hideAiHighlightPopup();
+  window.getSelection().removeAllRanges();
+};
+
+// Wire up selection events on notes content areas
+function setupAiHighlight(elId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+
+  el.addEventListener('mouseup', function(e) {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
+    var context = getSelectionContext(sel);
+    showAiHighlightPopup(e.clientX, e.clientY, sel.toString(), context);
+  });
+
+  el.addEventListener('touchend', function(e) {
+    setTimeout(function() {
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
+      var context = getSelectionContext(sel);
+      var touch = e.changedTouches[0];
+      showAiHighlightPopup(touch.clientX, touch.clientY, sel.toString(), context);
+    }, 100);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setupAiHighlight('notesContent');
+  setupAiHighlight('nbPageContent');
+  setupAiHighlight('scReaderContent');
+
+  // Hide popup on tap/click outside
+  document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('aiHighlightPopup');
+    if (popup && !popup.contains(e.target)) hideAiHighlightPopup();
+  });
+  document.addEventListener('touchstart', function(e) {
+    var popup = document.getElementById('aiHighlightPopup');
+    if (popup && popup.style.display !== 'none' && !popup.contains(e.target)) hideAiHighlightPopup();
+  }, { passive: true });
+});
+
 </script>
 
 <!-- NOTEBOOK NAME MODAL -->
@@ -3502,6 +3608,11 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
   </div>
+</div>
+
+<!-- AI HIGHLIGHT POPUP -->
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+  <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Highlight</button>
 </div>
 </body>
 </html>
