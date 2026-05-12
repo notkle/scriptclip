@@ -955,7 +955,7 @@
     #ytTab {
       width: 18px;
       background: var(--surface);
-      border: 1px solid var(--accent);
+      border: 1px solid var(--border);
       border-left: none;
       border-radius: 0 6px 6px 0;
       padding: 10px 3px;
@@ -1023,6 +1023,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      margin-top: 6px;
       margin-bottom: 8px;
       width: 100%;
     }
@@ -1351,8 +1352,8 @@
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
-        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:3px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:5px;position:relative;">
-          <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.5s linear;pointer-events:none;"></div>
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
+          <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
         <div id="ytTimes" style="display:flex;justify-content:space-between;">
           <span id="ytCurrent">0:00</span>
@@ -1904,7 +1905,30 @@ function renderYtHistory() {
   ytHistory.forEach(function(item, idx) {
     var row = document.createElement('div');
     row.style.cssText = 'padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:10px;font-family:system-ui,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-    row.textContent = (idx + 1) + '. ' + item.title;
+    // Star button
+    var star = document.createElement('span');
+    star.textContent = item.fav ? '★' : '☆';
+    star.style.cssText = 'cursor:pointer;flex-shrink:0;font-size:11px;color:' + (item.fav ? 'var(--accent)' : 'var(--muted)') + ';padding-right:6px;';
+    star.onclick = function(e) {
+      e.stopPropagation();
+      item.fav = !item.fav;
+      star.textContent = item.fav ? '★' : '☆';
+      star.style.color = item.fav ? 'var(--accent)' : 'var(--muted)';
+      // Persist
+      var favs2 = ytHistory.filter(function(h) { return h.fav; });
+      var nonFavs2 = ytHistory.filter(function(h) { return !h.fav; });
+      if (nonFavs2.length > 5) nonFavs2 = nonFavs2.slice(0, 5);
+      ytHistory = favs2.concat(nonFavs2);
+      localStorage.setItem('sc_yt_history', JSON.stringify(ytHistory));
+    };
+    // Title
+    var label = document.createElement('span');
+    label.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;';
+    label.textContent = item.title;
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.appendChild(star);
+    row.appendChild(label);
     row.addEventListener('click', function() {
       document.getElementById('ytUrlInput').value = item.url;
       ytVideoId = item.id;
@@ -2637,9 +2661,10 @@ function ytStartTimer() {
 function ytUpdatePlayBtn() {
   var btn = document.getElementById('ytPlayBtn');
   if (btn) btn.textContent = ytPlaying ? '\u275a\u275a' : '\u25b6';
+  var wrap = document.getElementById('ytPlayerWrap');
   var tab = document.getElementById('ytTab');
   if (tab) {
-    tab.textContent = document.getElementById('ytPlayerWrap') && document.getElementById('ytPlayerWrap').classList.contains('open') ? '\u25c0' : '\u25b6';
+    tab.textContent = wrap && wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
     tab.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
     tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
   }
@@ -2661,9 +2686,22 @@ function fetchYtInfo(id) {
       if (titleEl) titleEl.textContent = info.title;
       if (_ytFromUrl) {
         var url = document.getElementById('ytUrlInput').value.trim();
-        ytHistory = ytHistory.filter(function(h) { return h.id !== id; });
-        ytHistory.unshift({ id: id, title: info.title, url: url });
-        if (ytHistory.length > 5) ytHistory = ytHistory.slice(0, 5);
+        // Don't overwrite if it exists as a favorite
+        var existing = ytHistory.find(function(h) { return h.id === id; });
+        if (existing && existing.fav) {
+          // Already favorited - just move to top but keep fav status
+          ytHistory = ytHistory.filter(function(h) { return h.id !== id; });
+          existing.fav = true;
+          ytHistory.unshift(existing);
+        } else {
+          ytHistory = ytHistory.filter(function(h) { return h.id !== id; });
+          ytHistory.unshift({ id: id, title: info.title, url: url, fav: false });
+        }
+        // Only trim non-favorites beyond 5
+        var favs = ytHistory.filter(function(h) { return h.fav; });
+        var nonFavs = ytHistory.filter(function(h) { return !h.fav; });
+        if (nonFavs.length > 5) nonFavs = nonFavs.slice(0, 5);
+        ytHistory = favs.concat(nonFavs);
         localStorage.setItem('sc_yt_history', JSON.stringify(ytHistory));
         ytLoopIdx = 0;
         _ytFromUrl = false;
