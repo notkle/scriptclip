@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ScriptClip</title>
 
@@ -289,6 +289,7 @@
   .notes-content {
     flex: 1; overflow-y: auto; overflow-x: hidden;
     word-break: break-word; overflow-wrap: break-word;
+   
     border: 1px solid var(--border); border-radius: 8px;
     padding: 32px 28px; background: var(--bg);
     line-height: 1.8; font-size: 14px;
@@ -901,6 +902,44 @@
       font-size: 16px !important;
     }
   }
+
+  /* Custom zoom container */
+  .zoomable-wrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .zoomable-inner {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 28px;
+    box-sizing: border-box;
+    transform-origin: top left;
+    transition: transform 0.25s ease;
+    will-change: transform;
+  }
+  .zoomable-inner.zoomed {
+    overflow-x: hidden;
+  }
+  .zoom-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-size: 9px;
+    font-family: system-ui,-apple-system,sans-serif;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
@@ -984,7 +1023,7 @@
         <option value="syntax">Syntax</option>
       </select>
     </div>
-    <div class="notes-content" id="notesContent"></div>
+    <div class="zoomable-wrap" id="notesZoomWrap"><div class="zoomable-inner notes-content" id="notesContent"></div><div class="zoom-hint" id="notesZoomHint">double-tap to zoom</div></div>
   </div>
 
 </div>
@@ -1130,7 +1169,7 @@
       </select>
       <button class="tool-btn" onclick="if(typeof window.loadCurrentPageToQuiz==='function'){window.loadCurrentPageToQuiz()}">Quiz</button>
     </div>
-    <div class="notes-content nb-page-content" id="nbPageContent"></div>
+    <div class="zoomable-wrap" id="pageZoomWrap"><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div><div class="zoom-hint" id="pageZoomHint">double-tap to zoom</div></div>
   </div>
 
 </div>
@@ -2878,6 +2917,78 @@ window.importFromPastedJson = function() {
     window.toast('Invalid JSON: ' + e.message);
   }
 };
+
+// ── DOUBLE-TAP ZOOM ──
+function setupZoom(wrapperId, innerId, hintId) {
+  const wrap = document.getElementById(wrapperId);
+  const inner = document.getElementById(innerId);
+  const hint = document.getElementById(hintId);
+  if (!wrap || !inner) return;
+
+  let lastTap = 0;
+  let isZoomed = false;
+  let scale = 1;
+
+  function getScale() {
+    // Scale to fill wrap width with padding accounted for
+    const wrapW = wrap.clientWidth;
+    const innerW = inner.scrollWidth;
+    return Math.max(wrapW / innerW * wrapW / (wrapW - 56), 1.6);
+  }
+
+  function zoomIn() {
+    isZoomed = true;
+    scale = getScale();
+    inner.style.transform = 'scale(' + scale + ')';
+    inner.style.transformOrigin = 'top left';
+    inner.style.width = (100 / scale) + '%';
+    inner.style.overflowX = 'hidden';
+    if (hint) hint.style.opacity = '0';
+  }
+
+  function zoomOut() {
+    isZoomed = false;
+    scale = 1;
+    inner.style.transform = 'scale(1)';
+    inner.style.width = '100%';
+    inner.style.overflowX = 'hidden';
+    if (hint) hint.style.opacity = '0.6';
+  }
+
+  inner.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    const gap = now - lastTap;
+    if (gap < 300 && gap > 30) {
+      e.preventDefault();
+      if (isZoomed) { zoomOut(); } else { zoomIn(); }
+    }
+    lastTap = now;
+  }, { passive: false });
+
+  // Prevent horizontal scroll on wrap when zoomed
+  wrap.addEventListener('touchmove', function(e) {
+    if (isZoomed && e.touches.length === 1) {
+      // Allow only vertical movement
+      const touch = e.touches[0];
+      if (!this._lastY) { this._lastY = touch.clientY; this._lastX = touch.clientX; return; }
+      const dy = Math.abs(touch.clientY - this._lastY);
+      const dx = Math.abs(touch.clientX - this._lastX);
+      this._lastY = touch.clientY;
+      this._lastX = touch.clientX;
+      if (dx > dy) e.preventDefault();
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchstart', function() {
+    this._lastY = null; this._lastX = null;
+  }, { passive: true });
+}
+
+// Wire up both zoomable areas after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  setupZoom('notesZoomWrap', 'notesContent', 'notesZoomHint');
+  setupZoom('pageZoomWrap', 'nbPageContent', 'pageZoomHint');
+});
 
 </script>
 
