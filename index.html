@@ -2169,8 +2169,7 @@ window.openPage = function(idx) {
   sessionStorage.setItem('sc_nb_id', currentNotebookId);
   sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
   // Apply universal font size
-  var _nc = document.getElementById('nbPageContent');
-  if (_nc) _nc.style.fontSize = _nbFontSize + 'px';
+  applyNbFontSize();
 
   // If opened from search, scroll to match with temporary highlight only
   if (window._searchQuery) {
@@ -3526,9 +3525,19 @@ var _nbFontSize = parseInt(localStorage.getItem('sc_font_size')) || 15;
 window.nbFontAdj = function(delta) {
   _nbFontSize = Math.min(28, Math.max(10, _nbFontSize + delta));
   localStorage.setItem('sc_font_size', _nbFontSize);
-  var nc = document.getElementById('nbPageContent');
-  if (nc) nc.style.fontSize = _nbFontSize + 'px';
+  applyNbFontSize();
 };
+
+function applyNbFontSize() {
+  var nc = document.getElementById('nbPageContent');
+  if (!nc) return;
+  var s = _nbFontSize;
+  nc.style.fontSize = s + 'px';
+  // Scale headings proportionally relative to body size
+  var h1 = nc.querySelectorAll('h1'); h1.forEach(function(el){ el.style.fontSize = Math.round(s * 1.8) + 'px'; });
+  var h2 = nc.querySelectorAll('h2'); h2.forEach(function(el){ el.style.fontSize = Math.round(s * 1.35) + 'px'; });
+  var h3 = nc.querySelectorAll('h3'); h3.forEach(function(el){ el.style.fontSize = Math.round(s * 1.1) + 'px'; });
+}
 
 </script>
 
