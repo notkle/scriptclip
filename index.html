@@ -1005,7 +1005,9 @@
   <div class="nb-view" id="nbListView">
     <div class="nb-header" style="justify-content:flex-end;gap:10px">
       <input type="file" id="nbImportInput" accept=".json" style="display:none"/>
-      <button class="tool-btn" onclick="if(typeof window.triggerNbImport==='function'){window.triggerNbImport()}" title="Import notebook">↑ Import</button>
+      <button class="tool-btn" onclick="if(typeof window.openExportModal==='function'){window.openExportModal()}" title="Export notebook">↓ Export</button>
+      <button class="tool-btn" onclick="if(typeof window.triggerNbImport==='function'){window.triggerNbImport()}" title="Import file">↑ File</button>
+      <button class="tool-btn" onclick="if(typeof window.openPasteJson==='function'){window.openPasteJson()}" title="Paste JSON">↑ JSON</button>
       <button onclick="window.createNotebook()" id="nbCreateBtn"><span style="margin-bottom:1px">+</span></button>
     </div>
     <div class="nb-list" id="nbList"></div>
@@ -1772,6 +1774,14 @@ window.openNotebook = function(id) {
 window.showPagesView = function() {
   document.getElementById('nbPageView').style.display = 'none';
   document.getElementById('nbPagesView').style.display = 'flex';
+  // Always clear search and re-render full list
+  const inp = document.getElementById('nbSearchInput');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('nbSearchClear');
+  if (clr) clr.style.display = 'none';
+  const sts = document.getElementById('nbSearchStatus');
+  if (sts) sts.textContent = '';
+  renderPagesList();
 };
 
 function renderPagesList() {
@@ -2360,6 +2370,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (nbco) nbco.addEventListener('click', function(e){ if(e.target===this) window.closeNbColor(); });
   setupNbDropZone();
   // Import file input handler
+  var expo = document.getElementById('nbExportOverlay');
+  if (expo) expo.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+  var pjo = document.getElementById('nbPasteJsonOverlay');
+  if (pjo) pjo.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
   var sco = document.getElementById('scConfirmOverlay');
   if (sco) sco.addEventListener('click', function(e){ if(e.target===this && window.scConfirmResolve) window.scConfirmResolve(false); });
   var nbii = document.getElementById('nbImportInput');
@@ -2652,7 +2666,7 @@ window.nbSearch = function(query) {
       const el = document.createElement('div');
       el.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;transition:background 0.15s;border-top:' + (ri > 0 ? '1px solid var(--border)' : 'none') + ';background:var(--surface);';
       el.innerHTML =
-        '<span style="font-size:14px;flex-shrink:0;margin-top:1px">📄</span>' +
+        '' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:700;letter-spacing:0.5px">' + m.page.name + ' · ' + new Date(m.page.saved).toLocaleDateString() + '</div>' +
           '<div>' + row.label + '</div>' +
@@ -2712,6 +2726,87 @@ function highlightMatch(text, q) {
     text.slice(idx + q.length);
 }
 
+window.openExportModal = function() {
+  const data = nbLoad();
+  const ids = Object.keys(data);
+  if (ids.length === 0) { window.toast('No notebooks to export.'); return; }
+  const sel = document.getElementById('nbExportSelect');
+  sel.innerHTML = '';
+  ids.forEach(function(id) {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = data[id].name;
+    sel.appendChild(opt);
+  });
+  // Pre-fill filename from first notebook
+  updateExportFilename();
+  sel.onchange = updateExportFilename;
+  document.getElementById('nbExportOverlay').classList.add('open');
+};
+
+function updateExportFilename() {
+  const sel = document.getElementById('nbExportSelect');
+  const data = nbLoad();
+  const nb = data[sel.value];
+  if (nb) {
+    document.getElementById('nbExportFilename').value =
+      nb.name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'-');
+  }
+}
+
+window.doExportNotebook = function() {
+  const nbId = document.getElementById('nbExportSelect').value;
+  const filename = document.getElementById('nbExportFilename').value.trim() || 'notebook';
+  const data = nbLoad();
+  const nb = data[nbId];
+  if (!nb) return;
+  const exportObj = { _scriptclip: true, version: 1, notebook: nb };
+  const json = JSON.stringify(exportObj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename + '.scriptclip.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  document.getElementById('nbExportOverlay').classList.remove('open');
+  window.toast('Exported: ' + filename + '.scriptclip.json');
+};
+
+window.openPasteJson = function() {
+  document.getElementById('nbPasteJsonArea').value = '';
+  document.getElementById('nbPasteJsonOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('nbPasteJsonArea').focus(); }, 50);
+};
+
+window.importFromPastedJson = function() {
+  const raw = document.getElementById('nbPasteJsonArea').value.trim();
+  if (!raw) { window.toast('Please paste JSON text first.'); return; }
+  try {
+    const obj = JSON.parse(raw);
+    if (!obj._scriptclip || !obj.notebook) { window.toast('Not valid ScriptClip JSON.'); return; }
+    document.getElementById('nbPasteJsonOverlay').classList.remove('open');
+    const nb = obj.notebook;
+    const data = nbLoad();
+    const existingId = Object.keys(data).find(function(id){ return data[id].name === nb.name; });
+    if (existingId) {
+      data[existingId].pages = data[existingId].pages.concat(nb.pages || []);
+      if (nb.color) data[existingId].color = nb.color;
+      if (nb.icon) data[existingId].icon = nb.icon;
+      nbSave(data);
+      window.toast('Merged into: ' + nb.name);
+    } else {
+      const id = 'nb_' + Date.now();
+      data[id] = nb;
+      nbSave(data);
+      window.toast('Imported: ' + nb.name + ' (' + (nb.pages||[]).length + ' pages)');
+    }
+    renderNotebookList();
+  } catch(e) {
+    window.toast('Invalid JSON: ' + e.message);
+  }
+};
+
 </script>
 
 <!-- NOTEBOOK NAME MODAL -->
@@ -2759,6 +2854,38 @@ function highlightMatch(text, q) {
     <div class="modal-actions">
       <button class="modal-cancel" onclick="window.scConfirmResolve(false)">Cancel</button>
       <button class="modal-save" style="background:var(--accent)" onclick="window.scConfirmResolve(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="nbExportOverlay">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">Export Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Select Notebook</label>
+      <select id="nbExportSelect" class="modal-filename-input" style="cursor:pointer"></select>
+    </div>
+    <div class="modal-filename-wrap" style="margin-top:12px">
+      <label class="modal-filename-label">File Name</label>
+      <input type="text" id="nbExportFilename" class="modal-filename-input" spellcheck="false" autocorrect="off"/>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="document.getElementById('nbExportOverlay').classList.remove('open')">Cancel</button>
+      <button class="modal-save" onclick="if(typeof window.doExportNotebook==='function'){window.doExportNotebook()}">Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASTE JSON MODAL -->
+<div class="modal-overlay" id="nbPasteJsonOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Import from JSON Text</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:system-ui,sans-serif">Paste the contents of a .scriptclip.json file below</div>
+    <textarea id="nbPasteJsonArea" style="width:100%;min-height:140px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:var(--ink);resize:vertical;outline:none;box-sizing:border-box" placeholder='{"_scriptclip":true,"version":1,"notebook":{...}}'></textarea>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="modal-cancel" onclick="document.getElementById('nbPasteJsonOverlay').classList.remove('open')">Cancel</button>
+      <button class="modal-save" onclick="if(typeof window.importFromPastedJson==='function'){window.importFromPastedJson()}">Import</button>
     </div>
   </div>
 </div>
