@@ -3264,9 +3264,9 @@ function ytStartTimer() {
 
 function ytUpdatePlayBtn() {
   var btn = document.getElementById('ytPlayBtn');
-  if (btn) btn.textContent = ytPlaying ? '⏸' : '▶';
+  if (btn) btn.textContent = ytPlaying ? '❙❙' : '▶';
   var tab = document.getElementById('ytTab');
-  if (tab) tab.textContent = ytPlaying ? '⏸' : '▶';
+  if (tab) tab.textContent = document.getElementById('ytPlayerWrap').classList.contains('open') ? '◀' : '▶';
 }
 
 window.ytLoad = function() {
@@ -3324,7 +3324,10 @@ window.ytSeek = function(e) {
 };
 
 window.ytTogglePanel = function() {
-  document.getElementById('ytPlayerWrap').classList.toggle('open');
+  var wrap = document.getElementById('ytPlayerWrap');
+  wrap.classList.toggle('open');
+  var tab = document.getElementById('ytTab');
+  if (tab) tab.textContent = wrap.classList.contains('open') ? '◀' : '▶';
 };
 
 document.addEventListener('DOMContentLoaded', function() {
