@@ -955,7 +955,7 @@
     #ytTab {
       width: 18px;
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--accent);
       border-left: none;
       border-radius: 0 6px 6px 0;
       padding: 10px 3px;
@@ -979,7 +979,7 @@
       transition: width 0.25s ease;
       pointer-events: none;
       background: var(--surface);
-      border: 0px solid var(--border);
+      border: 0px solid var(--accent);
       border-left: none;
       border-radius: 8px 8px 8px 0;
     }
@@ -987,6 +987,7 @@
       width: 210px;
       pointer-events: all;
       border-width: 1px;
+      border-color: var(--accent);
     }
 
     #ytPlayerWrap.open #ytTab {
@@ -1342,8 +1343,8 @@
         <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px"></div>
         <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
         <div style="display:flex;gap:4px;width:100%">
-          <input type="text" id="ytSearchInput" placeholder="Search (e.g. jazz)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytSearch()}" style="flex:1;transition:border-color 0.2s"/>
-          <button class="ytBtn" id="ytSearchBtn" onclick="window.ytSearch()" style="flex-shrink:0;padding:4px 8px">▶</button>
+          <input type="text" id="ytSearchInput" placeholder="Search (e.g. jazz)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytSearch()}" style="flex:1;transition:border-color 0.2s;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;"/>
+          <button class="ytBtn" id="ytSearchBtn" onclick="window.ytSearch()" style="flex-shrink:0;padding:4px 10px;margin-left:4px">▶</button>
         </div>
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
@@ -2826,11 +2827,12 @@ window.ytSearch = function() {
       // Load the result
       var url = 'https://www.youtube.com/watch?v=' + res.videoId;
       document.getElementById('ytUrlInput').value = url;
+      localStorage.setItem('sc_yt_url', url);
       document.getElementById('ytUrlInput').style.borderColor = '';
       document.getElementById('ytSearchInput').style.borderColor = 'var(--accent)';
       ytVideoId = res.videoId;
       ytCurrentSec = 0; ytDurSec = 0;
-      _ytFromUrl = false; // don't save to history from search for now
+      _ytFromUrl = true; // save to history
       if (res.title) {
         var titleEl = document.getElementById('ytTitle');
         if (titleEl) titleEl.textContent = res.title;
@@ -2852,6 +2854,19 @@ window.ytSearch = function() {
 };
 
 </script>
+
+<!-- PASTE JSON MODAL -->
+<div class="modal-overlay" id="nbPasteJsonOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Import from JSON Text</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:system-ui,sans-serif">Paste the contents of a .scriptclip.json file below</div>
+    <textarea id="nbPasteJsonArea" style="width:100%;min-height:140px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:var(--ink);resize:vertical;outline:none;box-sizing:border-box"></textarea>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="modal-cancel" onclick="document.getElementById('nbPasteJsonOverlay').classList.remove('open')">Cancel</button>
+      <button class="modal-save" onclick="if(typeof window.importFromPastedJson==='function'){window.importFromPastedJson()}">Import</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
   </div>
