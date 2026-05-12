@@ -926,6 +926,7 @@
   .zoomable-inner.zoomed {
     overflow-x: hidden;
   }
+  @media (min-width: 769px) { .zoom-hint { display: none; } }
   .zoom-hint {
     font-size: 9px;
     font-family: system-ui,-apple-system,sans-serif;
@@ -1071,6 +1072,9 @@
     }
   }
   @media (min-width: 769px) { #ytPlayerWrap { display: none !important; } }
+
+
+  @media (max-width: 768px) { #nbFontControls { display: none !important; } }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
@@ -1293,6 +1297,10 @@
     <div class="nb-header">
       <button class="tool-btn" onclick="if(typeof window.showPagesView==='function'){window.showPagesView()}">← Back</button>
       <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+      <div id="nbFontControls" style="display:flex;align-items:center;gap:4px">
+        <button class="tool-btn" onclick="if(typeof window.nbFontAdj==='function'){window.nbFontAdj(-1)}" style="padding:4px 8px;font-size:13px;line-height:1">−</button>
+        <button class="tool-btn" onclick="if(typeof window.nbFontAdj==='function'){window.nbFontAdj(1)}" style="padding:4px 8px;font-size:13px;line-height:1">+</button>
+      </div>
       <span class="notes-theme-label">Theme</span>
       <select id="themeSelectPage" onchange="if(typeof window.setPageTheme==='function'){window.setPageTheme(this.value,true)}" class="notes-theme-select">
         <option value="dusk">Dusk</option>
@@ -2160,6 +2168,12 @@ window.openPage = function(idx) {
   sessionStorage.setItem('sc_nb_view', 'page');
   sessionStorage.setItem('sc_nb_id', currentNotebookId);
   sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
+  // Restore saved font size
+  var _fsData = nbLoad();
+  var _fsPage = _fsData[currentNotebookId] && _fsData[currentNotebookId].pages[idx];
+  _nbFontSize = (_fsPage && _fsPage.fontSize) || 15;
+  var _nc = document.getElementById('nbPageContent');
+  if (_nc) _nc.style.fontSize = _nbFontSize + 'px';
 
   // If opened from search, scroll to match with temporary highlight only
   if (window._searchQuery) {
@@ -3508,6 +3522,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (popup && popup.style.display !== 'none' && !popup.contains(e.target)) hideAiHighlightPopup();
   }, { passive: true });
 });
+
+// ── PAGE FONT SIZE (desktop only) ──
+var _nbFontSize = 15; // default px
+
+window.nbFontAdj = function(delta) {
+  _nbFontSize = Math.min(28, Math.max(10, _nbFontSize + delta));
+  var nc = document.getElementById('nbPageContent');
+  if (nc) nc.style.fontSize = _nbFontSize + 'px';
+  // Save per page
+  if (window._currentPageIdx !== undefined && currentNotebookId) {
+    var data = nbLoad();
+    var nb = data[currentNotebookId];
+    if (nb && nb.pages[window._currentPageIdx]) {
+      nb.pages[window._currentPageIdx].fontSize = _nbFontSize;
+      nbSave(data);
+    }
+  }
+};
 
 </script>
 
