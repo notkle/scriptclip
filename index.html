@@ -3207,6 +3207,7 @@ function restoreSessionState() {
 }
 
 // ── YOUTUBE AUDIO PLAYER (iframe embed, no API needed) ──
+var YT_API_KEY = ''; // paste your YouTube Data API key here
 var ytVideoId = null;
 var ytPlaying = false;
 var ytCurrentSec = 0;
@@ -3256,6 +3257,11 @@ function ytStartTimer() {
       return;
     }
     document.getElementById('ytCurrent').textContent = fmtTime(ytCurrentSec);
+    if (ytDurSec > 0) {
+      var pct = Math.min(100, ytCurrentSec / ytDurSec * 100);
+      var pb = document.getElementById('ytProgressBar');
+      if (pb) pb.style.width = pct + '%';
+    }
   }, 1000);
 }
 
@@ -3278,15 +3284,30 @@ window.ytLoad = function() {
   ytVideoId = id;
   ytCurrentSec = 0;
   localStorage.setItem('sc_yt_url', url);
-  // Fetch duration via oEmbed
-  fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + id + '&format=json')
-    .then(function(r) { return r.json(); })
-    .catch(function() { return {}; })
-    .then(function() {
-      // oEmbed doesn't give duration - use a rough estimate or leave at 0
-      ytDurSec = 0;
-      document.getElementById('ytDuration').textContent = '?:??';
-    });
+  // Fetch video info via worker
+  fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'ytInfo', videoId: id })
+  })
+  .then(function(r) { return r.json(); })
+  .catch(function() { return {}; })
+  .then(function(info) {
+    if (info.title) {
+      var titleEl = document.getElementById('ytTitle');
+      if (titleEl) titleEl.textContent = info.title;
+    }
+    if (info.duration) {
+      // Parse ISO 8601 duration e.g. PT4M33S
+      var m = info.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (m) {
+        var h = parseInt(m[1] || 0);
+        var min = parseInt(m[2] || 0);
+        var sec = parseInt(m[3] || 0);
+        ytDurSec = h * 3600 + min * 60 + sec;
+      }
+    }
+  });
   ytBuildIframe(id, 0);
 };
 
@@ -3308,6 +3329,14 @@ window.ytTogglePlay = function() {
 window.ytSkipBack = function() {
   if (!ytVideoId) return;
   ytCurrentSec = Math.max(0, ytCurrentSec - 30);
+  ytBuildIframe(ytVideoId, ytCurrentSec);
+};
+
+window.ytSeek = function(e) {
+  if (!ytVideoId || !ytDurSec) return;
+  var rect = document.getElementById('ytProgressWrap').getBoundingClientRect();
+  var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  ytCurrentSec = Math.floor(pct * ytDurSec);
   ytBuildIframe(ytVideoId, ytCurrentSec);
 };
 
@@ -3623,9 +3652,15 @@ function applyNbFontSize() {
         <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
         <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
       </div>
-      <!-- Timestamp -->
-      <div id="ytTimes" style="text-align:center;margin-top:2px">
+      <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px"></div>
+      <!-- Progress -->
+      <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:3px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:5px;position:relative;">
+        <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.5s linear;pointer-events:none;"></div>
+      </div>
+      <!-- Timestamps -->
+      <div id="ytTimes" style="display:flex;justify-content:space-between;">
         <span id="ytCurrent">0:00</span>
+        <span id="ytDuration">0:00</span>
       </div>
     </div>
   </div>
