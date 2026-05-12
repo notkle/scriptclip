@@ -1392,9 +1392,12 @@ window.switchTab = function switchTab(name) {
     setTimeout(function() {
       if (typeof window.showNotebookList === 'function') window.showNotebookList();
     }, 10);
-    // Push base state so first back press is instant
     history.replaceState({ nbView: 'list' }, '');
   }
+  sessionStorage.setItem('sc_tab', name);
+  sessionStorage.setItem('sc_nb_view', 'list');
+  sessionStorage.removeItem('sc_nb_id');
+  sessionStorage.removeItem('sc_page_idx');
 }
 
 // BUILDER
@@ -1883,6 +1886,9 @@ window.openNotebook = function(id) {
   reorderActive = false;
   renderPagesList();
   nbPushState({ nbView: 'pages', nbId: id });
+  sessionStorage.setItem('sc_nb_view', 'pages');
+  sessionStorage.setItem('sc_nb_id', id);
+  sessionStorage.removeItem('sc_page_idx');
 };
 
 window.showPagesView = function() {
@@ -1984,6 +1990,9 @@ window.openPage = function(idx) {
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'flex';
   nbPushState({ nbView: 'page', nbId: currentNotebookId });
+  sessionStorage.setItem('sc_nb_view', 'page');
+  sessionStorage.setItem('sc_nb_id', currentNotebookId);
+  sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
 
   // If opened from search, scroll to match with temporary highlight only
   if (window._searchQuery) {
@@ -2987,8 +2996,34 @@ function setupZoom(wrapperId, innerId, hintId) {
 // Wire up both zoomable areas after DOM ready
 document.addEventListener('DOMContentLoaded', function() {
   setupZoom('notesZoomWrap', 'notesContent', 'notesZoomHint');
+  restoreSessionState();
   setupZoom('pageZoomWrap', 'nbPageContent', 'pageZoomHint');
 });
+
+// ── RESTORE STATE ON REFRESH ──
+function restoreSessionState() {
+  const tab = sessionStorage.getItem('sc_tab') || 'builder';
+  const nbView = sessionStorage.getItem('sc_nb_view');
+  const nbId = sessionStorage.getItem('sc_nb_id');
+  const pageIdx = sessionStorage.getItem('sc_page_idx');
+
+  // Switch to saved tab
+  window.switchTab(tab);
+
+  if (tab === 'notebook' && nbId) {
+    // Restore notebook navigation depth
+    setTimeout(function() {
+      if (nbView === 'pages' || nbView === 'page') {
+        window.openNotebook(nbId);
+      }
+      if (nbView === 'page' && pageIdx !== null) {
+        setTimeout(function() {
+          window.openPage(parseInt(pageIdx));
+        }, 50);
+      }
+    }, 30);
+  }
+}
 
 </script>
 
