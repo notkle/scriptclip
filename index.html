@@ -984,7 +984,7 @@
       border-radius: 8px 8px 8px 0;
     }
     #ytPlayerWrap.open #ytPanel {
-      width: 200px;
+      width: 210px;
       pointer-events: all;
       border-width: 1px;
     }
@@ -1322,7 +1322,51 @@
 </div>
 
 
+
+<!-- YOUTUBE AUDIO PLAYER - mobile only -->
+<div id="ytPlayerWrap">
+  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
+  <div id="ytPanel">
+<!-- Hidden iframe always present -->
+    <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
+
+    <!-- MAIN PANEL -->
+    <div id="ytMainPanel">
+      <div id="ytPanelInner">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;flex:1"></div>
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="flex-shrink:0;margin-left:4px;font-size:9px;padding:2px 6px">⋯</button>
+        </div>
+        <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
+        <div id="ytControls">
+          <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
+          <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
+          <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
+        </div>
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:3px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:5px;position:relative;">
+          <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.5s linear;pointer-events:none;"></div>
+        </div>
+        <div id="ytTimes" style="display:flex;justify-content:space-between;">
+          <span id="ytCurrent">0:00</span>
+          <span id="ytDuration">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTIONS PANEL -->
+    <div id="ytOptionsPanel" style="display:none">
+      <div id="ytPanelInner">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <button class="ytBtn" onclick="window.ytShowMain()" style="font-size:9px;padding:2px 8px">← Back</button>
+          <button class="ytBtn" id="ytLoopBtn" onclick="window.ytToggleLoop()" style="font-size:9px;padding:2px 8px;color:var(--muted);border-color:var(--border)">↻ Loop</button>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:system-ui,sans-serif;margin-bottom:6px">History</div>
+        <div id="ytHistoryList"></div>
+      </div>
+    </div>
 <script>
+
+
 // ── COLORIZE THEMES ──
 const THEMES = {
   dusk: {
@@ -1806,1414 +1850,103 @@ window.doSave = function doSave() {
       sumBg:'#eef4f8', sumBorder:'#2c4a6e', sumText:'#2c4a6e',
       border:'#d4cfc4', thBg:'#e8e4dc', rowAlt:'#f0ece4'
     };
-    const css = `body{background:${s.bg};color:${s.ink};font-family:Georgia,serif;padding:40px;max-width:820px;margin:auto;line-height:1.8}
-h1{font-size:22px;font-weight:800;color:${s.h1};margin:36px 0 14px;padding-bottom:10px;border-bottom:1px solid ${s.border};line-height:1.2}
-h1:first-child{margin-top:0}
-h2{font-size:16px;font-weight:700;color:${s.h2};margin:24px 0 10px}
-h3{font-size:14px;font-weight:600;color:${s.h3};margin:16px 0 8px}
-p{margin:6px 0;color:${s.bullet}}ul{list-style:none;margin:6px 0;padding:0}
-li{padding-left:22px;margin:5px 0;color:${s.bullet};position:relative;line-height:1.7}
-li::before{content:'';position:absolute;left:4px;top:0.55em;width:7px;height:7px;border-radius:50%;background:${s.bulletMarker}}
-ul ul{margin:4px 0 4px 18px}ul ul li::before{width:5px;height:5px;top:0.6em;background:none;border:1.5px solid ${s.h3}}
-ul ul ul{margin:3px 0 3px 16px}ul ul ul li::before{width:3px;height:3px;top:0.65em;background:${s.h3};border:none}
-.term{color:${s.term};font-weight:600}.romaji{color:${s.romaji};font-style:italic;font-size:0.93em}
-.summary-block{border-left:3px solid ${s.sumBorder};padding:16px 20px;background:${s.sumBg};color:${s.sumText};font-style:italic;border-radius:0 6px 6px 0;margin:10px 0}
-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
-th{background:${s.thBg};color:${s.h2};font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid ${s.border}}
-td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth-child(even) td{background:${s.rowAlt}}`;
-    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style>
-</head><body>${content.innerHTML}
-<!-- NOTEBOOK NAME MODAL -->
-<div class="modal-overlay" id="nbNameOverlay">
-  <div class="modal">
-    <div class="modal-title">New Notebook</div>
-    <div class="modal-filename-wrap">
-      <label class="modal-filename-label">Name</label>
-      <input type="text" id="nbNameInput" class="modal-filename-input" placeholder="e.g. Japanese Lessons" autocomplete="off" spellcheck="false"/>
-    </div>
-    <div class="modal-actions" style="margin-top:20px">
-      <button class="modal-cancel" onclick="window.closeNbNameModal()">Cancel</button>
-      <button class="modal-save" onclick="window.confirmNbName()">Create</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTEBOOK PICKER MODAL -->
-<div class="modal-overlay" id="nbPickerOverlay">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title">Load from Notebook</div>
-    <div id="nbPickerContent" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.closeNotebookPicker()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTEBOOK COLOR MODAL -->
-<div class="modal-overlay" id="nbColorOverlay">
-  <div class="modal" style="max-width:320px">
-    <div class="modal-title">Notebook Color</div>
-    <div id="nbColorGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.closeNbColor()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div class="modal-overlay" id="scConfirmOverlay">
-  <div class="modal" style="max-width:300px">
-    <div class="modal-title" id="scConfirmTitle">Are you sure?</div>
-    <div id="scConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:20px;font-family:system-ui,sans-serif"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.scConfirmResolve(false)">Cancel</button>
-      <button class="modal-save" style="background:var(--accent)" onclick="window.scConfirmResolve(true)">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- YOUTUBE AUDIO PLAYER - mobile only -->
-<div id="ytPlayerWrap" style="display:none">
-  <!-- Collapsed tab -->
-  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
-  <!-- Expanded panel -->
-  <div id="ytPanel">
-    <div id="ytPanelInner">
-      <!-- URL input -->
-      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
-      <!-- Hidden iframe -->
-      <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
-      <!-- Controls row -->
-      <div id="ytControls">
-        <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
-        <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
-        <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
-      </div>
-      <!-- Timestamp -->
-      <div id="ytTimes" style="text-align:center;margin-top:2px">
-        <span id="ytCurrent">0:00</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- AI HIGHLIGHT POPUP -->
-<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
-  <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Copy</button>
-</div>
-</body></html>`], {type:'text/html'});
-    triggerDownload(URL.createObjectURL(blob), title+'.html');
+    const css = 'body{background:' + s.bg + ';color:' + s.ink + ';font-family:Georgia,serif;padding:40px;max-width:820px;margin:auto;line-height:1.8}' +
+      'h1{font-size:22px;font-weight:800;color:' + s.h1 + ';margin:36px 0 4px;border-bottom:2px solid ' + s.border + ';padding-bottom:8px}' +
+      'h2{font-size:17px;font-weight:700;color:' + s.h2 + ';margin:28px 0 4px}' +
+      'h3{font-size:14px;font-weight:700;color:' + s.h3 + ';margin:20px 0 4px}' +
+      '.term{color:' + s.term + ';font-weight:600}.romaji{color:' + s.romaji + ';font-style:italic;font-size:0.93em}' +
+      '.summary-block{border-left:3px solid ' + s.sumBorder + ';padding:16px 20px;background:' + s.sumBg + ';color:' + s.sumText + ';font-style:italic;border-radius:0 6px 6px 0;margin:10px 0}' +
+      'ul{margin:6px 0 6px 0;padding:0}li{margin:4px 0;padding-left:20px;list-style:none;position:relative}' +
+      "li::before{content:'•';position:absolute;left:0;color:" + s.bulletMarker + '}' +
+      'table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}' +
+      'th{background:' + s.thBg + ';color:' + s.h2 + ';padding:8px 12px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase}' +
+      'td{padding:8px 12px;border-bottom:1px solid ' + s.border + '}' +
+      'tr:nth-child(even) td{background:' + s.rowAlt + '}';
+    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
+      '<style>' + css + '</style></head><body>' + content.innerHTML + '</body></html>';
+    const blob = new Blob([html], {type:'text/html'});
+    triggerDownload(URL.createObjectURL(blob), title + '.html');
   } else {
-    const blob2 = new Blob([content.innerText], {type:'text/plain'});
-    triggerDownload(URL.createObjectURL(blob2), title+'.txt');
+    const blob = new Blob([content.innerText], {type:'text/plain'});
+    triggerDownload(URL.createObjectURL(blob), title + '.txt');
   }
 }
 
-function triggerDownload(url, filename) {
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-// ── NOTEBOOK ──
-const NB_KEY = 'sc_notebooks';
-
-function nbLoad() {
-  try { return JSON.parse(localStorage.getItem(NB_KEY) || '{}'); } catch(e) { return {}; }
-}
-function nbSave(data) { localStorage.setItem(NB_KEY, JSON.stringify(data)); }
-
-let currentNotebookId = null;
-let reorderActive = false;
-let dragSrcIdx = null;
-
-window.showNotebookList = function() {
-  document.getElementById('nbListView').style.display = 'flex';
-  document.getElementById('nbPagesView').style.display = 'none';
-  document.getElementById('nbPageView').style.display = 'none';
-  // Clear search on exit
-  const si = document.getElementById('nbSearchInput');
-  if (si) si.value = '';
-  const ss = document.getElementById('nbSearchStatus');
-  if (ss) ss.textContent = '';
-  renderNotebookList();
-  history.replaceState({ nbView: 'list' }, '');
-};
-
-function renderNotebookList() {
-  const data = nbLoad();
-  const list = document.getElementById('nbList');
-  const empty = document.getElementById('nbEmpty');
-  const ids = Object.keys(data);
+// ── YOUTUBE OPTIONS: HISTORY + LOOP ──
+function renderYtHistory() {
+  var list = document.getElementById('ytHistoryList');
+  if (!list) return;
   list.innerHTML = '';
-  if (ids.length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  ids.forEach(id => {
-    const nb = data[id];
-    const card = document.createElement('div');
-    card.className = 'nb-card' + (localStorage.getItem('sc_last_nb') === id ? ' nb-card-recent' : '');
-    const nbColor = nb.color || 'var(--muted)';
-    const nbIcon = nb.icon || '📓';
-    card.innerHTML = '<span class="nb-card-icon" style="color:' + nbColor + '">' + nbIcon + '</span><div class="nb-card-info"><div class="nb-card-name">' + nb.name + '</div><div class="nb-card-meta">' + (nb.pages||[]).length + ' page' + ((nb.pages||[]).length !== 1 ? 's' : '') + '</div></div><div style="display:flex;gap:6px;flex-shrink:0">' +
-      '<button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button>' +
-      '<button class="nb-page-btn" title="Customize" style="font-size:11px;color:' + nbColor + '">⬤</button>' +
-      '</div>';
-    card.querySelector('[title="Rename"]').onclick = function(e){ e.stopPropagation(); window.renameNotebook(id); };
-    card.querySelector('[title="Customize"]').onclick = function(e){ e.stopPropagation(); _nbColorParentId = null; window.openNbColor(id, 'notebook'); };
-    card.addEventListener('click', () => window.openNotebook(id));
-    list.appendChild(card);
-  });
-}
-
-window.createNotebook = function() {
-  document.getElementById('nbNameInput').value = '';
-  document.getElementById('nbNameInput').dataset.mode = '';
-  document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'New Notebook';
-  document.getElementById('nbNameOverlay').classList.add('open');
-  setTimeout(function(){ document.getElementById('nbNameInput').focus(); }, 50);
-};
-
-window.triggerNbImport = function() {
-  document.getElementById('nbImportInput').click();
-};
-
-window.closeNbNameModal = function() {
-  document.getElementById('nbNameOverlay').classList.remove('open');
-};
-
-window.confirmNbName = function() {
-  const name = document.getElementById('nbNameInput').value.trim();
-  if (!name) return;
-  const mode = document.getElementById('nbNameInput').dataset.mode || '';
-  const inp = document.getElementById('nbNameInput');
-
-  if (mode === 'rename-nb') {
-    const id = inp.dataset.renameId;
-    const data = nbLoad();
-    if (data[id]) { data[id].name = name; nbSave(data); }
-    inp.dataset.mode = '';
-    document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'New Notebook';
-    window.closeNbNameModal();
-    renderNotebookList();
+  if (ytHistory.length === 0) {
+    list.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;text-align:center;padding:8px 0">No history yet</div>';
     return;
   }
-
-  if (mode === 'rename-page') {
-    const idx = parseInt(inp.dataset.renameIdx);
-    const data = nbLoad();
-    const nb = data[currentNotebookId];
-    if (nb && nb.pages[idx]) { nb.pages[idx].name = name; nbSave(data); }
-    inp.dataset.mode = '';
-    document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'New Notebook';
-    window.closeNbNameModal();
-    renderPagesList();
-    return;
-  }
-
-  window.closeNbNameModal();
-  const data = nbLoad();
-  const id = 'nb_' + Date.now();
-  data[id] = { name: name, pages: [], created: Date.now() };
-  nbSave(data);
-  if (mode === 'quick') {
-    // also add to the select dropdown if open
-    const sel = document.getElementById('nbSelect');
-    if (sel) {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = name; sel.appendChild(opt); sel.value = id;
-    }
-    document.getElementById('nbNameInput').dataset.mode = '';
-  }
-  renderNotebookList();
-};
-
-window.openNotebook = function(id) {
-  currentNotebookId = id;
-  const data = nbLoad();
-  const nb = data[id];
-  if (!nb) return;
-  document.getElementById('nbPagesTitle').textContent = nb.name;
-  document.getElementById('nbListView').style.display = 'none';
-  document.getElementById('nbPagesView').style.display = 'flex';
-  document.getElementById('nbPageView').style.display = 'none';
-  reorderActive = false;
-  renderPagesList();
-  nbPushState({ nbView: 'pages', nbId: id });
-  sessionStorage.setItem('sc_nb_view', 'pages');
-  sessionStorage.setItem('sc_nb_id', id);
-  sessionStorage.removeItem('sc_page_idx');
-  localStorage.setItem('sc_last_nb', id);
-};
-
-window.showPagesView = function() {
-  document.getElementById('nbPageView').style.display = 'none';
-  document.getElementById('nbPagesView').style.display = 'flex';
-  // Always clear search and re-render full list
-  const inp = document.getElementById('nbSearchInput');
-  if (inp) inp.value = '';
-  const clr = document.getElementById('nbSearchClear');
-  if (clr) clr.style.display = 'none';
-  const sts = document.getElementById('nbSearchStatus');
-  if (sts) sts.textContent = '';
-  renderPagesList();
-};
-
-function renderPagesList() {
-  const data = nbLoad();
-  const nb = data[currentNotebookId];
-  if (!nb) return;
-  const list = document.getElementById('nbPagesList');
-  const empty = document.getElementById('nbPagesEmpty');
-  list.innerHTML = '';
-  if ((nb.pages||[]).length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  if (reorderActive) list.classList.add('nb-reorder-active');
-  else list.classList.remove('nb-reorder-active');
-
-  nb.pages.forEach((page, idx) => {
-    const item = document.createElement('div');
-    var lastPageIdx = parseInt(localStorage.getItem('sc_last_page_' + currentNotebookId));
-    item.className = 'nb-page-item' + (lastPageIdx === idx ? ' nb-page-recent' : '');
-    item.dataset.idx = idx;
-    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' +
-      '<button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button>' +
-      '<button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button>' +
-      '<button class="nb-page-btn del-btn" title="Delete">✕</button>' +
-      '</div>';
-
-    item.querySelector('.quiz-btn').addEventListener('click', (e) => { e.stopPropagation(); window.loadPageToQuiz(idx); });
-    item.querySelector('[title="Rename"]').addEventListener('click', (e) => { e.stopPropagation(); window.renamePage(idx); });
-    item.querySelector('.del-btn').addEventListener('click', (e) => { e.stopPropagation(); window.deletePage(idx); });
-
-    item.addEventListener('click', () => {
-      if (reorderActive) return;
-      window.openPage(idx);
-    });
-
-    let pressTimer = null;
-    item.addEventListener('touchstart', () => { pressTimer = setTimeout(() => activateReorder(), 600); });
-    item.addEventListener('touchend', () => clearTimeout(pressTimer));
-    item.addEventListener('touchmove', () => clearTimeout(pressTimer));
-
-    item.querySelector('.nb-drag-handle').addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      if (!reorderActive) activateReorder();
-    });
-
-    item.draggable = true;
-    item.addEventListener('dragstart', () => { dragSrcIdx = idx; setTimeout(() => item.classList.add('dragging'), 0); });
-    item.addEventListener('dragend', () => item.classList.remove('dragging'));
-    item.addEventListener('dragover', (e) => { e.preventDefault(); item.classList.add('drag-over'); });
-    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-    item.addEventListener('drop', (e) => {
-      e.preventDefault(); item.classList.remove('drag-over');
-      if (dragSrcIdx === null || dragSrcIdx === idx) return;
-      const d = nbLoad();
-      const pages = d[currentNotebookId].pages;
-      const moved = pages.splice(dragSrcIdx, 1)[0];
-      pages.splice(idx, 0, moved);
-      nbSave(d); dragSrcIdx = null; renderPagesList();
-    });
-
-    list.appendChild(item);
-  });
-
-  let doneB = document.getElementById('nbDoneReorder');
-  if (!doneB) {
-    doneB = document.createElement('button');
-    doneB.id = 'nbDoneReorder';
-    doneB.className = 'nb-done-reorder';
-    doneB.textContent = 'Done Reordering';
-    doneB.onclick = () => { reorderActive = false; renderPagesList(); };
-    list.parentNode.appendChild(doneB);
-  }
-  doneB.className = 'nb-done-reorder' + (reorderActive ? ' visible' : '');
-}
-
-function activateReorder() { reorderActive = true; renderPagesList(); }
-
-window.openPage = function(idx) {
-  const data = nbLoad();
-  const page = data[currentNotebookId].pages[idx];
-  if (!page) return;
-  window._currentPageIdx = idx;
-  document.getElementById('nbPageTitle').textContent = page.name;
-  window._currentPageHtml = page.html;
-  document.getElementById('nbPageContent').innerHTML = page.html;
-  const pageTheme = page.theme || currentTheme;
-  window.setPageTheme(pageTheme, false);
-  document.getElementById('nbPagesView').style.display = 'none';
-  document.getElementById('nbPageView').style.display = 'flex';
-  nbPushState({ nbView: 'page', nbId: currentNotebookId });
-  sessionStorage.setItem('sc_nb_view', 'page');
-  sessionStorage.setItem('sc_nb_id', currentNotebookId);
-  sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
-  localStorage.setItem('sc_last_nb', currentNotebookId);
-  localStorage.setItem('sc_last_page_' + currentNotebookId, window._currentPageIdx);
-  // Apply universal font size
-  applyNbFontSize();
-
-  // If opened from search, scroll to match with temporary highlight only
-  if (window._searchQuery) {
-    const q = window._searchQuery;
-    const matchIdx = window._searchMatchIdx || 0;
-    window._searchQuery = null;
-    window._searchMatchIdx = null;
-    setTimeout(function() {
-      const nc = document.getElementById('nbPageContent');
-      if (!nc) return;
-      // Find all text nodes and locate Nth match position
-      const walker = document.createTreeWalker(nc, NodeFilter.SHOW_TEXT);
-      let matchCount = 0;
-      let targetNode = null;
-      let targetOffset = 0;
-      const qLower = q.toLowerCase();
-      while (walker.nextNode()) {
-        const node = walker.currentNode;
-        const text = node.textContent.toLowerCase();
-        let pos = 0;
-        while (true) {
-          const idx = text.indexOf(qLower, pos);
-          if (idx < 0) break;
-          if (matchCount === matchIdx) {
-            targetNode = node;
-            targetOffset = idx;
-            break;
+  ytHistory.forEach(function(item, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:10px;font-family:system-ui,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    row.textContent = (idx + 1) + '. ' + item.title;
+    row.addEventListener('click', function() {
+      document.getElementById('ytUrlInput').value = item.url;
+      ytVideoId = item.id;
+      ytCurrentSec = 0;
+      ytDurSec = 0;
+      var titleEl = document.getElementById('ytTitle');
+      if (titleEl) titleEl.textContent = item.title;
+      ytBuildIframe(item.id, 0);
+      localStorage.setItem('sc_yt_url', item.url);
+      window.ytShowMain();
+      // fetch duration
+      fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'ytInfo', videoId: item.id }) })
+        .then(function(r){ return r.json(); }).catch(function(){ return {}; })
+        .then(function(info) {
+          if (info.duration) {
+            var h=0,min=0,sec=0;
+            var hm=info.duration.match(/([0-9]+)H/); if(hm) h=parseInt(hm[1]);
+            var mm=info.duration.match(/([0-9]+)M/); if(mm) min=parseInt(mm[1]);
+            var sm=info.duration.match(/([0-9]+)S/); if(sm) sec=parseInt(sm[1]);
+            ytDurSec = h*3600+min*60+sec;
+            var durEl=document.getElementById('ytDuration');
+            if(durEl) durEl.textContent=fmtTime(ytDurSec);
           }
-          matchCount++;
-          pos = idx + 1;
-        }
-        if (targetNode) break;
-      }
-      if (targetNode) {
-        // Wrap match in a temporary mark
-        const range = document.createRange();
-        range.setStart(targetNode, targetOffset);
-        range.setEnd(targetNode, targetOffset + q.length);
-        const mark = document.createElement('mark');
-        mark.style.cssText = 'background:color-mix(in srgb,var(--n-h2) 40%,transparent);color:inherit;border-radius:3px;padding:0 2px;outline:2px solid var(--n-h2);outline-offset:1px;';
-        range.surroundContents(mark);
-        mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Remove mark after 2s, restoring original text
-        setTimeout(function() {
-          if (mark.parentNode) {
-            mark.parentNode.replaceChild(document.createTextNode(mark.textContent), mark);
-          }
-        }, 2000);
-      }
-    }, 100);
-  }
-};
-
-window.deletePage = async function(idx) {
-  if (!await window.scConfirm('Delete this page? This cannot be undone.')) return;
-  const data = nbLoad();
-  data[currentNotebookId].pages.splice(idx, 1);
-  nbSave(data); renderPagesList();
-};
-
-window.deleteCurrentNotebook = async function() {
-  if (!await window.scConfirm('Delete this notebook and all its pages? This cannot be undone.')) return;
-  const data = nbLoad();
-  delete data[currentNotebookId];
-  nbSave(data); currentNotebookId = null; window.showNotebookList();
-};
-
-window.loadPageToQuiz = function(idx) {
-  const data = nbLoad();
-  const page = data[currentNotebookId].pages[idx];
-  if (!page) return;
-  const div = document.createElement('div');
-  div.innerHTML = page.html;
-  document.getElementById('quizPasteArea').value = div.innerText;
-  document.getElementById('quizSourceStatus').textContent = '✓ Loaded: ' + page.name;
-  window.switchTab('quiz');
-};
-
-window.openSaveToNotebook = function() {
-  const html = document.getElementById('notesContent').innerHTML;
-  console.log('[NB] openSaveToNotebook, html length:', html ? html.trim().length : 0);
-  if (!html || html.trim().length < 5) {
- return; }
-  const h1 = document.querySelector('#notesContent h1');
-  document.getElementById('nbPageNameInput').value = h1 ? h1.innerText.trim().substring(0, 60) : 'Untitled Page';
-  const data = nbLoad();
-  const sel = document.getElementById('nbSelect');
-  sel.innerHTML = '';
-  const ids = Object.keys(data);
-  if (ids.length === 0) { sel.innerHTML = '<option value="">— No notebooks yet —</option>'; }
-  else { ids.forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.textContent = data[id].name; sel.appendChild(opt); }); }
-  document.getElementById('saveToNbOverlay').classList.add('open');
-};
-
-window.closeSaveToNotebook = function() { document.getElementById('saveToNbOverlay').classList.remove('open'); };
-
-window.quickCreateNotebook = function() {
-  document.getElementById('nbNameInput').value = '';
-  document.getElementById('nbNameInput').dataset.mode = 'quick';
-  document.getElementById('nbNameOverlay').classList.add('open');
-  setTimeout(function(){ document.getElementById('nbNameInput').focus(); }, 50);
-};
-
-window.doSaveToNotebook = function() {
-  const nbId = document.getElementById('nbSelect').value;
-  const pageName = document.getElementById('nbPageNameInput').value.trim();
-  if (!nbId) {
- return; }
-  if (!pageName) {
- return; }
-  const html = document.getElementById('notesContent').innerHTML;
-  const data = nbLoad();
-  console.log('[NB] data keys:', Object.keys(data));
-  if (!data[nbId]) {
- return; }
-  data[nbId].pages.push({ name: pageName, html: html, saved: Date.now(), theme: currentTheme });
-  nbSave(data);
-  window.closeSaveToNotebook();
-  const btn = document.querySelector('#notesRendered .tool-btn:nth-child(3)');
-  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Saved'; setTimeout(() => btn.textContent = orig, 1500); }
-};
-
-document.addEventListener('click', function(e) {
-  var o = document.getElementById('saveToNbOverlay');
-  if (o && e.target === o) window.closeSaveToNotebook();
-});
-
-// [notebook switchTab override removed]
-
-
-
-// Notebook drop zone — drag HTML file directly into a notebook
-function setupNbDropZone() {
-  const zone = document.getElementById('nbDropZone');
-  if (!zone) return;
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-    if (file.name.endsWith('.json')) {
-      window.importNotebook(file);
-      return;
-    }
-    if (!file.name.endsWith('.html') && !file.name.endsWith('.txt')) {
-      window.toast('Please drop an HTML, text, or .scriptclip.json file.'); return;
-    }
-    const data = nbLoad();
-    const ids = Object.keys(data);
-    if (ids.length === 0) {
-      window.toast('Create a notebook first, then drop the file.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      let html = ev.target.result;
-      let text = '';
-      // If it's an HTML file, extract the body content
-      if (file.name.endsWith('.html')) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        // Try to get just the body content for cleaner storage
-        const body = div.querySelector('body');
-        html = body ? body.innerHTML : div.innerHTML;
-      }
-      // Page name from filename (strip extension)
-      const defaultName = file.name.replace(/\.(html|txt)$/i, '');
-      // If only one notebook, save straight to it; otherwise prompt
-      let targetId;
-      if (ids.length === 1) {
-        targetId = ids[0];
-        const pageName = prompt('Page name:', defaultName) || defaultName;
-        data[targetId].pages.push({ name: pageName, html, saved: Date.now() });
-        nbSave(data);
-        renderNotebookList();
-        alert('Saved to "' + data[targetId].name + '"');
-      } else {
-        // Show notebook picker
-        const names = ids.map(id => data[id].name);
-        const choice = prompt('Save to which notebook?\n' + ids.map((id, i) => (i+1) + '. ' + data[id].name).join('\n') + '\n\nType the number:');
-        const idx = parseInt(choice) - 1;
-        if (isNaN(idx) || idx < 0 || idx >= ids.length) { window.toast('Invalid choice.'); return; }
-        targetId = ids[idx];
-        const pageName = prompt('Page name:', defaultName) || defaultName;
-        data[targetId].pages.push({ name: pageName, html, saved: Date.now() });
-        nbSave(data);
-        renderNotebookList();
-        alert('Saved to "' + data[targetId].name + '"');
-      }
-    };
-    reader.readAsText(file);
-  });
-}
-
-// [nb dropzone override removed]
-
-
-// ── INIT ──
-(function() {
-  // Set dark mode immediately
-  document.documentElement.setAttribute('data-theme', 'dark');
-  
-  function init() {
-    var tb = document.getElementById('themeBtn');
-    if (tb) tb.textContent = '\u263e Dark';
-    
-    // Quiz drop zone
-    if (typeof setupDropZone === 'function') setupDropZone();
-    
-    // Notebook drop zone  
-    if (typeof setupNbDropZone === 'function') setupNbDropZone();
-    
-    // Modal overlay closers
-    var mo = document.getElementById('modalOverlay');
-    if (mo) mo.addEventListener('click', function(e) { if (e.target === this && window.closeSaveModal) window.closeSaveModal(); });
-    var sno = document.getElementById('saveToNbOverlay');
-    if (sno) sno.addEventListener('click', function(e) { if (e.target === this && window.closeSaveToNotebook) window.closeSaveToNotebook(); });
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-
-
-function triggerDownload(url, filename) {
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-// ── QUIZ ──
-const WORKER_URL = 'https://scriptclip-proxy.sotempyhehe.workers.dev';
-let quizData = null;
-
-function setupDropZone() {
-  const zone = document.getElementById('quizDropArea');
-  if (!zone) return;
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) readQuizFile(file);
-  });
-}
-
-window.handleFileUpload = function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.name.endsWith('.json')) {
-    window.importNotebook(file);
-    return;
-  }
-  readQuizFile(file);
-}
-
-function readQuizFile(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    let text = ev.target.result;
-    if (file.name.endsWith('.html')) {
-      const div = document.createElement('div');
-      div.innerHTML = text;
-      text = div.innerText;
-    }
-    document.getElementById('quizPasteArea').value = text;
-    document.getElementById('quizSourceStatus').textContent = `✓ Loaded: ${file.name}`;
-  };
-  reader.readAsText(file);
-}
-
-function getNotesText() {
-  return document.getElementById('quizPasteArea').value.trim();
-}
-
-async function callWorker(payload) {
-  const res = await fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error || `Worker error ${res.status}`);
-  }
-  return res.json();
-}
-
-window.generateQuiz = async function generateQuiz() {
-  const notes = getNotesText();
-  if (!notes || notes.length < 100) {
-    window.toast('Please add notes first — paste text or drop a file above.');
-    return;
-  }
-  const btn = document.getElementById('quizGenerateBtn');
-  const btnInner = document.getElementById('quizGenerateBtnInner');
-  const statusEl = document.getElementById('quizGenStatus');
-  btn.disabled = true;
-  btnInner.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
-  statusEl.textContent = 'Loading quiz…';
-
-  const prompt = `You are a quiz generator. Based on the study notes below, generate exactly 10 quiz questions that genuinely test understanding — not just surface recall.
-
-Mix these types across the 10:
-- Multiple choice (4 options, only one correct) — type "mc"
-- Fill in the blank (1-3 word answer) — type "fitb"
-- True or False — type "tf"
-- Short answer (2-3 sentence response) — type "sa"
-
-Return ONLY a valid JSON array, no markdown, no backticks, no preamble. Each object:
-{
-  "type": "mc"|"fitb"|"tf"|"sa",
-  "question": "...",
-  "options": ["A","B","C","D"],
-  "answer": "exact correct answer string",
-  "explanation": "2-3 sentence explanation referencing the notes"
-}
-For mc: answer must exactly match one option. For tf: "True" or "False" exactly. For fitb: the missing word(s). For sa: a model answer.
-
-STUDY NOTES:
-${notes.substring(0, 12000)}`;
-
-  try {
-    const data = await callWorker({ action: 'generate', prompt });
-    let raw = (data.text || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-    const questions = JSON.parse(raw);
-    if (!Array.isArray(questions) || questions.length === 0) throw new Error('No questions returned');
-    quizData = questions;
-    renderQuiz(questions);
-  } catch(e) {
-    statusEl.textContent = '✗ ' + (e.message || 'Something went wrong. Try again.');
-    btn.disabled = false;
-    btnInner.textContent = 'GENERATE QUIZ';
-  }
-}
-
-window.renderQuiz = function renderQuiz(questions) {
-  const container = document.getElementById('quizQuestions');
-  container.innerHTML = '';
-  document.getElementById('quizProgressText').textContent = `${questions.length} questions`;
-  const typeLabels = { mc:'Multiple Choice', fitb:'Fill in the Blank', tf:'True / False', sa:'Short Answer' };
-  questions.forEach((q, idx) => {
-    const div = document.createElement('div');
-    div.className = 'quiz-q'; div.dataset.idx = idx;
-    let inputHTML = '';
-    if (q.type === 'mc' && q.options) {
-      const letters = ['A','B','C','D'];
-      inputHTML = `<div class="quiz-mc-options">${q.options.map((opt, oi) =>
-        `<div class="quiz-mc-opt" onclick="selectMC(${idx},${oi})" data-opt="${oi}">
-          <span class="quiz-mc-letter">${letters[oi]}</span>${opt}
-        </div>`).join('')}</div>`;
-    } else if (q.type === 'tf') {
-      inputHTML = `<div class="quiz-tf-wrap">
-        <button class="quiz-tf-btn" onclick="selectTF(${idx},'True')" data-val="True">True</button>
-        <button class="quiz-tf-btn" onclick="selectTF(${idx},'False')" data-val="False">False</button>
-      </div>`;
-    } else {
-      const ph = q.type === 'fitb' ? 'Type your answer…' : 'Write your answer (2-3 sentences)…';
-      const rows = q.type === 'sa' ? 'style="min-height:80px;resize:vertical"' : '';
-      inputHTML = `<textarea class="quiz-text-input" data-idx="${idx}" placeholder="${ph}" ${rows}></textarea>`;
-    }
-    div.innerHTML = `
-      <div class="quiz-q-type ${q.type}">${typeLabels[q.type]}</div>
-      <div class="quiz-q-text">${idx+1}. ${q.question}</div>
-      ${inputHTML}`;
-    container.appendChild(div);
-  });
-  document.getElementById('quizSetup').style.display = 'none';
-  document.getElementById('quizActive').style.display = 'flex';
-  document.getElementById('quizResults').style.display = 'none';
-}
-
-window.selectMC = function(qIdx, optIdx) {
-  document.querySelectorAll(`.quiz-q[data-idx="${qIdx}"] .quiz-mc-opt`).forEach(o => o.classList.remove('selected'));
-  document.querySelectorAll(`.quiz-q[data-idx="${qIdx}"] .quiz-mc-opt`)[optIdx].classList.add('selected');
-}
-
-window.selectTF = function(qIdx, val) {
-  document.querySelectorAll(`.quiz-q[data-idx="${qIdx}"] .quiz-tf-btn`).forEach(b => b.classList.remove('selected'));
-  document.querySelector(`.quiz-q[data-idx="${qIdx}"] .quiz-tf-btn[data-val="${val}"]`).classList.add('selected');
-}
-
-window.submitQuiz = async function submitQuiz() {
-  const submitBtn = document.getElementById('quizSubmitBtn');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Grading…';
-  const userAnswers = quizData.map((q, idx) => {
-    if (q.type === 'mc') {
-      const sel = document.querySelector('.quiz-q[data-idx="' + idx + '"] .quiz-mc-opt.selected');
-      return sel ? sel.textContent.trim().replace(/^[A-D]\s*/, '') : '';
-    } else if (q.type === 'tf') {
-      const sel = document.querySelector('.quiz-q[data-idx="' + idx + '"] .quiz-tf-btn.selected');
-      return sel ? sel.dataset.val : '';
-    } else {
-      const ta = document.querySelector('.quiz-text-input[data-idx="' + idx + '"]');
-      return ta ? ta.value.trim() : '';
-    }
-  });
-  const results = quizData.map((q, idx) => {
-    if (q.type === 'mc' || q.type === 'tf') {
-      return { correct: userAnswers[idx].toLowerCase().trim() === q.answer.toLowerCase().trim(), explanation: q.explanation };
-    }
-    return null;
-  });
-  const aiQueue = quizData.map((q, idx) => (q.type !== 'mc' && q.type !== 'tf') ? { idx, q, userAnswer: userAnswers[idx] } : null).filter(Boolean);
-  if (aiQueue.length > 0) {
-    const qLines = aiQueue.map((item, i) =>
-      (i+1) + '. Type: ' + item.q.type +
-      '\nQuestion: ' + item.q.question +
-      '\nCorrect: ' + item.q.answer +
-      '\nStudent: ' + (item.userAnswer || '(blank)')
-    ).join('\n\n');
-    const gradingPrompt = 'Grade these answers. Return ONLY a JSON array, one object per question in order:\n' +
-      '[{ "score": 1-10, "explanation": "2-3 sentence feedback on what was right/wrong and the actual concept" }]\n\n' +
-      'Score 1-10: 10=perfect, 7+ means essentially correct (accept close paraphrases, near-synonyms, valid alternatives), below 7=incorrect or missing key meaning.\n\n' +
-      qLines +
-      '\n\nBe lenient on spelling/romanization. For short answer grade conceptual understanding not exact wording.';
-    try {
-      const data = await callWorker({ action: 'grade', prompt: gradingPrompt });
-      let raw = (data.text || '').replace(/\`\`\`json\s*/gi, '').replace(/\`\`\`\s*/g, '').trim();
-      const aiRes = JSON.parse(raw);
-      aiQueue.forEach((item, i) => {
-        const score = aiRes[i]?.score ?? 0;
-        results[item.idx] = { correct: score >= 7, score, explanation: aiRes[i]?.explanation || item.q.explanation };
-      });
-    } catch(e) {
-      aiQueue.forEach(item => { results[item.idx] = { correct: false, explanation: item.q.explanation }; });
-    }
-  }
-  window.showResults(results, userAnswers);
-  submitBtn.disabled = false;
-  submitBtn.textContent = 'Submit for Grading';
-}
-
-
-window.showResults = function showResults(results, userAnswers) {
-  const score = results.filter(r => r.correct).length;
-  const total = results.length;
-  const pct = Math.round((score/total)*100);
-  document.getElementById('scoreNum').textContent = score;
-  document.getElementById('scoreDenom').textContent = `/${total}`;
-  const labels = [[90,'🏆 Excellent — you really know this material'],[75,'✓ Good work — a few gaps worth reviewing'],[60,'~ Getting there — review the sections you missed'],[0,'✗ Needs more study — revisit the notes and try again']];
-  document.getElementById('scoreLabel').textContent = labels.find(([t]) => pct >= t)[1];
-  const list = document.getElementById('quizFeedbackList');
-  list.innerHTML = '';
-  results.forEach((r, idx) => {
-    const q = quizData[idx];
-    const item = document.createElement('div');
-    item.className = `quiz-feedback-item ${r.correct ? 'pass' : 'fail'}`;
-    const scoreTag = r.score !== undefined ? `<span class="quiz-score-tag" style="font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;margin-left:8px;background:${r.correct ? 'color-mix(in srgb,var(--n-summary-border) 15%,transparent)' : 'color-mix(in srgb,var(--accent) 15%,transparent)'};color:${r.correct ? 'var(--n-summary-text)' : 'var(--accent)'}">${r.score}/10</span>` : '';
-    item.innerHTML = `
-      <div class="quiz-feedback-header" onclick="if(typeof window.toggleFeedback==='function'){window.toggleFeedback(${idx})}">
-        <span class="quiz-feedback-icon">${r.correct ? '✓' : '✗'}</span>
-        <span class="quiz-feedback-q">${idx+1}. ${q.question}${scoreTag}</span>
-        <span class="quiz-feedback-toggle" id="ftoggle-${idx}">▼</span>
-      </div>
-      <div class="quiz-feedback-body" id="fbody-${idx}">
-        <div class="quiz-feedback-your">Your answer: <span>${userAnswers[idx] || '(no answer)'}</span></div>
-        <div class="quiz-feedback-correct">Correct answer: <span>${q.answer}</span></div>
-        <div class="quiz-feedback-explain">${r.explanation}</div>
-      </div>`;
-    list.appendChild(item);
-    // auto-expand all
-    document.getElementById(`fbody-${idx}`).classList.add('open');
-    document.getElementById(`ftoggle-${idx}`).classList.add('open');
-  });
-  document.getElementById('quizActive').style.display = 'none';
-  document.getElementById('quizResults').style.display = 'block';
-}
-
-window.toggleFeedback = function(idx) {
-  document.getElementById(`fbody-${idx}`).classList.toggle('open');
-  document.getElementById(`ftoggle-${idx}`).classList.toggle('open');
-}
-
-window.resetQuiz = function resetQuiz() {
-  quizData = null;
-  document.getElementById('quizPasteArea').value = '';
-  document.getElementById('quizSourceStatus').textContent = '';
-  document.getElementById('quizSetup').style.display = 'block';
-  document.getElementById('quizActive').style.display = 'none';
-  document.getElementById('quizResults').style.display = 'none';
-  document.getElementById('quizGenStatus').textContent = '';
-  const btn = document.getElementById('quizGenerateBtn');
-  btn.disabled = false;
-  document.getElementById('quizGenerateBtnInner').textContent = 'GENERATE QUIZ';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  var nbpo = document.getElementById('nbPickerOverlay');
-  var nbco = document.getElementById('nbColorOverlay');
-  if (nbco) nbco.addEventListener('click', function(e){ if(e.target===this) window.closeNbColor(); });
-  setupNbDropZone();
-  // Import file input handler
-  var expo = document.getElementById('nbExportOverlay');
-  if (expo) expo.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
-  var pjo = document.getElementById('nbPasteJsonOverlay');
-  if (pjo) pjo.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
-  var sco = document.getElementById('scConfirmOverlay');
-  if (sco) sco.addEventListener('click', function(e){ if(e.target===this && window.scConfirmResolve) window.scConfirmResolve(false); });
-  var nbii = document.getElementById('nbImportInput');
-  if (nbii) nbii.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) { window.importNotebook(file); e.target.value = ''; }
-  });
-  if (nbpo) nbpo.addEventListener('click', function(e){ if(e.target===this) window.closeNotebookPicker(); });
-  var inp = document.getElementById('nbNameInput');
-  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') window.confirmNbName(); });
-  var ov = document.getElementById('nbNameOverlay');
-  if (ov) ov.addEventListener('click', function(e){ if(e.target===this) window.closeNbNameModal(); });
-});
-
-window.openNotebookPicker = function() {
-  const data = nbLoad();
-  const ids = Object.keys(data);
-  const container = document.getElementById('nbPickerContent');
-  container.innerHTML = '';
-
-  if (ids.length === 0) {
-    container.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No notebooks yet. Save some notes first.</div>';
-    document.getElementById('nbPickerOverlay').classList.add('open');
-    return;
-  }
-
-  ids.forEach(id => {
-    const nb = data[id];
-    if (!nb.pages || nb.pages.length === 0) return;
-
-    const section = document.createElement('div');
-    section.innerHTML = '<div style="font-family:system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:8px 0 6px">' + nb.name + '</div>';
-
-    nb.pages.forEach((page, pageIdx) => {
-      const btn = document.createElement('div');
-      btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;';
-      btn.innerHTML = '<span style="font-size:14px">📄</span><div style="flex:1;min-width:0"><div style="font-family:system-ui,sans-serif;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + page.name + '</div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + new Date(page.saved).toLocaleDateString() + '</div></div>';
-      btn.onclick = function() { window.loadNotebookPageToQuiz(id, pageIdx); };
-      section.appendChild(btn);
-    });
-
-    container.appendChild(section);
-  });
-
-  document.getElementById('nbPickerOverlay').classList.add('open');
-};
-
-window.closeNotebookPicker = function() {
-  document.getElementById('nbPickerOverlay').classList.remove('open');
-};
-
-window.loadNotebookPageToQuiz = function(nbId, pageIdx) {
-  const data = nbLoad();
-  const page = data[nbId] && data[nbId].pages[pageIdx];
-  if (!page) return;
-  const div = document.createElement('div');
-  div.innerHTML = page.html;
-  const text = div.innerText;
-  document.getElementById('quizPasteArea').value = text;
-  document.getElementById('quizSourceStatus').textContent = '✓ Loaded: ' + page.name;
-  window.closeNotebookPicker();
-};
-
-
-window.renameNotebook = function(id) {
-  const data = nbLoad();
-  if (!data[id]) return;
-  document.getElementById('nbNameInput').value = data[id].name;
-  document.getElementById('nbNameInput').dataset.mode = 'rename-nb';
-  document.getElementById('nbNameInput').dataset.renameId = id;
-  document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'Rename Notebook';
-  document.getElementById('nbNameOverlay').classList.add('open');
-  setTimeout(function(){ document.getElementById('nbNameInput').select(); }, 50);
-};
-
-window.renamePage = function(idx) {
-  const data = nbLoad();
-  const nb = data[currentNotebookId];
-  if (!nb || !nb.pages[idx]) return;
-  document.getElementById('nbNameInput').value = nb.pages[idx].name;
-  document.getElementById('nbNameInput').dataset.mode = 'rename-page';
-  document.getElementById('nbNameInput').dataset.renameIdx = idx;
-  document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent = 'Rename Page';
-  document.getElementById('nbNameOverlay').classList.add('open');
-  setTimeout(function(){ document.getElementById('nbNameInput').select(); }, 50);
-};
-
-// ── NOTEBOOK EXPORT / IMPORT ──
-window.exportNotebook = function() {
-  const data = nbLoad();
-  const nb = data[currentNotebookId];
-  if (!nb) return;
-  const exportObj = {
-    _scriptclip: true,
-    version: 1,
-    notebook: nb
-  };
-  const json = JSON.stringify(exportObj, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  // Smart filename from notebook name
-  const filename = nb.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '-') + '.scriptclip.json';
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  window.toast('Exported: ' + filename);
-};
-
-window.importNotebook = function(file) {
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      const obj = JSON.parse(ev.target.result);
-      if (!obj._scriptclip || !obj.notebook) {
-        window.toast('Not a valid ScriptClip notebook file.');
-        return;
-      }
-      const nb = obj.notebook;
-      const data = nbLoad();
-      // Check if a notebook with same name exists
-      const existingId = Object.keys(data).find(id => data[id].name === nb.name);
-      if (existingId) {
-        // Append pages to existing notebook rather than duplicate
-        data[existingId].pages = data[existingId].pages.concat(nb.pages || []);
-        if (nb.color) data[existingId].color = nb.color;
-        if (nb.icon) data[existingId].icon = nb.icon;
-        nbSave(data);
-        window.toast('Merged into existing notebook: ' + nb.name);
-      } else {
-        const id = 'nb_' + Date.now();
-        data[id] = nb;
-        nbSave(data);
-        window.toast('Imported: ' + nb.name + ' (' + (nb.pages || []).length + ' pages)');
-      }
-      renderNotebookList();
-    } catch(e) {
-      window.toast('Failed to read file: ' + e.message);
-    }
-  };
-  reader.readAsText(file);
-};
-
-window.setPageTheme = function(name, save) {
-  if (!THEMES[name]) return;
-  const sel = document.getElementById('themeSelectPage');
-  if (sel) sel.value = name;
-  const th = THEMES[name];
-  const root = document.documentElement;
-  root.style.setProperty('--n-h1', th.h1);
-  root.style.setProperty('--n-h2', th.h2);
-  root.style.setProperty('--n-h3', th.h3);
-  root.style.setProperty('--n-term', th.term);
-  root.style.setProperty('--n-romaji', th.romaji);
-  root.style.setProperty('--n-bullet-marker', th.bulletMarker);
-  root.style.setProperty('--n-bullet', th.bullet);
-  root.style.setProperty('--n-summary-bg', th.sumBg);
-  root.style.setProperty('--n-summary-border', th.sumBorder);
-  root.style.setProperty('--n-summary-text', th.sumText);
-  // Persist theme choice to this page's data
-  if (save !== false && window._currentPageIdx !== undefined) {
-    const data = nbLoad();
-    const nb = data[currentNotebookId];
-    if (nb && nb.pages[window._currentPageIdx]) {
-      nb.pages[window._currentPageIdx].theme = name;
-      nbSave(data);
-    }
-  }
-};
-
-// ── HISTORY NAV ──
-// Push a state whenever we navigate deeper in the notebook
-function nbPushState(state) {
-  history.pushState(state, '');
-}
-
-// Intercept browser back button
-window.addEventListener('popstate', function(e) {
-  // If reading mode is open, close it first and do nothing else
-  var reader = document.getElementById('scReaderOverlay');
-  if (reader && reader.style.display !== 'none') {
-    reader.style.display = 'none';
-    document.getElementById('scReaderContent').innerHTML = '';
-    history.pushState({}, '');
-    return;
-  }
-  // Otherwise handle normal notebook navigation
-  const pageView = document.getElementById('nbPageView');
-  const pagesView = document.getElementById('nbPagesView');
-  const notebookTab = document.getElementById('panel-notebook');
-  if (!notebookTab || !notebookTab.classList.contains('active')) return;
-  if (pageView && pageView.style.display !== 'none') {
-    history.pushState({ nbView: 'pages' }, '');
-    window.showPagesView();
-  } else if (pagesView && pagesView.style.display !== 'none') {
-    history.pushState({ nbView: 'list' }, '');
-    window.showNotebookList();
-  }
-});
-
-window.loadCurrentPageToQuiz = function() {
-  if (!window._currentPageHtml) return;
-  const div = document.createElement('div');
-  div.innerHTML = window._currentPageHtml;
-  document.getElementById('quizPasteArea').value = div.innerText;
-  const data = nbLoad();
-  const nb = data[currentNotebookId];
-  const page = nb && nb.pages[window._currentPageIdx];
-  document.getElementById('quizSourceStatus').textContent = page ? '✓ Loaded: ' + page.name : '✓ Page loaded';
-  window.switchTab('quiz');
-};
-
-// ── NOTEBOOK SEARCH ──
-// Extract all context snippets for a query within text
-function getContextSnippets(text, q, maxSnippets) {
-  const snippets = [];
-  const lower = text.toLowerCase();
-  let pos = 0;
-  while (snippets.length < (maxSnippets || 4)) {
-    const idx = lower.indexOf(q, pos);
-    if (idx < 0) break;
-    const before = text.slice(Math.max(0, idx - 45), idx);
-    const match = text.slice(idx, idx + q.length);
-    const after = text.slice(idx + q.length, idx + q.length + 45);
-    snippets.push({
-      before: (idx > 45 ? '…' : '') + before,
-      match,
-      after: after + (idx + q.length + 45 < text.length ? '…' : ''),
-      charPos: idx
-    });
-    pos = idx + q.length;
-  }
-  return snippets;
-}
-
-window.nbSearch = function(query) {
-  const q = query.trim().toLowerCase();
-  const clearBtn = document.getElementById('nbSearchClear');
-  const status = document.getElementById('nbSearchStatus');
-  if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
-
-  if (!q) {
-    status.textContent = '';
-    renderPagesList();
-    return;
-  }
-
-  const data = nbLoad();
-  const nb = data[currentNotebookId];
-  if (!nb || !nb.pages) return;
-
-  const matches = [];
-  nb.pages.forEach(function(page, idx) {
-    const nameMatch = page.name.toLowerCase().includes(q);
-    const div = document.createElement('div');
-    div.innerHTML = page.html || '';
-    const text = div.innerText;
-    const snippets = getContextSnippets(text, q, 4);
-    if (nameMatch || snippets.length > 0) {
-      matches.push({ page, idx, nameMatch, snippets });
-    }
-  });
-
-  const totalHits = matches.reduce(function(n, m) { return n + m.snippets.length + (m.nameMatch ? 1 : 0); }, 0);
-  status.textContent = matches.length === 0
-    ? 'No results'
-    : matches.length + ' page' + (matches.length !== 1 ? 's' : '') + ', ' + totalHits + ' match' + (totalHits !== 1 ? 'es' : '');
-
-  const list = document.getElementById('nbPagesList');
-  const empty = document.getElementById('nbPagesEmpty');
-  list.innerHTML = '';
-  empty.style.display = matches.length === 0 ? 'block' : 'none';
-
-  matches.forEach(function(m) {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;';
-
-    // If name matches, add it as first context row
-    const allRows = [];
-    if (m.nameMatch) {
-      allRows.push({ label: highlightMatch(m.page.name, q), isName: true, si: 0 });
-    }
-    m.snippets.forEach(function(s, si) {
-      allRows.push({
-        label: '<span style="color:var(--muted)">' + escapeHtml(s.before) + '</span>' +
-          '<mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:var(--ink);border-radius:2px;padding:0 1px">' + escapeHtml(s.match) + '</mark>' +
-          '<span style="color:var(--muted)">' + escapeHtml(s.after) + '</span>',
-        isName: false, si
-      });
-    });
-
-    allRows.forEach(function(row, ri) {
-      const el = document.createElement('div');
-      el.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;transition:background 0.15s;border-top:' + (ri > 0 ? '1px solid var(--border)' : 'none') + ';background:var(--surface);';
-      el.innerHTML =
-        '' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:700;letter-spacing:0.5px">' + m.page.name + ' · ' + new Date(m.page.saved).toLocaleDateString() + '</div>' +
-          '<div>' + row.label + '</div>' +
-        '</div>' +
-        (ri === 0 ? '<button class="nb-page-btn quiz-btn" style="flex-shrink:0" title="Load into Quiz">Quiz</button>' : '');
-      el.addEventListener('click', function(e) {
-        if (e.target.closest('.quiz-btn')) return;
-        window.openPageAtMatch(m.idx, row.si, q);
-      });
-      if (ri === 0) {
-        el.querySelector('.quiz-btn').addEventListener('click', function(e) {
-          e.stopPropagation(); window.loadPageToQuiz(m.idx);
         });
-      }
-      wrap.appendChild(el);
     });
-
-    list.appendChild(wrap);
+    list.appendChild(row);
   });
-};
-
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Open page and scroll to Nth match
-window.openPageAtMatch = function(idx, matchIdx, q) {
-  window._searchQuery = q;
-  window._searchMatchIdx = matchIdx;
-  // Clear search bar so highlight doesn't persist on return
-  const inp = document.getElementById('nbSearchInput');
-  if (inp) inp.value = '';
-  const clr = document.getElementById('nbSearchClear');
-  if (clr) clr.style.display = 'none';
-  const sts = document.getElementById('nbSearchStatus');
-  if (sts) sts.textContent = '';
-  window.openPage(idx);
+window.ytShowOptions = function() {
+  document.getElementById('ytMainPanel').style.display = 'none';
+  document.getElementById('ytOptionsPanel').style.display = 'block';
+  renderYtHistory();
 };
 
-window.nbClearSearch = function() {
-  const inp = document.getElementById('nbSearchInput');
-  if (inp) { inp.value = ''; inp.focus(); }
-  document.getElementById('nbSearchClear').style.display = 'none';
-  document.getElementById('nbSearchStatus').textContent = '';
-  renderPagesList();
+window.ytShowMain = function() {
+  document.getElementById('ytOptionsPanel').style.display = 'none';
+  document.getElementById('ytMainPanel').style.display = 'block';
 };
 
-function highlightMatch(text, q) {
-  const idx = text.toLowerCase().indexOf(q);
-  if (idx < 0) return text;
-  return text.slice(0, idx) +
-    '<mark style="background:color-mix(in srgb,var(--n-h2) 30%,transparent);color:inherit;border-radius:2px">' +
-    text.slice(idx, idx + q.length) +
-    '</mark>' +
-    text.slice(idx + q.length);
-}
-
-window.openExportModal = function(preselectId) {
-  const data = nbLoad();
-  const ids = Object.keys(data);
-  if (ids.length === 0) { window.toast('No notebooks to export.'); return; }
-  const sel = document.getElementById('nbExportSelect');
-  sel.innerHTML = '';
-  ids.forEach(function(id) {
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = data[id].name;
-    sel.appendChild(opt);
-  });
-  // Pre-select the passed notebook if provided
-  if (preselectId && data[preselectId]) sel.value = preselectId;
-  updateExportFilename();
-  sel.onchange = updateExportFilename;
-  document.getElementById('nbExportOverlay').classList.add('open');
-};
-
-function updateExportFilename() {
-  const sel = document.getElementById('nbExportSelect');
-  const data = nbLoad();
-  const nb = data[sel.value];
-  if (nb) {
-    document.getElementById('nbExportFilename').value =
-      nb.name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'-');
-  }
-}
-
-window.doExportNotebook = function() {
-  const nbId = document.getElementById('nbExportSelect').value;
-  const filename = document.getElementById('nbExportFilename').value.trim() || 'notebook';
-  const data = nbLoad();
-  const nb = data[nbId];
-  if (!nb) return;
-  const exportObj = { _scriptclip: true, version: 1, notebook: nb };
-  const json = JSON.stringify(exportObj, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename + '.scriptclip.json';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  document.getElementById('nbExportOverlay').classList.remove('open');
-  window.toast('Exported: ' + filename + '.scriptclip.json');
-};
-
-window.openPasteJson = function() {
-  document.getElementById('nbPasteJsonArea').value = '';
-  document.getElementById('nbPasteJsonOverlay').classList.add('open');
-  setTimeout(function(){ document.getElementById('nbPasteJsonArea').focus(); }, 50);
-};
-
-window.importFromPastedJson = function() {
-  const raw = document.getElementById('nbPasteJsonArea').value.trim();
-  if (!raw) { window.toast('Please paste JSON text first.'); return; }
-  try {
-    const obj = JSON.parse(raw);
-    if (!obj._scriptclip || !obj.notebook) { window.toast('Not valid ScriptClip JSON.'); return; }
-    document.getElementById('nbPasteJsonOverlay').classList.remove('open');
-    const nb = obj.notebook;
-    const data = nbLoad();
-    const existingId = Object.keys(data).find(function(id){ return data[id].name === nb.name; });
-    if (existingId) {
-      data[existingId].pages = data[existingId].pages.concat(nb.pages || []);
-      if (nb.color) data[existingId].color = nb.color;
-      if (nb.icon) data[existingId].icon = nb.icon;
-      nbSave(data);
-      window.toast('Merged into: ' + nb.name);
-    } else {
-      const id = 'nb_' + Date.now();
-      data[id] = nb;
-      nbSave(data);
-      window.toast('Imported: ' + nb.name + ' (' + (nb.pages||[]).length + ' pages)');
-    }
-    renderNotebookList();
-  } catch(e) {
-    window.toast('Invalid JSON: ' + e.message);
+window.ytToggleLoop = function() {
+  ytLoopPlaylist = !ytLoopPlaylist;
+  var btn = document.getElementById('ytLoopBtn');
+  if (btn) {
+    btn.style.color = ytLoopPlaylist ? 'var(--accent)' : 'var(--muted)';
+    btn.style.borderColor = ytLoopPlaylist ? 'var(--accent)' : 'var(--border)';
   }
 };
 
-// ── FULL-SCREEN READING MODE (double-tap to open, double-tap to close) ──
-(function() {
-  var overlay = document.createElement('div');
-  overlay.id = 'scReaderOverlay';
-  overlay.style.cssText = [
-    'position:fixed',
-    'inset:0',
-    'z-index:9999',
-    'background:var(--bg)',
-    'display:none',
-    'overflow-y:auto',
-    'overflow-x:hidden',
-    '-webkit-overflow-scrolling:touch',
-    'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
-    'box-sizing:border-box',
-    'word-break:break-word',
-    'overflow-wrap:break-word',
-  ].join(';');
-
-  var inner = document.createElement('div');
-  inner.id = 'scReaderContent';
-  inner.className = 'notes-content';
-  inner.style.cssText = 'padding:28px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;';
-  overlay.appendChild(inner);
-
-  function openReader(sourceId) {
-    var source = document.getElementById(sourceId);
-    if (!source) return;
-    // Get page name
-    var pageName = '';
-    if (sourceId === 'nbPageContent' && window._currentPageIdx !== undefined) {
-      var data = nbLoad();
-      var nb = data[currentNotebookId];
-      if (nb && nb.pages[window._currentPageIdx]) pageName = nb.pages[window._currentPageIdx].name;
-    } else if (sourceId === 'notesContent') {
-      var h1 = source.querySelector('h1');
-      if (h1) pageName = h1.innerText;
-    }
-    inner.innerHTML = (pageName ? '<div style="font-family:system-ui,-apple-system,sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">' + pageName + '</div>' : '') + source.innerHTML;
-    overlay.style.display = 'block';
-    overlay.scrollTop = 0;
-    history.pushState({ reader: true }, '');
-  }
-
-  function closeReader() {
-    overlay.style.display = 'none';
-    inner.innerHTML = '';
-  }
-
-  function handleDoubleTap(el, cb) {
-    el._lastTap = 0;
-    el.addEventListener('touchend', function(e) {
-      var now = Date.now();
-      var gap = now - (el._lastTap || 0);
-      el._lastTap = now;
-      if (gap < 300 && gap > 30) {
-        e.preventDefault();
-        cb();
-      }
-    }, { passive: false });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    document.body.appendChild(overlay);
-
-    // Double-tap overlay itself to close
-    handleDoubleTap(overlay, closeReader);
-
-    // Double-tap notes content to open
-    var nc = document.getElementById('notesContent');
-    if (nc) handleDoubleTap(nc, function() { openReader('notesContent'); });
-
-    var pc = document.getElementById('nbPageContent');
-    if (pc) handleDoubleTap(pc, function() { openReader('nbPageContent'); });
-  });
-})();
-
-// ── RESTORE STATE ON REFRESH ──
-function restoreSessionState() {
-  // Read all values FIRST before any function calls that might overwrite them
-  const tab = sessionStorage.getItem('sc_tab') || 'builder';
-  const nbView = sessionStorage.getItem('sc_nb_view');
-  const nbId = sessionStorage.getItem('sc_nb_id');
-  const pageIdx = sessionStorage.getItem('sc_page_idx');
-
-  // Activate tab visually without triggering sessionStorage reset
-  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
-  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
-  var tabEl = document.getElementById('tab-' + tab);
-  var panelEl = document.getElementById('panel-' + tab);
-  if (tabEl) tabEl.classList.add('active');
-  if (panelEl) panelEl.classList.add('active');
-
-  if (tab === 'notebook') {
-    setTimeout(function() {
-      if (typeof window.showNotebookList === 'function') window.showNotebookList();
-      if (nbId) {
-        setTimeout(function() {
-          if (nbView === 'pages' || nbView === 'page') {
-            window.openNotebook(nbId);
-          }
-          if (nbView === 'page' && pageIdx !== null) {
-            setTimeout(function() {
-              window.openPage(parseInt(pageIdx));
-            }, 80);
-          }
-        }, 50);
-      }
-    }, 20);
-  }
-}
-
-// ── YOUTUBE AUDIO PLAYER (iframe embed, no API needed) ──
+// ── YOUTUBE AUDIO PLAYER ──
 var YT_API_KEY = ''; // paste your YouTube Data API key here
 var ytVideoId = null;
+var ytHistory = JSON.parse(localStorage.getItem('sc_yt_history') || '[]');
+var ytLoopPlaylist = false;
+var ytLoopIdx = 0;
 var ytPlaying = false;
 var ytCurrentSec = 0;
 var ytDurSec = 0;
 var ytInterval = null;
 var ytIframe = null;
+var _ytFromUrl = false;
 
 function extractYtId(url) {
   var m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
@@ -3222,13 +1955,16 @@ function extractYtId(url) {
 
 function fmtTime(s) {
   s = Math.floor(s || 0);
-  var m = Math.floor(s / 60);
+  var h = Math.floor(s / 3600);
+  var m = Math.floor((s % 3600) / 60);
   var sec = s % 60;
+  if (h > 0) return h + ':' + (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
 function ytBuildIframe(videoId, startSec) {
   var wrap = document.getElementById('ytIframeWrap');
+  if (!wrap) return;
   wrap.innerHTML = '';
   var src = 'https://www.youtube.com/embed/' + videoId
     + '?autoplay=1&controls=0&loop=1&playlist=' + videoId
@@ -3250,10 +1986,22 @@ function ytStartTimer() {
   ytInterval = setInterval(function() {
     if (!ytPlaying) return;
     ytCurrentSec++;
-    // Fake loop when we reach end (within 2s)
     if (ytDurSec > 0 && ytCurrentSec >= ytDurSec) {
-      ytCurrentSec = 0;
-      ytBuildIframe(ytVideoId, 0);
+      if (ytLoopPlaylist && ytHistory.length > 1) {
+        ytLoopIdx = (ytLoopIdx + 1) % ytHistory.length;
+        var next = ytHistory[ytLoopIdx];
+        document.getElementById('ytUrlInput').value = next.url;
+        ytVideoId = next.id;
+        ytCurrentSec = 0;
+        ytDurSec = 0;
+        var titleEl = document.getElementById('ytTitle');
+        if (titleEl) titleEl.textContent = next.title;
+        ytBuildIframe(next.id, 0);
+        fetchYtInfo(next.id);
+      } else {
+        ytCurrentSec = 0;
+        ytBuildIframe(ytVideoId, 0);
+      }
       return;
     }
     document.getElementById('ytCurrent').textContent = fmtTime(ytCurrentSec);
@@ -3269,24 +2017,16 @@ function ytStartTimer() {
 
 function ytUpdatePlayBtn() {
   var btn = document.getElementById('ytPlayBtn');
-  if (btn) btn.textContent = ytPlaying ? '❙❙' : '▶';
+  if (btn) btn.textContent = ytPlaying ? '\u275a\u275a' : '\u25b6';
   var tab = document.getElementById('ytTab');
   if (tab) {
-    tab.textContent = document.getElementById('ytPlayerWrap').classList.contains('open') ? '◀' : '▶';
+    tab.textContent = document.getElementById('ytPlayerWrap') && document.getElementById('ytPlayerWrap').classList.contains('open') ? '\u25c0' : '\u25b6';
     tab.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
     tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
   }
 }
 
-window.ytLoad = function() {
-  var url = document.getElementById('ytUrlInput').value.trim();
-  if (!url) return;
-  var id = extractYtId(url);
-  if (!id) { window.toast('Invalid YouTube URL'); return; }
-  ytVideoId = id;
-  ytCurrentSec = 0;
-  localStorage.setItem('sc_yt_url', url);
-  // Fetch video info via worker
+function fetchYtInfo(id) {
   fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -3298,31 +2038,50 @@ window.ytLoad = function() {
     if (info.title) {
       var titleEl = document.getElementById('ytTitle');
       if (titleEl) titleEl.textContent = info.title;
+      if (_ytFromUrl) {
+        var url = document.getElementById('ytUrlInput').value.trim();
+        ytHistory = ytHistory.filter(function(h) { return h.id !== id; });
+        ytHistory.unshift({ id: id, title: info.title, url: url });
+        if (ytHistory.length > 5) ytHistory = ytHistory.slice(0, 5);
+        localStorage.setItem('sc_yt_history', JSON.stringify(ytHistory));
+        ytLoopIdx = 0;
+        _ytFromUrl = false;
+      }
     }
     if (info.duration) {
-      var dur = info.duration;
-      var h = 0, min = 0, sec = 0;
-      var hm = dur.match(/([0-9]+)H/); if (hm) h = parseInt(hm[1]);
-      var mm = dur.match(/([0-9]+)M/); if (mm) min = parseInt(mm[1]);
-      var sm = dur.match(/([0-9]+)S/); if (sm) sec = parseInt(sm[1]);
-      ytDurSec = h * 3600 + min * 60 + sec;
+      var h=0, min=0, sec=0;
+      var hm=info.duration.match(/([0-9]+)H/); if(hm) h=parseInt(hm[1]);
+      var mm=info.duration.match(/([0-9]+)M/); if(mm) min=parseInt(mm[1]);
+      var sm=info.duration.match(/([0-9]+)S/); if(sm) sec=parseInt(sm[1]);
+      ytDurSec = h*3600+min*60+sec;
       var durEl = document.getElementById('ytDuration');
       if (durEl) durEl.textContent = fmtTime(ytDurSec);
     }
   });
+}
+
+window.ytLoad = function() {
+  var url = document.getElementById('ytUrlInput').value.trim();
+  if (!url) return;
+  var id = extractYtId(url);
+  if (!id) { window.toast('Invalid YouTube URL'); return; }
+  ytVideoId = id;
+  ytCurrentSec = 0;
+  ytDurSec = 0;
+  _ytFromUrl = true;
+  localStorage.setItem('sc_yt_url', url);
   ytBuildIframe(id, 0);
+  fetchYtInfo(id);
 };
 
 window.ytTogglePlay = function() {
   if (!ytVideoId) { window.ytLoad(); return; }
   if (ytPlaying) {
-    // Pause: remove iframe, remember position
     localStorage.setItem('sc_yt_pos', ytCurrentSec);
     document.getElementById('ytIframeWrap').innerHTML = '';
     ytPlaying = false;
     clearInterval(ytInterval);
   } else {
-    // Resume from current position
     ytBuildIframe(ytVideoId, ytCurrentSec);
   }
   ytUpdatePlayBtn();
@@ -3334,6 +2093,12 @@ window.ytSkipBack = function() {
   ytBuildIframe(ytVideoId, ytCurrentSec);
 };
 
+window.ytSkipFwd = function() {
+  if (!ytVideoId) return;
+  ytCurrentSec = ytCurrentSec + 30;
+  ytBuildIframe(ytVideoId, ytCurrentSec);
+};
+
 window.ytSeek = function(e) {
   if (!ytVideoId || !ytDurSec) return;
   var rect = document.getElementById('ytProgressWrap').getBoundingClientRect();
@@ -3342,18 +2107,11 @@ window.ytSeek = function(e) {
   ytBuildIframe(ytVideoId, ytCurrentSec);
 };
 
-window.ytSkipFwd = function() {
-  if (!ytVideoId) return;
-  ytCurrentSec = ytCurrentSec + 30;
-  ytBuildIframe(ytVideoId, ytCurrentSec);
-};
-
-
 window.ytTogglePanel = function() {
   var wrap = document.getElementById('ytPlayerWrap');
   wrap.classList.toggle('open');
   var tab = document.getElementById('ytTab');
-  if (tab) tab.textContent = wrap.classList.contains('open') ? '◀' : '▶';
+  if (tab) tab.textContent = wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
 };
 
 window.ytClose = function() {
@@ -3361,12 +2119,12 @@ window.ytClose = function() {
   if (wrap && wrap.classList.contains('open')) {
     wrap.classList.remove('open');
     var tab = document.getElementById('ytTab');
-    if (tab) tab.textContent = '▶';
+    if (tab) tab.textContent = '\u25b6';
   }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Restore saved URL on load
+  // Restore saved URL and position
   var saved = localStorage.getItem('sc_yt_url');
   if (saved) {
     document.getElementById('ytUrlInput').value = saved;
@@ -3378,9 +2136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-
-
-  // Auto-pause when screen locks or app is backgrounded
+  // Auto-pause on visibility change
   document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
       if (ytPlaying) {
@@ -3391,12 +2147,12 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(ytInterval);
       }
     } else {
-      // Returned to page — auto-resume if was playing
       if (ytVideoId && !ytPlaying) {
         ytBuildIframe(ytVideoId, ytCurrentSec);
       }
     }
   });
+
   // Close player when tapping outside
   document.addEventListener('click', function(e) {
     var wrap = document.getElementById('ytPlayerWrap');
@@ -3410,6 +2166,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.ytClose();
     }
   }, { passive: true });
+
   // Hide when reading mode opens
   var readerOverlay = document.getElementById('scReaderOverlay');
   if (readerOverlay) {
@@ -3421,256 +2178,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ── AI HIGHLIGHT ──
-var _aiHighlightText = '';
-var _aiHighlightContext = '';
-
-function getSelectionContext(selection) {
-  if (!selection || selection.isCollapsed) return '';
-  var range = selection.getRangeAt(0);
-  var container = range.commonAncestorContainer;
-  // Walk up to find a block-level parent for context
-  var block = container.nodeType === 3 ? container.parentElement : container;
-  while (block && !['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName)) {
-    block = block.parentElement;
-  }
-  return block ? block.innerText || block.textContent : '';
-}
-
-function showAiHighlightPopup(x, y, selected, context) {
-  _aiHighlightText = selected;
-  _aiHighlightContext = context;
-  var popup = document.getElementById('aiHighlightPopup');
-  popup.style.display = 'block';
-  popup.style.transform = 'translateX(-50%)';
-  popup.style.bottom = 'auto';
-  var vw = window.innerWidth;
-  var vh = window.innerHeight;
-  // Get the bounding rect of the selection to position below it
-  var sel = window.getSelection();
-  var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
-  if (rect) {
-    // Place below the selection with a gap
-    var top = rect.bottom + window.scrollY + 10;
-    var left = Math.min(Math.max(rect.left + rect.width / 2, 80), vw - 80);
-    popup.style.top = top + 'px';
-    popup.style.left = left + 'px';
-  } else {
-    // Fallback to touch position
-    popup.style.top = (y + 10) + 'px';
-    popup.style.left = Math.min(Math.max(x, 80), vw - 80) + 'px';
-  }
-}
-
-function hideAiHighlightPopup() {
-  document.getElementById('aiHighlightPopup').style.display = 'none';
-}
-
-window.aiHighlightCopy = function() {
-  var prompt = 'You are helping a student understand content from their study notes.\n\n' +
-    'Explain the following term or phrase:\n\n' +
-    '"' + _aiHighlightText.trim() + '"\n\n' +
-    (_aiHighlightContext && _aiHighlightContext.trim() !== _aiHighlightText.trim()
-      ? 'Context from study notes:\n"' + _aiHighlightContext.trim() + '"\n\n'
-      : '') +
-    'Keep the explanation under 100 words. Use plain language. ' +
-    'Focus on what it means and why it matters in this context. ' +
-    'If this is a foreign language term, include romanization, literal meaning, and a short usage example.';
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(prompt).then(function() {
-      window.toast('Prompt copied — paste into Claude or Gemini');
-    });
-  } else {
-    var ta = document.createElement('textarea');
-    ta.value = prompt;
-    ta.style.cssText = 'position:fixed;top:-9999px';
-    document.body.appendChild(ta);
-    ta.select(); ta.setSelectionRange(0, 99999);
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    window.toast('Prompt copied — paste into Claude or Gemini');
-  }
-  hideAiHighlightPopup();
-  window.getSelection().removeAllRanges();
-};
-
-// Wire up selection events on notes content areas
-function setupAiHighlight(elId) {
-  var el = document.getElementById(elId);
-  if (!el) return;
-
-  el.addEventListener('mouseup', function(e) {
-    var sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
-    var context = getSelectionContext(sel);
-    showAiHighlightPopup(e.clientX, e.clientY, sel.toString(), context);
-  });
-
-  el.addEventListener('touchend', function(e) {
-    setTimeout(function() {
-      var sel = window.getSelection();
-      if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
-      var context = getSelectionContext(sel);
-      var touch = e.changedTouches[0];
-      showAiHighlightPopup(touch.clientX, touch.clientY, sel.toString(), context);
-    }, 100);
-  });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  setupAiHighlight('notesContent');
-  setupAiHighlight('nbPageContent');
-  setupAiHighlight('scReaderContent');
-
-  // Hide popup on tap/click outside
-  document.addEventListener('mousedown', function(e) {
-    var popup = document.getElementById('aiHighlightPopup');
-    if (popup && !popup.contains(e.target)) hideAiHighlightPopup();
-  });
-  document.addEventListener('touchstart', function(e) {
-    var popup = document.getElementById('aiHighlightPopup');
-    if (popup && popup.style.display !== 'none' && !popup.contains(e.target)) hideAiHighlightPopup();
-  }, { passive: true });
-});
-
-// ── PAGE FONT SIZE (desktop only, universal) ──
-var _nbFontSize = parseInt(localStorage.getItem('sc_font_size')) || 15;
-
-window.nbFontAdj = function(delta) {
-  _nbFontSize = Math.min(28, Math.max(10, _nbFontSize + delta));
-  localStorage.setItem('sc_font_size', _nbFontSize);
-  applyNbFontSize();
-};
-
-function applyNbFontSize() {
-  var nc = document.getElementById('nbPageContent');
-  if (!nc) return;
-  var s = _nbFontSize;
-  nc.style.fontSize = s + 'px';
-  // Scale headings proportionally relative to body size
-  var h1 = nc.querySelectorAll('h1'); h1.forEach(function(el){ el.style.fontSize = Math.round(s * 1.8) + 'px'; });
-  var h2 = nc.querySelectorAll('h2'); h2.forEach(function(el){ el.style.fontSize = Math.round(s * 1.35) + 'px'; });
-  var h3 = nc.querySelectorAll('h3'); h3.forEach(function(el){ el.style.fontSize = Math.round(s * 1.1) + 'px'; });
-}
-
 </script>
-
-<!-- NOTEBOOK NAME MODAL -->
-<div class="modal-overlay" id="nbNameOverlay">
-  <div class="modal">
-    <div class="modal-title">New Notebook</div>
-    <div class="modal-filename-wrap">
-      <label class="modal-filename-label">Name</label>
-      <input type="text" id="nbNameInput" class="modal-filename-input" placeholder="e.g. Japanese Lessons" autocomplete="off" spellcheck="false"/>
-    </div>
-    <div class="modal-actions" style="margin-top:20px">
-      <button class="modal-cancel" onclick="window.closeNbNameModal()">Cancel</button>
-      <button class="modal-save" onclick="window.confirmNbName()">Create</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTEBOOK PICKER MODAL -->
-<div class="modal-overlay" id="nbPickerOverlay">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title">Load from Notebook</div>
-    <div id="nbPickerContent" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.closeNotebookPicker()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTEBOOK COLOR MODAL -->
-<div class="modal-overlay" id="nbColorOverlay">
-  <div class="modal" style="max-width:320px">
-    <div class="modal-title">Notebook Color</div>
-    <div id="nbColorGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.closeNbColor()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div class="modal-overlay" id="scConfirmOverlay">
-  <div class="modal" style="max-width:300px">
-    <div class="modal-title" id="scConfirmTitle">Are you sure?</div>
-    <div id="scConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:20px;font-family:system-ui,sans-serif"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="window.scConfirmResolve(false)">Cancel</button>
-      <button class="modal-save" style="background:var(--accent)" onclick="window.scConfirmResolve(true)">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- EXPORT MODAL -->
-<div class="modal-overlay" id="nbExportOverlay">
-  <div class="modal" style="max-width:360px">
-    <div class="modal-title">Export Notebook</div>
-    <div class="modal-filename-wrap">
-      <label class="modal-filename-label">Select Notebook</label>
-      <select id="nbExportSelect" class="modal-filename-input" style="cursor:pointer"></select>
-    </div>
-    <div class="modal-filename-wrap" style="margin-top:12px">
-      <label class="modal-filename-label">File Name</label>
-      <input type="text" id="nbExportFilename" class="modal-filename-input" spellcheck="false" autocorrect="off"/>
-    </div>
-    <div class="modal-actions" style="margin-top:20px">
-      <button class="modal-cancel" onclick="document.getElementById('nbExportOverlay').classList.remove('open')">Cancel</button>
-      <button class="modal-save" onclick="if(typeof window.doExportNotebook==='function'){window.doExportNotebook()}">Export</button>
-    </div>
-  </div>
-</div>
-
-<!-- PASTE JSON MODAL -->
-<div class="modal-overlay" id="nbPasteJsonOverlay">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-title">Import from JSON Text</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:system-ui,sans-serif">Paste the contents of a .scriptclip.json file below</div>
-    <textarea id="nbPasteJsonArea" style="width:100%;min-height:140px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:var(--ink);resize:vertical;outline:none;box-sizing:border-box" placeholder='{"_scriptclip":true,"version":1,"notebook":{...}}'></textarea>
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="modal-cancel" onclick="document.getElementById('nbPasteJsonOverlay').classList.remove('open')">Cancel</button>
-      <button class="modal-save" onclick="if(typeof window.importFromPastedJson==='function'){window.importFromPastedJson()}">Import</button>
-    </div>
-  </div>
-</div>
-
-<!-- YOUTUBE AUDIO PLAYER - mobile only -->
-<div id="ytPlayerWrap" style="display:none">
-  <!-- Collapsed tab -->
-  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
-  <!-- Expanded panel -->
-  <div id="ytPanel">
-    <div id="ytPanelInner">
-      <!-- URL input -->
-      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
-      <!-- Hidden iframe -->
-      <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
-      <!-- Controls row -->
-      <div id="ytControls">
-        <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
-        <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
-        <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
-      </div>
-      <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px"></div>
-      <!-- Progress -->
-      <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:3px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:5px;position:relative;">
-        <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.5s linear;pointer-events:none;"></div>
-      </div>
-      <!-- Timestamps -->
-      <div id="ytTimes" style="display:flex;justify-content:space-between;">
-        <span id="ytCurrent">0:00</span>
-        <span id="ytDuration">0:00</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- AI HIGHLIGHT POPUP -->
-<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
-  <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Copy</button>
-</div>
 </body>
 </html>
+  </div>
+</div>
