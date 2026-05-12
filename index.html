@@ -997,8 +997,11 @@
 
     #ytPanelInner {
       padding: 10px 12px;
-      width: 200px;
+      width: 210px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     #ytUrlInput {
@@ -1017,8 +1020,10 @@
     #ytControls {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 8px;
       margin-bottom: 8px;
+      width: 100%;
     }
 
     .ytBtn {
@@ -1046,6 +1051,7 @@
       color: var(--muted);
       font-family: system-ui,-apple-system,sans-serif;
       letter-spacing: 0.5px;
+      width: 100%;
     }
   }
   @media (min-width: 769px) { #ytPlayerWrap { display: none !important; } }
@@ -1878,9 +1884,9 @@ window.doSave = function doSave() {
 
 // ── YOUTUBE OPTIONS: HISTORY + LOOP ──
 function renderYtHistory() {
-  console.log('[YT] renderYtHistory called, history length:', ytHistory.length);
   var list = document.getElementById('ytHistoryList');
-  if (!list) { console.log('[YT] ytHistoryList element not found'); return; }
+  if (!list) {
+ return; }
   list.innerHTML = '';
   if (ytHistory.length === 0) {
     list.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;text-align:center;padding:8px 0">No history yet</div>';
@@ -1942,9 +1948,10 @@ window.ytToggleLoop = function() {
 
 // ── YOUTUBE AUDIO PLAYER ──
 var YT_API_KEY = ''; // paste your YouTube Data API key here
+var WORKER_URL = 'https://scriptclip-proxy.sotempyhehe.workers.dev';
 var ytVideoId = null;
 var ytHistory = JSON.parse(localStorage.getItem('sc_yt_history') || '[]');
-var ytLoopPlaylist = false;
+var ytLoopPlaylist = true;
 var ytLoopIdx = 0;
 var ytPlaying = false;
 var ytCurrentSec = 0;
@@ -2032,14 +2039,14 @@ function ytUpdatePlayBtn() {
 }
 
 function fetchYtInfo(id) {
-  console.log('[YT] fetchYtInfo called for:', id);
   fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'ytInfo', videoId: id })
   })
   .then(function(r) { return r.json(); })
-  .catch(function(e) { console.log('[YT] fetch error:', e); return {}; })
+  .catch(function(e) {
+ return {}; })
   .then(function(info) {
     console.log('[YT] info received:', JSON.stringify(info).substring(0,100));
     if (info.title) {
@@ -2131,6 +2138,12 @@ window.ytClose = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Init loop button as active (default on)
+  var loopBtn = document.getElementById('ytLoopBtn');
+  if (loopBtn) {
+    loopBtn.style.color = 'var(--accent)';
+    loopBtn.style.borderColor = 'var(--accent)';
+  }
   // Restore saved URL and position
   var saved = localStorage.getItem('sc_yt_url');
   if (saved) {
