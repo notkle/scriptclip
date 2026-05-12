@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ScriptClip</title>
 
@@ -2927,78 +2927,70 @@ window.importFromPastedJson = function() {
   }
 };
 
-// ── DOUBLE-TAP ZOOM ──
-function setupZoom(wrapperId, innerId, hintId) {
-  const wrap = document.getElementById(wrapperId);
-  const inner = document.getElementById(innerId);
-  const hint = document.getElementById(hintId);
-  if (!wrap || !inner) return;
+// ── FULL-SCREEN READING MODE (double-tap to open, double-tap to close) ──
+(function() {
+  var overlay = document.createElement('div');
+  overlay.id = 'scReaderOverlay';
+  overlay.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:9999',
+    'background:var(--bg)',
+    'display:none',
+    'overflow-y:auto',
+    'overflow-x:hidden',
+    '-webkit-overflow-scrolling:touch',
+    'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
+    'box-sizing:border-box',
+    'word-break:break-word',
+    'overflow-wrap:break-word',
+  ].join(';');
 
-  let lastTap = 0;
-  let isZoomed = false;
-  let scale = 1;
+  var inner = document.createElement('div');
+  inner.id = 'scReaderContent';
+  inner.style.cssText = 'padding:28px 20px 48px;';
+  overlay.appendChild(inner);
 
-  function getScale() {
-    // Scale to fill wrap width with padding accounted for
-    const wrapW = wrap.clientWidth;
-    const innerW = inner.scrollWidth;
-    return Math.max(wrapW / innerW * wrapW / (wrapW - 56), 1.6);
+  function openReader(sourceId) {
+    var source = document.getElementById(sourceId);
+    if (!source) return;
+    inner.innerHTML = source.innerHTML;
+    overlay.style.display = 'block';
+    overlay.scrollTop = 0;
   }
 
-  function zoomIn() {
-    isZoomed = true;
-    scale = getScale();
-    inner.style.transform = 'scale(' + scale + ')';
-    inner.style.transformOrigin = 'top left';
-    inner.style.width = (100 / scale) + '%';
-    inner.style.overflowX = 'hidden';
-    if (hint) hint.style.opacity = '0';
+  function closeReader() {
+    overlay.style.display = 'none';
+    inner.innerHTML = '';
   }
 
-  function zoomOut() {
-    isZoomed = false;
-    scale = 1;
-    inner.style.transform = 'scale(1)';
-    inner.style.width = '100%';
-    inner.style.overflowX = 'hidden';
-    if (hint) hint.style.opacity = '0.6';
+  function handleDoubleTap(el, cb) {
+    el._lastTap = 0;
+    el.addEventListener('touchend', function(e) {
+      var now = Date.now();
+      var gap = now - (el._lastTap || 0);
+      el._lastTap = now;
+      if (gap < 300 && gap > 30) {
+        e.preventDefault();
+        cb();
+      }
+    }, { passive: false });
   }
 
-  inner.addEventListener('touchend', function(e) {
-    const now = Date.now();
-    const gap = now - lastTap;
-    if (gap < 300 && gap > 30) {
-      e.preventDefault();
-      if (isZoomed) { zoomOut(); } else { zoomIn(); }
-    }
-    lastTap = now;
-  }, { passive: false });
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.appendChild(overlay);
 
-  // Prevent horizontal scroll on wrap when zoomed
-  wrap.addEventListener('touchmove', function(e) {
-    if (isZoomed && e.touches.length === 1) {
-      // Allow only vertical movement
-      const touch = e.touches[0];
-      if (!this._lastY) { this._lastY = touch.clientY; this._lastX = touch.clientX; return; }
-      const dy = Math.abs(touch.clientY - this._lastY);
-      const dx = Math.abs(touch.clientX - this._lastX);
-      this._lastY = touch.clientY;
-      this._lastX = touch.clientX;
-      if (dx > dy) e.preventDefault();
-    }
-  }, { passive: false });
+    // Double-tap overlay itself to close
+    handleDoubleTap(overlay, closeReader);
 
-  wrap.addEventListener('touchstart', function() {
-    this._lastY = null; this._lastX = null;
-  }, { passive: true });
-}
+    // Double-tap notes content to open
+    var nc = document.getElementById('notesContent');
+    if (nc) handleDoubleTap(nc, function() { openReader('notesContent'); });
 
-// Wire up both zoomable areas after DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-  setupZoom('notesZoomWrap', 'notesContent', 'notesZoomHint');
-  restoreSessionState();
-  setupZoom('pageZoomWrap', 'nbPageContent', 'pageZoomHint');
-});
+    var pc = document.getElementById('nbPageContent');
+    if (pc) handleDoubleTap(pc, function() { openReader('nbPageContent'); });
+  });
+})();
 
 // ── RESTORE STATE ON REFRESH ──
 function restoreSessionState() {
