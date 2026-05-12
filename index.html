@@ -1023,6 +1023,15 @@
       <button class="nb-new-btn" onclick="if(typeof window.exportNotebook==='function'){window.exportNotebook()}" title="Export" style="margin-right:6px">↓ Export</button>
       <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
     </div>
+    <div style="margin-bottom:12px;position:relative">
+      <input type="text" id="nbSearchInput" placeholder="Search pages…"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 36px 9px 14px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;box-sizing:border-box;"
+        oninput="if(typeof window.nbSearch==='function'){window.nbSearch(this.value)}"
+        onfocus="this.style.borderColor='var(--n-h2)'"
+        onblur="this.style.borderColor='var(--border)'"/>
+      <span id="nbSearchClear" onclick="window.nbClearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;line-height:1">✕</span>
+    </div>
+    <div id="nbSearchStatus" style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:system-ui,sans-serif;min-height:16px"></div>
     <div class="nb-pages-list" id="nbPagesList"></div>
     <div class="nb-empty" id="nbPagesEmpty">No pages saved to this notebook yet.</div>
   </div>
@@ -1650,6 +1659,11 @@ window.showNotebookList = function() {
   document.getElementById('nbListView').style.display = 'flex';
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'none';
+  // Clear search on exit
+  const si = document.getElementById('nbSearchInput');
+  if (si) si.value = '';
+  const ss = document.getElementById('nbSearchStatus');
+  if (ss) ss.textContent = '';
   renderNotebookList();
   history.replaceState({ nbView: 'list' }, '');
 };
@@ -1841,12 +1855,62 @@ window.openPage = function(idx) {
   document.getElementById('nbPageTitle').textContent = page.name;
   window._currentPageHtml = page.html;
   document.getElementById('nbPageContent').innerHTML = page.html;
-  // Restore this page's saved theme, fall back to current colorize theme
   const pageTheme = page.theme || currentTheme;
   window.setPageTheme(pageTheme, false);
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbPageView').style.display = 'flex';
   nbPushState({ nbView: 'page', nbId: currentNotebookId });
+
+  // If opened from search, scroll to match with temporary highlight only
+  if (window._searchQuery) {
+    const q = window._searchQuery;
+    const matchIdx = window._searchMatchIdx || 0;
+    window._searchQuery = null;
+    window._searchMatchIdx = null;
+    setTimeout(function() {
+      const nc = document.getElementById('nbPageContent');
+      if (!nc) return;
+      // Find all text nodes and locate Nth match position
+      const walker = document.createTreeWalker(nc, NodeFilter.SHOW_TEXT);
+      let matchCount = 0;
+      let targetNode = null;
+      let targetOffset = 0;
+      const qLower = q.toLowerCase();
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const text = node.textContent.toLowerCase();
+        let pos = 0;
+        while (true) {
+          const idx = text.indexOf(qLower, pos);
+          if (idx < 0) break;
+          if (matchCount === matchIdx) {
+            targetNode = node;
+            targetOffset = idx;
+            break;
+          }
+          matchCount++;
+          pos = idx + 1;
+        }
+        if (targetNode) break;
+      }
+      if (targetNode) {
+        // Wrap match in a temporary mark
+        const range = document.createRange();
+        range.setStart(targetNode, targetOffset);
+        range.setEnd(targetNode, targetOffset + q.length);
+        const mark = document.createElement('mark');
+        mark.style.cssText = 'background:color-mix(in srgb,var(--n-h2) 40%,transparent);color:inherit;border-radius:3px;padding:0 2px;outline:2px solid var(--n-h2);outline-offset:1px;';
+        range.surroundContents(mark);
+        mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Remove mark after 2s, restoring original text
+        setTimeout(function() {
+          if (mark.parentNode) {
+            mark.parentNode.replaceChild(document.createTextNode(mark.textContent), mark);
+          }
+        }, 2000);
+      }
+    }, 100);
+  }
 };
 
 window.deletePage = async function(idx) {
@@ -2504,6 +2568,149 @@ window.loadCurrentPageToQuiz = function() {
   document.getElementById('quizSourceStatus').textContent = page ? '✓ Loaded: ' + page.name : '✓ Page loaded';
   window.switchTab('quiz');
 };
+
+// ── NOTEBOOK SEARCH ──
+// Extract all context snippets for a query within text
+function getContextSnippets(text, q, maxSnippets) {
+  const snippets = [];
+  const lower = text.toLowerCase();
+  let pos = 0;
+  while (snippets.length < (maxSnippets || 4)) {
+    const idx = lower.indexOf(q, pos);
+    if (idx < 0) break;
+    const before = text.slice(Math.max(0, idx - 45), idx);
+    const match = text.slice(idx, idx + q.length);
+    const after = text.slice(idx + q.length, idx + q.length + 45);
+    snippets.push({
+      before: (idx > 45 ? '…' : '') + before,
+      match,
+      after: after + (idx + q.length + 45 < text.length ? '…' : ''),
+      charPos: idx
+    });
+    pos = idx + q.length;
+  }
+  return snippets;
+}
+
+window.nbSearch = function(query) {
+  const q = query.trim().toLowerCase();
+  const clearBtn = document.getElementById('nbSearchClear');
+  const status = document.getElementById('nbSearchStatus');
+  if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+  if (!q) {
+    status.textContent = '';
+    renderPagesList();
+    return;
+  }
+
+  const data = nbLoad();
+  const nb = data[currentNotebookId];
+  if (!nb || !nb.pages) return;
+
+  const matches = [];
+  nb.pages.forEach(function(page, idx) {
+    const nameMatch = page.name.toLowerCase().includes(q);
+    const div = document.createElement('div');
+    div.innerHTML = page.html || '';
+    const text = div.innerText;
+    const snippets = getContextSnippets(text, q, 4);
+    if (nameMatch || snippets.length > 0) {
+      matches.push({ page, idx, nameMatch, snippets });
+    }
+  });
+
+  const totalHits = matches.reduce(function(n, m) { return n + m.snippets.length + (m.nameMatch ? 1 : 0); }, 0);
+  status.textContent = matches.length === 0
+    ? 'No results'
+    : matches.length + ' page' + (matches.length !== 1 ? 's' : '') + ', ' + totalHits + ' match' + (totalHits !== 1 ? 'es' : '');
+
+  const list = document.getElementById('nbPagesList');
+  const empty = document.getElementById('nbPagesEmpty');
+  list.innerHTML = '';
+  empty.style.display = matches.length === 0 ? 'block' : 'none';
+
+  matches.forEach(function(m) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;';
+
+    // If name matches, add it as first context row
+    const allRows = [];
+    if (m.nameMatch) {
+      allRows.push({ label: highlightMatch(m.page.name, q), isName: true, si: 0 });
+    }
+    m.snippets.forEach(function(s, si) {
+      allRows.push({
+        label: '<span style="color:var(--muted)">' + escapeHtml(s.before) + '</span>' +
+          '<mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:var(--ink);border-radius:2px;padding:0 1px">' + escapeHtml(s.match) + '</mark>' +
+          '<span style="color:var(--muted)">' + escapeHtml(s.after) + '</span>',
+        isName: false, si
+      });
+    });
+
+    allRows.forEach(function(row, ri) {
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;transition:background 0.15s;border-top:' + (ri > 0 ? '1px solid var(--border)' : 'none') + ';background:var(--surface);';
+      el.innerHTML =
+        '<span style="font-size:14px;flex-shrink:0;margin-top:1px">📄</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:700;letter-spacing:0.5px">' + m.page.name + ' · ' + new Date(m.page.saved).toLocaleDateString() + '</div>' +
+          '<div>' + row.label + '</div>' +
+        '</div>' +
+        (ri === 0 ? '<button class="nb-page-btn quiz-btn" style="flex-shrink:0" title="Load into Quiz">Quiz</button>' : '');
+      el.onmouseover = function(){ this.style.background = 'color-mix(in srgb,var(--n-h2) 8%,transparent)'; };
+      el.onmouseout = function(){ this.style.background = 'var(--surface)'; };
+      el.addEventListener('click', function(e) {
+        if (e.target.closest('.quiz-btn')) return;
+        window.openPageAtMatch(m.idx, row.si, q);
+      });
+      if (ri === 0) {
+        el.querySelector('.quiz-btn').addEventListener('click', function(e) {
+          e.stopPropagation(); window.loadPageToQuiz(m.idx);
+        });
+      }
+      wrap.appendChild(el);
+    });
+
+    list.appendChild(wrap);
+  });
+};
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Open page and scroll to Nth match
+window.openPageAtMatch = function(idx, matchIdx, q) {
+  window._searchQuery = q;
+  window._searchMatchIdx = matchIdx;
+  // Clear search bar so highlight doesn't persist on return
+  const inp = document.getElementById('nbSearchInput');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('nbSearchClear');
+  if (clr) clr.style.display = 'none';
+  const sts = document.getElementById('nbSearchStatus');
+  if (sts) sts.textContent = '';
+  window.openPage(idx);
+};
+
+window.nbClearSearch = function() {
+  const inp = document.getElementById('nbSearchInput');
+  if (inp) { inp.value = ''; inp.focus(); }
+  document.getElementById('nbSearchClear').style.display = 'none';
+  document.getElementById('nbSearchStatus').textContent = '';
+  renderPagesList();
+};
+
+function highlightMatch(text, q) {
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx < 0) return text;
+  return text.slice(0, idx) +
+    '<mark style="background:color-mix(in srgb,var(--n-h2) 30%,transparent);color:inherit;border-radius:2px">' +
+    text.slice(idx, idx + q.length) +
+    '</mark>' +
+    text.slice(idx + q.length);
+}
 
 </script>
 
