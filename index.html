@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ScriptClip</title>
 
@@ -62,14 +62,25 @@
     color: var(--ink);
     font-family: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     transition: background 0.3s, color 0.3s;
+    overflow: hidden;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
   }
 
   .frame {
     position: fixed;
-    top: 14px; left: 14px; right: 14px; bottom: 14px;
+    top: calc(14px + env(safe-area-inset-top));
+    left: calc(14px + env(safe-area-inset-left));
+    right: calc(14px + env(safe-area-inset-right));
+    bottom: calc(14px + env(safe-area-inset-bottom));
     border: 1px solid var(--border);
     border-radius: 3px;
     pointer-events: none;
@@ -84,6 +95,7 @@
     justify-content: space-between;
     padding: 20px 28px 0;
     flex-shrink: 0;
+    -webkit-user-select: none;
   }
 
   .logo { display: flex; align-items: center; gap: 10px; }
@@ -136,7 +148,7 @@
   .tab:hover:not(.active) { color: var(--ink); }
 
   /* PANELS */
-  .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; }
+  .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
   .panel.active { display: flex; }
 
   /* BUILDER */
@@ -506,7 +518,7 @@
   }
   #nbCreateBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-  .nb-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
+  .nb-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; min-height: 0; }
   .nb-empty { font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; font-style: italic; }
 
   /* Notebook cards */
@@ -528,7 +540,7 @@
   .nb-card-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; }
 
   /* Page items */
-  .nb-pages-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
+  .nb-pages-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; min-height: 0; }
 
   .nb-page-item {
     display: flex; align-items: center; gap: 10px;
@@ -708,7 +720,7 @@
   .quiz-active-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-shrink: 0; }
   .quiz-progress-text { font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
 
-  .quiz-questions { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; padding-right: 4px; }
+  .quiz-questions { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 24px; padding-right: 4px; min-height: 0; }
 
   .quiz-q {
     background: var(--surface); border: 1px solid var(--border);
@@ -822,6 +834,12 @@
     transition: background 0.3s, color 0.3s;
   }
 
+
+  @supports (-webkit-touch-callout: none) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
@@ -918,7 +936,7 @@
     <div class="quiz-setup-inner">
       <div class="quiz-setup-title">Generate a Quiz</div>
       <div class="quiz-setup-sub">Drop a file, paste notes, or load from a notebook</div>
-      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--n-h2)';this.style.color='var(--n-h2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📓 Load from Notebook</button>
+      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;">📓 Load from Notebook</button>
 
       <!-- COMBINED DROP + PASTE AREA -->
       <div id="quizDropArea" class="quiz-drop-area">
@@ -1180,8 +1198,6 @@ window.openNbColor = function(id, type) {
     const btn = document.createElement('div');
     btn.style.cssText = 'width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:transform 0.15s;border:2px solid ' + (ic === currentIcon ? 'var(--accent)' : 'transparent') + ';background:var(--surface)';
     btn.textContent = ic;
-    btn.onmouseover = function(){ this.style.transform='scale(1.15)'; };
-    btn.onmouseout = function(){ this.style.transform='scale(1)'; };
     btn.onclick = function(){ window.applyNbIcon(ic); };
     grid.appendChild(btn);
   });
@@ -1195,8 +1211,6 @@ window.openNbColor = function(id, type) {
   NB_COLORS.forEach(function(c) {
     const swatch = document.createElement('div');
     swatch.style.cssText = 'width:36px;height:36px;border-radius:50%;background:' + c + ';cursor:pointer;transition:transform 0.15s;border:3px solid ' + (c === currentColor ? 'var(--ink)' : 'transparent') + ';';
-    swatch.onmouseover = function(){ this.style.transform='scale(1.15)'; };
-    swatch.onmouseout = function(){ this.style.transform='scale(1)'; };
     swatch.onclick = function(){ window.applyNbColor(c); };
     grid.appendChild(swatch);
   });
@@ -1800,7 +1814,7 @@ function renderPagesList() {
     const item = document.createElement('div');
     item.className = 'nb-page-item' + (reorderActive ? ' wiggle' : '');
     item.dataset.idx = idx;
-    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><span class="nb-page-icon">📄</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' +
+    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' +
       '<button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button>' +
       '<button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button>' +
       '<button class="nb-page-btn del-btn" title="Delete">✕</button>' +
@@ -2411,8 +2425,6 @@ window.openNotebookPicker = function() {
       const btn = document.createElement('div');
       btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.2s;';
       btn.innerHTML = '<span style="font-size:14px">📄</span><div style="flex:1;min-width:0"><div style="font-family:system-ui,sans-serif;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + page.name + '</div><div style="font-size:10px;color:var(--muted);margin-top:2px">' + new Date(page.saved).toLocaleDateString() + '</div></div>';
-      btn.onmouseover = function() { this.style.borderColor = 'var(--n-h2)'; };
-      btn.onmouseout = function() { this.style.borderColor = 'var(--border)'; };
       btn.onclick = function() { window.loadNotebookPageToQuiz(id, pageIdx); };
       section.appendChild(btn);
     });
@@ -2672,8 +2684,6 @@ window.nbSearch = function(query) {
           '<div>' + row.label + '</div>' +
         '</div>' +
         (ri === 0 ? '<button class="nb-page-btn quiz-btn" style="flex-shrink:0" title="Load into Quiz">Quiz</button>' : '');
-      el.onmouseover = function(){ this.style.background = 'color-mix(in srgb,var(--n-h2) 8%,transparent)'; };
-      el.onmouseout = function(){ this.style.background = 'var(--surface)'; };
       el.addEventListener('click', function(e) {
         if (e.target.closest('.quiz-btn')) return;
         window.openPageAtMatch(m.idx, row.si, q);
