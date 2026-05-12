@@ -1880,7 +1880,7 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
   <div id="ytPanel">
     <div id="ytPanelInner">
       <!-- URL input -->
-      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}"/>
+      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
       <!-- Hidden iframe -->
       <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
       <!-- Controls row -->
@@ -3261,6 +3261,8 @@ function ytStartTimer() {
       var pct = Math.min(100, ytCurrentSec / ytDurSec * 100);
       var pb = document.getElementById('ytProgressBar');
       if (pb) pb.style.width = pct + '%';
+      var durEl = document.getElementById('ytDuration');
+      if (durEl) durEl.textContent = fmtTime(ytDurSec);
     }
   }, 1000);
 }
@@ -3298,14 +3300,14 @@ window.ytLoad = function() {
       if (titleEl) titleEl.textContent = info.title;
     }
     if (info.duration) {
-      // Parse ISO 8601 duration e.g. PT4M33S
-      var m = info.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-      if (m) {
-        var h = parseInt(m[1] || 0);
-        var min = parseInt(m[2] || 0);
-        var sec = parseInt(m[3] || 0);
-        ytDurSec = h * 3600 + min * 60 + sec;
-      }
+      var dur = info.duration;
+      var h = 0, min = 0, sec = 0;
+      var hm = dur.match(/([0-9]+)H/); if (hm) h = parseInt(hm[1]);
+      var mm = dur.match(/([0-9]+)M/); if (mm) min = parseInt(mm[1]);
+      var sm = dur.match(/([0-9]+)S/); if (sm) sec = parseInt(sm[1]);
+      ytDurSec = h * 3600 + min * 60 + sec;
+      var durEl = document.getElementById('ytDuration');
+      if (durEl) durEl.textContent = fmtTime(ytDurSec);
     }
   });
   ytBuildIframe(id, 0);
@@ -3643,7 +3645,7 @@ function applyNbFontSize() {
   <div id="ytPanel">
     <div id="ytPanelInner">
       <!-- URL input -->
-      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}"/>
+      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
       <!-- Hidden iframe -->
       <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
       <!-- Controls row -->
