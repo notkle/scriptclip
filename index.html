@@ -596,12 +596,9 @@
   @media (hover: hover) and (pointer: fine) { .nb-page-item:hover .nb-drag-handle { opacity: 1; } }
   .nb-page-item.dragging { opacity: 0.4; border-style: dashed; }
   .nb-page-item.drag-over { border-color: var(--n-h2); background: color-mix(in srgb, var(--n-h2) 8%, transparent); }
-  .nb-page-item.wiggle { animation: wiggle 0.5s ease infinite alternate; }
 
-  @keyframes wiggle {
-    from { transform: rotate(-0.8deg); }
-    to { transform: rotate(0.8deg); }
-  }
+
+
 
   .nb-drag-handle {
     color: var(--muted); font-size: 14px; cursor: grab;
@@ -1075,6 +1072,14 @@
 
 
   @media (max-width: 768px) { #nbFontControls { display: none !important; } }
+
+
+  .nb-card-recent {
+    border-color: color-mix(in srgb, var(--n-h2) 40%, var(--border));
+  }
+  .nb-page-recent {
+    border-color: color-mix(in srgb, var(--n-h2) 40%, var(--border));
+  }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
@@ -1973,7 +1978,7 @@ function renderNotebookList() {
   ids.forEach(id => {
     const nb = data[id];
     const card = document.createElement('div');
-    card.className = 'nb-card';
+    card.className = 'nb-card' + (localStorage.getItem('sc_last_nb') === id ? ' nb-card-recent' : '');
     const nbColor = nb.color || 'var(--muted)';
     const nbIcon = nb.icon || '📓';
     card.innerHTML = '<span class="nb-card-icon" style="color:' + nbColor + '">' + nbIcon + '</span><div class="nb-card-info"><div class="nb-card-name">' + nb.name + '</div><div class="nb-card-meta">' + (nb.pages||[]).length + ' page' + ((nb.pages||[]).length !== 1 ? 's' : '') + '</div></div><div style="display:flex;gap:6px;flex-shrink:0">' +
@@ -2064,6 +2069,7 @@ window.openNotebook = function(id) {
   sessionStorage.setItem('sc_nb_view', 'pages');
   sessionStorage.setItem('sc_nb_id', id);
   sessionStorage.removeItem('sc_page_idx');
+  localStorage.setItem('sc_last_nb', id);
 };
 
 window.showPagesView = function() {
@@ -2093,7 +2099,8 @@ function renderPagesList() {
 
   nb.pages.forEach((page, idx) => {
     const item = document.createElement('div');
-    item.className = 'nb-page-item' + (reorderActive ? ' wiggle' : '');
+    var lastPageIdx = parseInt(localStorage.getItem('sc_last_page_' + currentNotebookId));
+    item.className = 'nb-page-item' + (lastPageIdx === idx ? ' nb-page-recent' : '');
     item.dataset.idx = idx;
     item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' +
       '<button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button>' +
@@ -2168,6 +2175,8 @@ window.openPage = function(idx) {
   sessionStorage.setItem('sc_nb_view', 'page');
   sessionStorage.setItem('sc_nb_id', currentNotebookId);
   sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
+  localStorage.setItem('sc_last_nb', currentNotebookId);
+  localStorage.setItem('sc_last_page_' + currentNotebookId, window._currentPageIdx);
   // Apply universal font size
   applyNbFontSize();
 
@@ -3379,6 +3388,11 @@ document.addEventListener('DOMContentLoaded', function() {
         ytPlaying = false;
         ytUpdatePlayBtn();
         clearInterval(ytInterval);
+      }
+    } else {
+      // Returned to page — auto-resume if was playing
+      if (ytVideoId && !ytPlaying) {
+        ytBuildIframe(ytVideoId, ytCurrentSec);
       }
     }
   });
