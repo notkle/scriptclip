@@ -1041,27 +1041,7 @@
       color: var(--accent);
     }
 
-    #ytProgressWrap {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      cursor: pointer;
-      margin-bottom: 5px;
-      position: relative;
-    }
-
-    #ytProgressBar {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      width: 0%;
-      transition: width 0.5s linear;
-      pointer-events: none;
-    }
-
     #ytTimes {
-      display: flex;
-      justify-content: space-between;
       font-size: 9px;
       color: var(--muted);
       font-family: system-ui,-apple-system,sans-serif;
@@ -1909,14 +1889,9 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
         <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
         <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
       </div>
-      <!-- Progress bar -->
-      <div id="ytProgressWrap" onclick="window.ytSeek(event)">
-        <div id="ytProgressBar"></div>
-      </div>
-      <!-- Timestamps -->
-      <div id="ytTimes">
+      <!-- Timestamp -->
+      <div id="ytTimes" style="text-align:center;margin-top:2px">
         <span id="ytCurrent">0:00</span>
-        <span id="ytDuration">0:00</span>
       </div>
     </div>
   </div>
@@ -3280,8 +3255,6 @@ function ytStartTimer() {
       ytBuildIframe(ytVideoId, 0);
       return;
     }
-    var pct = ytDurSec > 0 ? (ytCurrentSec / ytDurSec * 100) : 0;
-    document.getElementById('ytProgressBar').style.width = pct + '%';
     document.getElementById('ytCurrent').textContent = fmtTime(ytCurrentSec);
   }, 1000);
 }
@@ -3344,13 +3317,6 @@ window.ytSkipFwd = function() {
   ytBuildIframe(ytVideoId, ytCurrentSec);
 };
 
-window.ytSeek = function(e) {
-  if (!ytVideoId || !ytDurSec) return;
-  var rect = document.getElementById('ytProgressWrap').getBoundingClientRect();
-  var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  ytCurrentSec = Math.floor(pct * ytDurSec);
-  ytBuildIframe(ytVideoId, ytCurrentSec);
-};
 
 window.ytTogglePanel = function() {
   var wrap = document.getElementById('ytPlayerWrap');
@@ -3657,14 +3623,9 @@ function applyNbFontSize() {
         <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
         <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
       </div>
-      <!-- Progress bar -->
-      <div id="ytProgressWrap" onclick="window.ytSeek(event)">
-        <div id="ytProgressBar"></div>
-      </div>
-      <!-- Timestamps -->
-      <div id="ytTimes">
+      <!-- Timestamp -->
+      <div id="ytTimes" style="text-align:center;margin-top:2px">
         <span id="ytCurrent">0:00</span>
-        <span id="ytDuration">0:00</span>
       </div>
     </div>
   </div>
