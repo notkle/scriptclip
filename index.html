@@ -1333,10 +1333,7 @@
     <!-- MAIN PANEL -->
     <div id="ytMainPanel">
       <div id="ytPanelInner">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;flex:1"></div>
-          <button class="ytBtn" onclick="window.ytShowOptions()" style="flex-shrink:0;margin-left:4px;font-size:9px;padding:2px 6px">⋯</button>
-        </div>
+        <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px"></div>
         <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
@@ -1349,6 +1346,9 @@
         <div id="ytTimes" style="display:flex;justify-content:space-between;">
           <span id="ytCurrent">0:00</span>
           <span id="ytDuration">0:00</span>
+        </div>
+        <div style="text-align:center;margin-top:6px">
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:11px;padding:1px 12px;letter-spacing:2px">···</button>
         </div>
       </div>
     </div>
@@ -1878,8 +1878,9 @@ window.doSave = function doSave() {
 
 // ── YOUTUBE OPTIONS: HISTORY + LOOP ──
 function renderYtHistory() {
+  console.log('[YT] renderYtHistory called, history length:', ytHistory.length);
   var list = document.getElementById('ytHistoryList');
-  if (!list) return;
+  if (!list) { console.log('[YT] ytHistoryList element not found'); return; }
   list.innerHTML = '';
   if (ytHistory.length === 0) {
     list.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;text-align:center;padding:8px 0">No history yet</div>';
@@ -2031,14 +2032,16 @@ function ytUpdatePlayBtn() {
 }
 
 function fetchYtInfo(id) {
+  console.log('[YT] fetchYtInfo called for:', id);
   fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'ytInfo', videoId: id })
   })
   .then(function(r) { return r.json(); })
-  .catch(function() { return {}; })
+  .catch(function(e) { console.log('[YT] fetch error:', e); return {}; })
   .then(function(info) {
+    console.log('[YT] info received:', JSON.stringify(info).substring(0,100));
     if (info.title) {
       var titleEl = document.getElementById('ytTitle');
       if (titleEl) titleEl.textContent = info.title;
