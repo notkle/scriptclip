@@ -907,9 +907,9 @@
   .zoomable-wrap {
     flex: 1;
     overflow: hidden;
-    position: relative;
     border: 1px solid var(--border);
     border-radius: 8px;
+    min-height: 0;
   }
   .zoomable-inner {
     width: 100%;
@@ -927,18 +927,150 @@
     overflow-x: hidden;
   }
   .zoom-hint {
-    position: absolute;
-    bottom: 12px;
-    right: 14px;
     font-size: 9px;
     font-family: system-ui,-apple-system,sans-serif;
     color: var(--muted);
     letter-spacing: 1px;
     text-transform: uppercase;
     pointer-events: none;
-    opacity: 0.6;
-    transition: opacity 0.3s;
+    opacity: 0.5;
+    text-align: right;
+    padding: 5px 4px 0;
+    flex-shrink: 0;
   }
+
+
+  /* ── YOUTUBE PLAYER - mobile only ── */
+  @media (max-width: 768px) {
+    #ytPlayerWrap {
+      position: fixed;
+      bottom: 80px;
+      left: 0;
+      z-index: 8888;
+      display: flex !important;
+      flex-direction: row;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+    #ytPlayerWrap.reader-hidden { display: none !important; }
+
+    #ytTab {
+      width: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 3px;
+      font-size: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      letter-spacing: 1px;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.2s;
+    }
+
+    #ytPanel {
+      width: 0;
+      overflow: hidden;
+      transition: width 0.25s ease;
+      pointer-events: none;
+      background: var(--surface);
+      border: 0px solid var(--border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+    }
+    #ytPlayerWrap.open #ytPanel {
+      width: 200px;
+      pointer-events: all;
+      border-width: 1px;
+    }
+
+    #ytPlayerWrap.open #ytTab {
+      border-radius: 0;
+      border-right: none;
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    }
+
+    #ytPanelInner {
+      padding: 10px 12px;
+      width: 200px;
+      box-sizing: border-box;
+    }
+
+    #ytUrlInput {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 11px;
+      color: var(--ink);
+      outline: none;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+
+    #ytControls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .ytBtn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      font-family: system-ui,-apple-system,sans-serif;
+      font-weight: 700;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    #ytPlayBtn {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-color: var(--n-h2);
+      color: var(--n-h2);
+    }
+
+    #ytProgressWrap {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    #ytProgressBar {
+      height: 100%;
+      background: var(--n-h2);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.5s linear;
+      pointer-events: none;
+    }
+
+    #ytTimes {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--muted);
+      font-family: system-ui,-apple-system,sans-serif;
+      letter-spacing: 0.5px;
+    }
+  }
+  @media (min-width: 769px) { #ytPlayerWrap { display: none !important; } }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
@@ -1023,7 +1155,7 @@
         <option value="syntax">Syntax</option>
       </select>
     </div>
-    <div class="zoomable-wrap" id="notesZoomWrap"><div class="zoomable-inner notes-content" id="notesContent"></div><div class="zoom-hint" id="notesZoomHint">double-tap to zoom</div></div>
+    <div class="zoomable-wrap" id="notesZoomWrap"><div class="zoomable-inner notes-content" id="notesContent"></div></div><div class="zoom-hint" id="notesZoomHint">double-tap to zoom</div>
   </div>
 
 </div>
@@ -1169,7 +1301,7 @@
       </select>
       <button class="tool-btn" onclick="if(typeof window.loadCurrentPageToQuiz==='function'){window.loadCurrentPageToQuiz()}">Quiz</button>
     </div>
-    <div class="zoomable-wrap" id="pageZoomWrap"><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div><div class="zoom-hint" id="pageZoomHint">double-tap to zoom</div></div>
+    <div class="zoomable-wrap" id="pageZoomWrap"><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div></div><div class="zoom-hint" id="pageZoomHint">double-tap to zoom</div>
   </div>
 
 </div>
@@ -1746,6 +1878,36 @@ td{padding:9px 14px;border-bottom:1px solid ${s.border};color:${s.bullet}}tr:nth
     </div>
   </div>
 </div>
+
+<!-- YOUTUBE AUDIO PLAYER - mobile only -->
+<div id="ytPlayerWrap" style="display:none">
+  <!-- Collapsed tab -->
+  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
+  <!-- Expanded panel -->
+  <div id="ytPanel">
+    <div id="ytPanelInner">
+      <!-- URL input -->
+      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}"/>
+      <!-- Hidden iframe -->
+      <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
+      <!-- Controls row -->
+      <div id="ytControls">
+        <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
+        <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
+        <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
+      </div>
+      <!-- Progress bar -->
+      <div id="ytProgressWrap" onclick="window.ytSeek(event)">
+        <div id="ytProgressBar"></div>
+      </div>
+      <!-- Timestamps -->
+      <div id="ytTimes">
+        <span id="ytCurrent">0:00</span>
+        <span id="ytDuration">0:00</span>
+      </div>
+    </div>
+  </div>
+</div>
 </body></html>`], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title+'.html');
   } else {
@@ -1921,13 +2083,13 @@ function renderPagesList() {
     item.className = 'nb-page-item' + (reorderActive ? ' wiggle' : '');
     item.dataset.idx = idx;
     item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' +
-      '<button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button>' +
       '<button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button>' +
+      '<button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button>' +
       '<button class="nb-page-btn del-btn" title="Delete">✕</button>' +
       '</div>';
 
-    item.querySelector('[title="Rename"]').addEventListener('click', (e) => { e.stopPropagation(); window.renamePage(idx); });
     item.querySelector('.quiz-btn').addEventListener('click', (e) => { e.stopPropagation(); window.loadPageToQuiz(idx); });
+    item.querySelector('[title="Rename"]').addEventListener('click', (e) => { e.stopPropagation(); window.renamePage(idx); });
     item.querySelector('.del-btn').addEventListener('click', (e) => { e.stopPropagation(); window.deletePage(idx); });
 
     item.addEventListener('click', () => {
@@ -2961,7 +3123,17 @@ window.importFromPastedJson = function() {
   function openReader(sourceId) {
     var source = document.getElementById(sourceId);
     if (!source) return;
-    inner.innerHTML = source.innerHTML;
+    // Get page name
+    var pageName = '';
+    if (sourceId === 'nbPageContent' && window._currentPageIdx !== undefined) {
+      var data = nbLoad();
+      var nb = data[currentNotebookId];
+      if (nb && nb.pages[window._currentPageIdx]) pageName = nb.pages[window._currentPageIdx].name;
+    } else if (sourceId === 'notesContent') {
+      var h1 = source.querySelector('h1');
+      if (h1) pageName = h1.innerText;
+    }
+    inner.innerHTML = (pageName ? '<div style="font-family:system-ui,-apple-system,sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">' + pageName + '</div>' : '') + source.innerHTML;
     overlay.style.display = 'block';
     overlay.scrollTop = 0;
     history.pushState({ reader: true }, '');
@@ -3034,6 +3206,150 @@ function restoreSessionState() {
     }, 20);
   }
 }
+
+// ── YOUTUBE AUDIO PLAYER ──
+var ytPlayer = null;
+var ytReady = false;
+var ytPlaying = false;
+var ytDur = 0;
+var ytProgressInterval = null;
+
+// Load YouTube IFrame API
+(function() {
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+})();
+
+window.onYouTubeIframeAPIReady = function() {
+  ytReady = true;
+  // Restore saved URL
+  var saved = localStorage.getItem('sc_yt_url');
+  if (saved) {
+    document.getElementById('ytUrlInput').value = saved;
+    ytCreatePlayer(extractYtId(saved), false);
+  }
+};
+
+function extractYtId(url) {
+  var m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function fmtTime(s) {
+  s = Math.floor(s || 0);
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function ytCreatePlayer(videoId, autoplay) {
+  if (!videoId) return;
+  var wrap = document.getElementById('ytIframeWrap');
+  wrap.innerHTML = '';
+  ytPlayer = new YT.Player(wrap, {
+    videoId: videoId,
+    playerVars: {
+      autoplay: autoplay ? 1 : 0,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      loop: 1,
+      playlist: videoId
+    },
+    events: {
+      onReady: function(e) {
+        ytDur = e.target.getDuration();
+        document.getElementById('ytDuration').textContent = fmtTime(ytDur);
+        if (autoplay) { e.target.playVideo(); ytPlaying = true; ytUpdatePlayBtn(); }
+        ytStartProgress();
+      },
+      onStateChange: function(e) {
+        if (e.data === YT.PlayerState.PLAYING) {
+          ytPlaying = true;
+          ytDur = ytPlayer.getDuration();
+          document.getElementById('ytDuration').textContent = fmtTime(ytDur);
+        } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+          ytPlaying = false;
+          if (e.data === YT.PlayerState.ENDED) { ytPlayer.seekTo(0); ytPlayer.playVideo(); ytPlaying = true; }
+        }
+        ytUpdatePlayBtn();
+      }
+    }
+  });
+}
+
+function ytStartProgress() {
+  clearInterval(ytProgressInterval);
+  ytProgressInterval = setInterval(function() {
+    if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+    var cur = ytPlayer.getCurrentTime();
+    var dur = ytPlayer.getDuration() || 1;
+    document.getElementById('ytProgressBar').style.width = (cur / dur * 100) + '%';
+    document.getElementById('ytCurrent').textContent = fmtTime(cur);
+  }, 500);
+}
+
+function ytUpdatePlayBtn() {
+  var btn = document.getElementById('ytPlayBtn');
+  if (btn) btn.textContent = ytPlaying ? '⏸' : '▶';
+  var tab = document.getElementById('ytTab');
+  if (tab) tab.textContent = ytPlaying ? '⏸' : '▶';
+}
+
+window.ytLoad = function() {
+  var url = document.getElementById('ytUrlInput').value.trim();
+  if (!url) return;
+  var id = extractYtId(url);
+  if (!id) { window.toast('Invalid YouTube URL'); return; }
+  localStorage.setItem('sc_yt_url', url);
+  ytCreatePlayer(id, true);
+};
+
+window.ytTogglePlay = function() {
+  if (!ytPlayer) { window.ytLoad(); return; }
+  if (ytPlaying) { ytPlayer.pauseVideo(); } else { ytPlayer.playVideo(); }
+};
+
+window.ytSkipBack = function() {
+  if (!ytPlayer) return;
+  ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 30));
+};
+
+window.ytSkipFwd = function() {
+  if (!ytPlayer) return;
+  ytPlayer.seekTo(Math.min(ytDur, ytPlayer.getCurrentTime() + 30));
+};
+
+window.ytSeek = function(e) {
+  if (!ytPlayer || !ytDur) return;
+  var rect = document.getElementById('ytProgressWrap').getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  ytPlayer.seekTo(pct * ytDur);
+};
+
+window.ytTogglePanel = function() {
+  document.getElementById('ytPlayerWrap').classList.toggle('open');
+};
+
+// Hide player when reader is open, show when closed
+var origOpenReader = null;
+document.addEventListener('DOMContentLoaded', function() {
+  var wrap = document.getElementById('ytPlayerWrap');
+
+  // Hook into reader open/close
+  var readerOverlay = document.getElementById('scReaderOverlay');
+  if (readerOverlay) {
+    var obs = new MutationObserver(function() {
+      var visible = readerOverlay.style.display !== 'none';
+      if (wrap) wrap.classList.toggle('reader-hidden', visible);
+    });
+    obs.observe(readerOverlay, { attributes: true, attributeFilter: ['style'] });
+  }
+});
 
 </script>
 
@@ -3114,6 +3430,36 @@ function restoreSessionState() {
     <div class="modal-actions" style="margin-top:16px">
       <button class="modal-cancel" onclick="document.getElementById('nbPasteJsonOverlay').classList.remove('open')">Cancel</button>
       <button class="modal-save" onclick="if(typeof window.importFromPastedJson==='function'){window.importFromPastedJson()}">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- YOUTUBE AUDIO PLAYER - mobile only -->
+<div id="ytPlayerWrap" style="display:none">
+  <!-- Collapsed tab -->
+  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
+  <!-- Expanded panel -->
+  <div id="ytPanel">
+    <div id="ytPanelInner">
+      <!-- URL input -->
+      <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}"/>
+      <!-- Hidden iframe -->
+      <div id="ytIframeWrap" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0"></div>
+      <!-- Controls row -->
+      <div id="ytControls">
+        <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
+        <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
+        <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
+      </div>
+      <!-- Progress bar -->
+      <div id="ytProgressWrap" onclick="window.ytSeek(event)">
+        <div id="ytProgressBar"></div>
+      </div>
+      <!-- Timestamps -->
+      <div id="ytTimes">
+        <span id="ytCurrent">0:00</span>
+        <span id="ytDuration">0:00</span>
+      </div>
     </div>
   </div>
 </div>
