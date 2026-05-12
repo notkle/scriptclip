@@ -3417,24 +3417,23 @@ function showAiHighlightPopup(x, y, selected, context) {
   _aiHighlightContext = context;
   var popup = document.getElementById('aiHighlightPopup');
   popup.style.display = 'block';
-  // On mobile: anchor to bottom center above iOS native toolbar
+  popup.style.transform = 'translateX(-50%)';
+  popup.style.bottom = 'auto';
   var vw = window.innerWidth;
-  var isMobile = window.innerWidth <= 768;
-  if (isMobile) {
-    popup.style.left = '50%';
-    popup.style.transform = 'translateX(-50%)';
-    popup.style.bottom = '90px';
-    popup.style.top = 'auto';
-  } else {
-    popup.style.transform = '';
-    popup.style.bottom = 'auto';
-    var pw = 160, ph = 36;
-    var vh = window.innerHeight;
-    var left = Math.min(x, vw - pw - 10);
-    var top = y - ph - 8;
-    if (top < 10) top = y + 20;
-    popup.style.left = left + 'px';
+  var vh = window.innerHeight;
+  // Get the bounding rect of the selection to position below it
+  var sel = window.getSelection();
+  var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
+  if (rect) {
+    // Place below the selection with a gap
+    var top = rect.bottom + window.scrollY + 10;
+    var left = Math.min(Math.max(rect.left + rect.width / 2, 80), vw - 80);
     popup.style.top = top + 'px';
+    popup.style.left = left + 'px';
+  } else {
+    // Fallback to touch position
+    popup.style.top = (y + 10) + 'px';
+    popup.style.left = Math.min(Math.max(x, 80), vw - 80) + 'px';
   }
 }
 
