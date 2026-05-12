@@ -2168,10 +2168,7 @@ window.openPage = function(idx) {
   sessionStorage.setItem('sc_nb_view', 'page');
   sessionStorage.setItem('sc_nb_id', currentNotebookId);
   sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
-  // Restore saved font size
-  var _fsData = nbLoad();
-  var _fsPage = _fsData[currentNotebookId] && _fsData[currentNotebookId].pages[idx];
-  _nbFontSize = (_fsPage && _fsPage.fontSize) || 15;
+  // Apply universal font size
   var _nc = document.getElementById('nbPageContent');
   if (_nc) _nc.style.fontSize = _nbFontSize + 'px';
 
@@ -3523,22 +3520,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }, { passive: true });
 });
 
-// ── PAGE FONT SIZE (desktop only) ──
-var _nbFontSize = 15; // default px
+// ── PAGE FONT SIZE (desktop only, universal) ──
+var _nbFontSize = parseInt(localStorage.getItem('sc_font_size')) || 15;
 
 window.nbFontAdj = function(delta) {
   _nbFontSize = Math.min(28, Math.max(10, _nbFontSize + delta));
+  localStorage.setItem('sc_font_size', _nbFontSize);
   var nc = document.getElementById('nbPageContent');
   if (nc) nc.style.fontSize = _nbFontSize + 'px';
-  // Save per page
-  if (window._currentPageIdx !== undefined && currentNotebookId) {
-    var data = nbLoad();
-    var nb = data[currentNotebookId];
-    if (nb && nb.pages[window._currentPageIdx]) {
-      nb.pages[window._currentPageIdx].fontSize = _nbFontSize;
-      nbSave(data);
-    }
-  }
 };
 
 </script>
