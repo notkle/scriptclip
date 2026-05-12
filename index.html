@@ -3349,6 +3349,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
 
+
+  // Auto-pause when screen locks or app is backgrounded
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      if (ytPlaying) {
+        document.getElementById('ytIframeWrap').innerHTML = '';
+        ytPlaying = false;
+        ytUpdatePlayBtn();
+        clearInterval(ytInterval);
+      }
+    }
+  });
   // Close player when tapping outside
   document.addEventListener('click', function(e) {
     var wrap = document.getElementById('ytPlayerWrap');
