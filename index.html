@@ -3442,13 +3442,15 @@ function hideAiHighlightPopup() {
 }
 
 window.aiHighlightCopy = function() {
-  var prompt = 'Explain the following term or phrase in simple terms:\n\n' +
+  var prompt = 'You are helping a student understand content from their study notes.\n\n' +
+    'Explain the following term or phrase:\n\n' +
     '"' + _aiHighlightText.trim() + '"\n\n' +
     (_aiHighlightContext && _aiHighlightContext.trim() !== _aiHighlightText.trim()
       ? 'Context from study notes:\n"' + _aiHighlightContext.trim() + '"\n\n'
       : '') +
-    'Give a clear, concise explanation of what this means and why it matters in this context. ' +
-    'If it is a foreign language term, include pronunciation and literal meaning.';
+    'Keep the explanation under 100 words. Use plain language. ' +
+    'Focus on what it means and why it matters in this context. ' +
+    'If this is a foreign language term, include romanization, literal meaning, and a short usage example.';
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(prompt).then(function() {
