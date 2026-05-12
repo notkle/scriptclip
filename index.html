@@ -2676,17 +2676,23 @@ function nbPushState(state) {
 
 // Intercept browser back button
 window.addEventListener('popstate', function(e) {
-  // Determine where we are now and go one level up
+  // If reading mode is open, close it first and do nothing else
+  var reader = document.getElementById('scReaderOverlay');
+  if (reader && reader.style.display !== 'none') {
+    reader.style.display = 'none';
+    document.getElementById('scReaderContent').innerHTML = '';
+    history.pushState({}, '');
+    return;
+  }
+  // Otherwise handle normal notebook navigation
   const pageView = document.getElementById('nbPageView');
   const pagesView = document.getElementById('nbPagesView');
   const notebookTab = document.getElementById('panel-notebook');
   if (!notebookTab || !notebookTab.classList.contains('active')) return;
   if (pageView && pageView.style.display !== 'none') {
-    // currently on a page — go back to pages list
     history.pushState({ nbView: 'pages' }, '');
     window.showPagesView();
   } else if (pagesView && pagesView.style.display !== 'none') {
-    // currently on pages list — go back to notebook list
     history.pushState({ nbView: 'list' }, '');
     window.showNotebookList();
   }
@@ -2958,6 +2964,7 @@ window.importFromPastedJson = function() {
     inner.innerHTML = source.innerHTML;
     overlay.style.display = 'block';
     overlay.scrollTop = 0;
+    history.pushState({ reader: true }, '');
   }
 
   function closeReader() {
