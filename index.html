@@ -3330,6 +3330,15 @@ window.ytTogglePanel = function() {
   if (tab) tab.textContent = wrap.classList.contains('open') ? '◀' : '▶';
 };
 
+window.ytClose = function() {
+  var wrap = document.getElementById('ytPlayerWrap');
+  if (wrap && wrap.classList.contains('open')) {
+    wrap.classList.remove('open');
+    var tab = document.getElementById('ytTab');
+    if (tab) tab.textContent = '▶';
+  }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
   // Restore saved URL on load
   var saved = localStorage.getItem('sc_yt_url');
@@ -3339,6 +3348,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (id) { ytVideoId = id; }
   }
 
+
+  // Close player when tapping outside
+  document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('ytPlayerWrap');
+    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+      window.ytClose();
+    }
+  });
+  document.addEventListener('touchstart', function(e) {
+    var wrap = document.getElementById('ytPlayerWrap');
+    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+      window.ytClose();
+    }
+  }, { passive: true });
   // Hide when reading mode opens
   var readerOverlay = document.getElementById('scReaderOverlay');
   if (readerOverlay) {
