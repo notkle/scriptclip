@@ -1108,6 +1108,10 @@
   .term-nuance { color: var(--n-romaji); font-weight: 600; }
   .contrast    { color: var(--n-h3); display: block; margin: 4px 0; font-style: italic; }
 
+
+  .term-core { color: var(--accent) !important; font-weight: 700; }
+  .contrast-inline { color: var(--n-h3); font-style: italic; }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
@@ -1605,57 +1609,46 @@ window.toast = function(msg) {
 // Safe dispatcher - queues calls if main script hasn't loaded yet
 // switchTab defined below
 
-const PROMPT = `You are a study note generator. Transform the following transcript into structured, deeply useful study notes.
+const PROMPT_GENERAL = `Here is a YouTube transcript. Transform it into structured study notes using this exact format:
 
-FORMAT — use exactly these markers:
+**Key Terms** — pull out important vocabulary/concepts and bold them, followed by a concise definition.
 
-# Title (one line — the subject of this content)
+**Core Ideas** — 3-5 bullet points capturing the main takeaways of the video
 
-## Section heading (for each major topic shift)
+**Detailed Notes** — organized by topic/section as it flows through the video. Use ## for each main section heading and ### for sub-topics within a section. Include sub-bullets with supporting details, examples, and explanations.
 
-### Sub-heading (for a specific rule, process, or mechanism within a section)
+**Summary** — 2-3 sentence plain-english recap of the whole video
 
-**[CORE] term** — definition: for foundational concepts the student absolutely cannot skip. Things that everything else builds on.
-
-**term** — definition: for important but supplementary terms. Good to know, not load-bearing.
-
-(pronunciation) — immediately after every non-English word, every single time, no exceptions.
-
-- Bullet: supporting detail, example, application
-
-⟷ Contrast: when two things are being compared, distinguished, or one corrects a misconception about the other. Use this whenever "unlike X", "but Y", "X vs Y", or "don't confuse" appears in the content.
-
-SUMMARY: 2-3 sentence plain-English recap at the end.
-
-IF NON-ENGLISH CONTENT IS PRESENT (Japanese, Chinese, Korean, Arabic, etc.) — additionally use:
-
-**[VOCAB] term** (pronunciation) — meaning: for words being introduced as vocabulary (what it means)
-
-**[GRAMMAR] pattern** (pronunciation) — rule: for grammatical structures, conjugation patterns, particles, or sentence-building rules (how it works)
-
-**[NUANCE] term** (pronunciation) — nuance: for register, formality, context-of-use, or "don't confuse with X" distinctions (when and how to actually use it)
-
-These three markers replace the standard **[CORE]** and **term** markers when language content is present. Every non-English character still requires pronunciation every time.
-
-COLORIZATION PRINCIPLES:
-- [CORE] = foundational, load-bearing knowledge — student must know this first
-- Standard bold term = supplementary, supporting knowledge
-- ## = orientation, topic shift
-- ### = mechanism, process, specific rule
-- ⟷ Contrast = comparative distinction worth highlighting
-- Bullets = examples, applications, edge cases, memory aids
-- [VOCAB]/[GRAMMAR]/[NUANCE] = three distinct cognitive tasks for language learning
-
-WRITING RULES:
-- Explain every concept as if the reader encounters it for the first time
-- Never use jargon without defining it
-- Simple, direct language — every line earns its place
-- Be comprehensive but not padded
-- Flag contrasts aggressively — they are where understanding is built
+Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time.
 
 Here is the transcript:
 
 ` + '\n\n';
+
+const PROMPT_LANGUAGE = `Here is a YouTube transcript about language learning. Transform it into structured study notes using this exact format:
+
+**Key Terms** — pull out important vocabulary/concepts and bold them, followed by a concise definition. Always include the romanized/phonetic pronunciation in parentheses immediately after every non-English word or phrase throughout the entire document — not just in the Key Terms section.
+
+**Core Ideas** — 3-5 bullet points capturing the main takeaways of the video
+
+**Detailed Notes** — organized by topic/section as it flows through the video. Use ## for each main section heading and ### for sub-topics within a section. Include sub-bullets with supporting details, examples, and explanations. Every non-English word or phrase must have its romanized pronunciation in parentheses beside it every single time it appears. Distinguish clearly between vocabulary (what a word means), grammar patterns (how it works structurally), and nuance (when and how to actually use it vs similar alternatives).
+
+**Summary** — 2-3 sentence plain-english recap of the whole video
+
+Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time. Never show a non-English character without its pronunciation beside it.
+
+Here is the transcript:
+
+` + '\n\n';
+
+// Language detection — non-English scripts OR language-learning keywords
+function detectLanguageLearning(text) {
+  // Non-English character ranges: Japanese, Chinese, Korean, Arabic, Hebrew, Thai, etc.
+  if (/[\u3000-\u9fff\uac00-\ud7af\u0600-\u06ff\u0590-\u05ff\u0e00-\u0e7f]/.test(text)) return true;
+  // Language-learning keywords
+  var keywords = /\b(conjugat|declension|grammar|vocabulary|vocab|pronunciation|romanization|kanji|hanzi|hiragana|katakana|particle|verb form|noun form|tense|honorific|formal speech|informal speech|native speaker|language lesson|phrase book|sentence structure|word order|masculine|feminine|plural form|singular form|loanword|loan word|mother tongue|target language|immersion|flashcard|mnemon)\w*/i;
+  return keywords.test(text);
+}
 
 // THEME
 let isDark = true;
@@ -1714,7 +1707,8 @@ window.handleBuild = async function handleBuild() {
   if (!transcript || transcript.trim().length < 50) {
     setBtn('default'); setStatus('Clipboard too short. Copy your transcript first.', 'bad'); return;
   }
-  const full = PROMPT + transcript.trim();
+  const isLanguage = detectLanguageLearning(transcript);
+  const full = (isLanguage ? PROMPT_LANGUAGE : PROMPT_GENERAL) + transcript.trim();
   try {
     await navigator.clipboard.writeText(full);
     setBtn('success'); setStatus('Prompt ready. Paste into Claude, then bring notes to tab ②.', 'ok');
@@ -1745,10 +1739,19 @@ window.renderNotes = function renderNotes() {
   const raw = document.getElementById('notesTextarea').value.trim();
   if (!raw) { window.toast('Paste your Claude notes first.'); return; }
   window._lastRawNotes = raw;
-  document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
+  // Render immediately with static parser
+  var baseHtml = parseMarkdown(raw);
+  document.getElementById('notesContent').innerHTML = baseHtml;
   window.setTheme(currentTheme);
   document.getElementById('notesInputArea').style.display = 'none';
   document.getElementById('notesRendered').classList.add('visible');
+  // Then enhance with AI colorization
+  window.aiColorize(raw, function(entries) {
+    if (!entries) return; // fail silently, static render already shown
+    var enhanced = applyAiColorization(parseMarkdown(raw), entries);
+    document.getElementById('notesContent').innerHTML = enhanced;
+    window.setTheme(currentTheme);
+  });
 }
 
 // ── MARKDOWN PARSER ──
@@ -3501,6 +3504,98 @@ function ytSetTitle(txt) {
     titleEl.textContent = txt || '';
     titleEl.className = '';
   }
+}
+
+// ── AI-ASSISTED COLORIZATION ──
+window.aiColorize = function(rawNotes, callback) {
+  var lines = [
+    'You are a study note colorization assistant. Analyze the following study notes and identify phrases that should be visually highlighted for learning.',
+    '',
+    'Return ONLY a JSON array, no markdown, no explanation. Each entry:',
+    '{"phrase": "exact phrase from notes", "type": "term|contrast|core|romaji"}',
+    '',
+    'Rules:',
+    '- term: important vocabulary, concepts, named things worth remembering',
+    '- core: foundational concepts everything else builds on (use sparingly, max 20% of terms)',
+    '- contrast: when two things are compared, distinguished, or one corrects the other',
+    '- romaji: any pronunciation guide or romanization in parentheses',
+    '- Only include phrases that genuinely benefit from highlighting',
+    '- Phrases must appear EXACTLY as written in the notes',
+    '- Aim for 10-25 entries depending on content length',
+    '',
+    'Notes:',
+    '',
+    rawNotes.substring(0, 3000)
+  ];
+  var prompt = lines.join('\n');
+  fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generate', prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .catch(function() { return {}; })
+  .then(function(res) {
+    if (!res.text) { window.toast('AI colorization unavailable — static colors applied.'); callback(null); return; }
+    var raw = res.text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    try {
+      var entries = JSON.parse(raw);
+      callback(Array.isArray(entries) ? entries : null);
+    } catch(e) { window.toast('AI colorization unavailable — static colors applied.'); callback(null); }
+  });
+};
+
+function applyAiColorization(html, entries) {
+  if (!entries || entries.length === 0) return html;
+  var div = document.createElement('div');
+  div.innerHTML = html;
+
+  function escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Sort longest first to avoid partial matches
+  entries.sort(function(a, b) { return b.phrase.length - a.phrase.length; });
+
+  entries.forEach(function(entry) {
+    var phrase = entry.phrase.trim();
+    if (!phrase || phrase.length < 2) return;
+    var cls = '';
+    if (entry.type === 'core') cls = 'term term-core';
+    else if (entry.type === 'contrast') cls = 'contrast-inline';
+    else if (entry.type === 'romaji') cls = 'romaji';
+    else cls = 'term';
+
+    // Walk text nodes and wrap matches
+    var walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function(node) {
+      var parent = node.parentNode;
+      // Don't re-wrap already colorized spans
+      if (parent && parent.classList && (parent.classList.contains('term') || parent.classList.contains('romaji') || parent.classList.contains('contrast-inline'))) return;
+      var text = node.textContent;
+      var regex = new RegExp('(' + escapeRegex(phrase) + ')', 'gi');
+      if (!regex.test(text)) return;
+      var frag = document.createDocumentFragment();
+      var last = 0;
+      regex.lastIndex = 0;
+      var match;
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > last) frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+        var span = document.createElement('span');
+        span.className = cls;
+        span.textContent = match[1];
+        frag.appendChild(span);
+        last = match.index + match[1].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      parent.replaceChild(frag, node);
+    });
+  });
+
+  return div.innerHTML;
 }
 
 </script>
