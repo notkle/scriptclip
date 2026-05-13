@@ -3534,8 +3534,9 @@ window.aiColorize = function(rawNotes, callback) {
     body: JSON.stringify({ action: 'generate', prompt: prompt })
   })
   .then(function(r) { return r.json(); })
-  .catch(function() { return {}; })
+  .catch(function(e) { console.log('[Colorize] fetch error:', e); return {}; })
   .then(function(res) {
+    console.log('[Colorize] response:', JSON.stringify(res).substring(0,100));
     if (!res.text) { window.toast('AI colorization unavailable — static colors applied.'); callback(null); return; }
     var raw = res.text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
     try {
