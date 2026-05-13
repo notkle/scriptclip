@@ -947,16 +947,20 @@
       z-index: 8888;
       display: flex !important;
       flex-direction: row;
-      align-items: flex-end;
+      align-items: stretch;
       pointer-events: none;
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      overflow: hidden;
+      transition: border-color 0.2s;
     }
     #ytPlayerWrap.reader-hidden { display: none !important; }
 
     #ytTab {
       width: 18px;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: none;
+      border: none;
       border-radius: 0 6px 6px 0;
       padding: 10px 3px;
       font-size: 8px;
@@ -979,20 +983,15 @@
       transition: width 0.25s ease;
       pointer-events: none;
       background: var(--surface);
-      border: 0px solid var(--accent);
-      border-left: none;
-      border-radius: 8px 8px 8px 0;
+      border: none;
+      border-radius: 0 8px 8px 0;
     }
     #ytPlayerWrap.open #ytPanel {
       width: 210px;
       pointer-events: all;
-      border-width: 1px;
-      border-color: var(--accent);
     }
 
     #ytPlayerWrap.open #ytTab {
-      border-radius: 0;
-      border-right: none;
       background: color-mix(in srgb, var(--accent) 12%, var(--surface));
     }
 
@@ -1263,6 +1262,37 @@
       
     </div>
   </div>
+
+
+<!-- FLASH CARD VIEW -->
+<div class="nb-view" id="nbFlashCardView" style="display:none">
+  <div class="nb-header">
+    <button class="tool-btn" id="nbFcBackBtn" onclick="if(typeof window.showPagesView==='function'){window.showPagesView()}">← Back</button>
+    <div class="nb-title" id="nbFcTitle" style="flex:1"></div>
+    <div style="font-size:11px;color:var(--muted);font-family:system-ui,sans-serif;margin-right:10px" id="nbFcCounter"></div>
+    <button class="tool-btn" id="nbFcDeleteBtn" onclick="if(typeof window.fcToggleDeleteMode==='function'){window.fcToggleDeleteMode()}">Delete</button>
+  </div>
+  <div id="nbFcArea" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px 0">
+    <div id="nbFcCard" onclick="window.fcFlip()" style="
+      width:100%;max-width:420px;min-height:200px;
+      background:var(--surface);border:1px solid var(--border);border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;padding:28px;box-sizing:border-box;
+      text-align:center;position:relative;transition:all 0.2s;
+      user-select:none;-webkit-user-select:none;
+    ">
+      <div id="nbFcFront" style="font-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.4"></div>
+      <div id="nbFcBack" style="display:none;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--muted);line-height:1.6"></div>
+      <div style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase" id="nbFcSide">tap to reveal</div>
+      <div id="nbFcDeleteX" style="display:none;position:absolute;inset:0;background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:12px;align-items:center;justify-content:center;font-size:40px;color:var(--accent);font-weight:300;cursor:pointer;" onclick="if(typeof window.fcDeleteCurrent==='function'){window.fcDeleteCurrent()}">✕</div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center">
+      <button class="tool-btn" onclick="window.fcPrev()" style="font-size:16px;padding:6px 14px">←</button>
+      <button class="tool-btn" onclick="window.fcNext()" style="font-size:16px;padding:6px 14px">→</button>
+    </div>
+    <div style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;text-align:center">tap card to flip · arrows to navigate</div>
+  </div>
+</div>
 
   <!-- PAGES VIEW -->
   <div class="nb-view" id="nbPagesView" style="display:none">
@@ -1931,6 +1961,8 @@ function renderYtHistory() {
     row.appendChild(label);
     row.addEventListener('click', function() {
       document.getElementById('ytUrlInput').value = item.url;
+      document.getElementById('ytUrlInput').style.borderColor = 'var(--accent)';
+      var si = document.getElementById('ytSearchInput'); if (si) si.style.borderColor = '';
       ytVideoId = item.id;
       ytCurrentSec = 0;
       ytDurSec = 0;
@@ -2052,6 +2084,7 @@ window.openNotebook = function(id) {
 
 window.showPagesView = function() {
   document.getElementById('nbPageView').style.display = 'none';
+  var fcv = document.getElementById('nbFlashCardView'); if (fcv) fcv.style.display = 'none';
   document.getElementById('nbPagesView').style.display = 'flex';
   const inp = document.getElementById('nbSearchInput');
   if (inp) inp.value = '';
@@ -2079,8 +2112,9 @@ function renderPagesList() {
     const lastPageIdx = parseInt(localStorage.getItem('sc_last_page_' + currentNotebookId));
     item.className = 'nb-page-item' + (lastPageIdx === idx ? ' nb-page-recent' : '');
     item.dataset.idx = idx;
-    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions"><button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button><button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button><button class="nb-page-btn del-btn" title="Delete">✕</button></div>';
+    item.innerHTML = '<span class="nb-drag-handle" title="Drag to reorder">⠿</span><div class="nb-page-info"><div class="nb-page-name">' + page.name + '</div><div class="nb-page-date">' + new Date(page.saved).toLocaleDateString() + '</div></div><div class="nb-page-actions">' + (page.flashCards && page.flashCards.length > 0 ? '<button class="nb-page-btn fc-btn" title="Flash Cards">FC</button>' : '') + '<button class="nb-page-btn quiz-btn" title="Load into Quiz">Quiz</button><button class="nb-page-btn" title="Rename" style="font-size:11px">✎</button><button class="nb-page-btn del-btn" title="Delete">✕</button></div>';
 
+    if (item.querySelector('.fc-btn')) item.querySelector('.fc-btn').addEventListener('click', (e) => { e.stopPropagation(); window.showFlashCards(idx); });
     item.querySelector('.quiz-btn').addEventListener('click', (e) => { e.stopPropagation(); window.loadPageToQuiz(idx); });
     item.querySelector('[title="Rename"]').addEventListener('click', (e) => { e.stopPropagation(); window.renamePage(idx); });
     item.querySelector('.del-btn').addEventListener('click', (e) => { e.stopPropagation(); window.deletePage(idx); });
@@ -2665,8 +2699,9 @@ function ytUpdatePlayBtn() {
   var tab = document.getElementById('ytTab');
   if (tab) {
     tab.textContent = wrap && wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
-    tab.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
     tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
+    var wrapEl = document.getElementById('ytPlayerWrap');
+    if (wrapEl) wrapEl.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
   }
 }
 
@@ -2840,7 +2875,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var readerOverlay = document.getElementById('scReaderOverlay');
   if (readerOverlay) {
     new MutationObserver(function() {
-      var visible = readerOverlay.style.display !== 'none';
+      var visible = window._isReaderOpen ? window._isReaderOpen() : readerOverlay.style.display !== 'none';
       var wrap = document.getElementById('ytPlayerWrap');
       if (wrap) wrap.classList.toggle('reader-hidden', visible);
     }).observe(readerOverlay, { attributes: true, attributeFilter: ['style'] });
@@ -2891,6 +2926,432 @@ window.ytSearch = function() {
   });
 };
 
+// ── FULLSCREEN READING MODE (double-tap to open, double-tap to close) ──
+(function() {
+  function openReader(sourceId) {
+    var source = document.getElementById(sourceId);
+    if (!source) return;
+    var inner = document.getElementById('scReaderContent');
+    // Get page name
+    var pageName = '';
+    if (sourceId === 'nbPageContent' && window._currentPageIdx !== undefined) {
+      var data = nbLoad();
+      var nb = data[currentNotebookId];
+      if (nb && nb.pages[window._currentPageIdx]) pageName = nb.pages[window._currentPageIdx].name;
+    } else if (sourceId === 'notesContent') {
+      var h1 = source.querySelector('h1');
+      if (h1) pageName = h1.innerText;
+    }
+    inner.innerHTML = (pageName ? '<div style="font-family:system-ui,-apple-system,sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">' + pageName + '</div>' : '') + source.innerHTML;
+    var overlay = document.getElementById('scReaderOverlay');
+    overlay.style.display = 'block';
+    overlay.scrollTop = 0;
+    history.pushState({ reader: true }, '');
+  }
+
+  function closeReader() {
+    var overlay = document.getElementById('scReaderOverlay');
+    overlay.style.display = 'none';
+    var inner = document.getElementById('scReaderContent');
+    inner.innerHTML = '';
+  }
+
+  function handleDoubleTap(el, cb) {
+    el._lastTap = 0;
+    el.addEventListener('touchend', function(e) {
+      var sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      var now = Date.now();
+      var gap = now - (el._lastTap || 0);
+      el._lastTap = now;
+      if (gap < 300 && gap > 30) {
+        e.preventDefault();
+        e.stopPropagation();
+        cb();
+      }
+    }, { passive: false });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('scReaderOverlay');
+    if (!overlay) return;
+
+    // Double-tap overlay to close
+    handleDoubleTap(overlay, closeReader);
+
+    // Double-tap notes content to open
+    var nc = document.getElementById('notesContent');
+    if (nc) handleDoubleTap(nc, function() { openReader('notesContent'); });
+
+    var pc = document.getElementById('nbPageContent');
+    if (pc) handleDoubleTap(pc, function() { openReader('nbPageContent'); });
+  });
+
+  // Expose closeReader globally for popstate
+  window._closeReader = closeReader;
+  window._isReaderOpen = function() {
+    var o = document.getElementById('scReaderOverlay');
+    return o && o.style.display !== 'none';
+  };
+})();
+
+// ── FLASH CARDS ──
+var _fcCards = [];
+var _fcIdx = 0;
+var _fcFlipped = false;
+
+window.aiGenerateFlashCards = function() {
+  if (!_aiHighlightText) return;
+  var highlight = _aiHighlightText.trim();
+  var context = _aiHighlightContext.trim();
+  hideAiHighlightPopup();
+  window.getSelection().removeAllRanges();
+
+  // Check we're on a notebook page
+  if (!currentNotebookId || window._currentPageIdx === undefined) {
+    window.toast('Open a notebook page first to save flash cards.');
+    return;
+  }
+
+  window.toast('Generating flash cards…');
+
+  var prompt = 'You are a study tool. Based on the highlighted term and its context, generate flash cards for studying.\n\n' +
+    'Highlighted: "' + highlight + '"\n\n' +
+    (context && context !== highlight ? 'Context: "' + context + '"\n\n' : '') +
+    'Determine the appropriate number of flash cards (typically 2-6) based on how much there is to learn.\n' +
+    'Return ONLY a JSON array, no markdown, no explanation:\n' +
+    '[{"front": "term or question", "back": "definition or answer"}]\n\n' +
+    'Make fronts concise (a term, phrase, or short question). Backs clear and complete but under 60 words.';
+
+  fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generate', prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .catch(function() { return {}; })
+  .then(function(res) {
+    if (!res.text) { window.toast('Failed to generate cards.'); return; }
+    var raw = res.text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    var cards;
+    try { cards = JSON.parse(raw); } catch(e) { window.toast('Could not parse cards.'); return; }
+    if (!Array.isArray(cards) || cards.length === 0) { window.toast('No cards generated.'); return; }
+
+    // Save to page
+    var data = nbLoad();
+    var nb = data[currentNotebookId];
+    if (!nb || !nb.pages[window._currentPageIdx]) { window.toast('Page not found.'); return; }
+    if (!nb.pages[window._currentPageIdx].flashCards) nb.pages[window._currentPageIdx].flashCards = [];
+    nb.pages[window._currentPageIdx].flashCards = nb.pages[window._currentPageIdx].flashCards.concat(cards);
+    nbSave(data);
+
+    window.toast(cards.length + ' flash cards saved!');
+    renderPagesList(); // refresh to show FC button
+  });
+};
+
+window.showFlashCards = function(idx) {
+  var data = nbLoad();
+  var nb = data[currentNotebookId];
+  var page = nb && nb.pages[idx];
+  if (!page || !page.flashCards || page.flashCards.length === 0) return;
+
+  window._currentPageIdx = idx;
+  _fcCards = page.flashCards;
+  _fcIdx = 0;
+  _fcFlipped = false;
+
+  document.getElementById('nbFcTitle').textContent = page.name;
+  document.getElementById('nbPagesView').style.display = 'none';
+  document.getElementById('nbFlashCardView').style.display = 'flex';
+  _fcDeleteMode = false;
+  var dbtn = document.getElementById('nbFcDeleteBtn');
+  if (dbtn) { dbtn.style.color = ''; dbtn.style.borderColor = ''; }
+  renderFcCard();
+  history.pushState({ nbView: 'flashcards' }, '');
+};
+
+function renderFcCard() {
+  if (_fcCards.length === 0) return;
+  var card = _fcCards[_fcIdx];
+  _fcFlipped = false;
+  document.getElementById('nbFcFront').style.display = 'block';
+  document.getElementById('nbFcBack').style.display = 'none';
+  document.getElementById('nbFcFront').textContent = card.front;
+  document.getElementById('nbFcBack').textContent = card.back;
+  document.getElementById('nbFcCounter').textContent = (_fcIdx + 1) + ' / ' + _fcCards.length;
+  document.getElementById('nbFcSide').textContent = 'tap to reveal';
+  // Reset card border
+  var cardEl = document.getElementById('nbFcCard');
+  cardEl.style.borderColor = 'var(--border)';
+}
+
+window.fcFlip = function() {
+  _fcFlipped = !_fcFlipped;
+  var cardEl = document.getElementById('nbFcCard');
+  if (_fcFlipped) {
+    document.getElementById('nbFcFront').style.display = 'none';
+    document.getElementById('nbFcBack').style.display = 'block';
+    document.getElementById('nbFcSide').textContent = 'tap to hide';
+    cardEl.style.borderColor = 'var(--accent)';
+  } else {
+    document.getElementById('nbFcFront').style.display = 'block';
+    document.getElementById('nbFcBack').style.display = 'none';
+    document.getElementById('nbFcSide').textContent = 'tap to reveal';
+    cardEl.style.borderColor = 'var(--border)';
+  }
+};
+
+window.fcNext = function() {
+  if (_fcIdx < _fcCards.length - 1) { _fcIdx++; renderFcCard(); }
+};
+
+window.fcPrev = function() {
+  if (_fcIdx > 0) { _fcIdx--; renderFcCard(); }
+};
+
+// Swipe support
+(function() {
+  var startX = null;
+  document.addEventListener('touchstart', function(e) {
+    var card = document.getElementById('nbFcCard');
+    if (card && card.contains(e.target)) startX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (startX === null) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) window.fcNext(); else window.fcPrev();
+  }, { passive: true });
+})();
+
+// ── AI HIGHLIGHT + FLASH CARDS ──
+var _aiHighlightText = '';
+var _aiHighlightContext = '';
+
+function getSelectionContext(selection) {
+  if (!selection || selection.isCollapsed) return '';
+  var range = selection.getRangeAt(0);
+  var container = range.commonAncestorContainer;
+  var block = container.nodeType === 3 ? container.parentElement : container;
+  while (block && !['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName)) {
+    block = block.parentElement;
+  }
+  return block ? (block.innerText || block.textContent) : '';
+}
+
+function showAiHighlightPopup(x, y, selected, context) {
+  _aiHighlightText = selected;
+  _aiHighlightContext = context;
+  var popup = document.getElementById('aiHighlightPopup');
+  popup.style.display = 'block';
+  popup.style.transform = 'translateX(-50%)';
+  popup.style.bottom = 'auto';
+  var vw = window.innerWidth;
+  var sel = window.getSelection();
+  var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
+  if (rect) {
+    var top = rect.bottom + window.scrollY + 10;
+    var left = Math.min(Math.max(rect.left + rect.width / 2, 80), vw - 80);
+    popup.style.top = top + 'px';
+    popup.style.left = left + 'px';
+  } else {
+    popup.style.top = (y + 10) + 'px';
+    popup.style.left = Math.min(Math.max(x, 80), vw - 80) + 'px';
+  }
+}
+
+function hideAiHighlightPopup() {
+  var p = document.getElementById('aiHighlightPopup');
+  if (p) p.style.display = 'none';
+}
+
+window.aiHighlightCopy = function() {
+  var prompt = 'You are helping a student understand content from their study notes.\n\n' +
+    'Explain the following term or phrase:\n\n' +
+    '"' + _aiHighlightText.trim() + '"\n\n' +
+    (_aiHighlightContext && _aiHighlightContext.trim() !== _aiHighlightText.trim()
+      ? 'Context from study notes:\n"' + _aiHighlightContext.trim() + '"\n\n' : '') +
+    'Keep the explanation under 100 words. Use plain language. ' +
+    'Focus on what it means and why it matters in this context. ' +
+    'If this is a foreign language term, include romanization, literal meaning, and a short usage example.';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt).then(function() {
+      window.toast('Prompt copied — paste into Claude or Gemini');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = prompt; ta.style.cssText = 'position:fixed;top:-9999px';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,99999);
+    document.execCommand('copy'); document.body.removeChild(ta);
+    window.toast('Prompt copied — paste into Claude or Gemini');
+  }
+  hideAiHighlightPopup();
+  window.getSelection().removeAllRanges();
+};
+
+window.aiGenerateFlashCards = function() {
+  hideAiHighlightPopup();
+  if (!currentNotebookId || window._currentPageIdx === undefined) {
+    window.toast('Open a notebook page first to save flash cards.');
+    return;
+  }
+  document.getElementById('fcStatusMsg').textContent = '';
+  document.getElementById('fcConfirmBtns').style.display = 'flex';
+  document.getElementById('fcConfirmOverlay').classList.add('open');
+};
+
+window.fcConfirmGenerate = function() {
+  document.getElementById('fcConfirmBtns').style.display = 'none';
+  document.getElementById('fcStatusMsg').textContent = 'Making flash cards…';
+
+  var highlight = _aiHighlightText.trim();
+  var context = _aiHighlightContext.trim();
+  window.getSelection().removeAllRanges();
+
+  var prompt = 'You are a study tool. Based on the highlighted term and its context, generate flash cards for studying.\n\n' +
+    'Highlighted: "' + highlight + '"\n\n' +
+    (context && context !== highlight ? 'Context: "' + context + '"\n\n' : '') +
+    'Determine the appropriate number of flash cards (typically 2-6). ' +
+    'Return ONLY a JSON array, no markdown:\n' +
+    '[{"front":"term or question","back":"definition or answer"}]\n\n' +
+    'Make fronts concise. Backs clear and under 60 words.';
+
+  fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generate', prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .catch(function() { return {}; })
+  .then(function(res) {
+    if (!res.text) {
+      document.getElementById('fcStatusMsg').textContent = 'Failed — please try again.';
+      document.getElementById('fcConfirmBtns').style.display = 'flex';
+      return;
+    }
+    var raw = res.text.replace(/\`\`\`json\s*/gi,'').replace(/\`\`\`\s*/g,'').trim();
+    var cards;
+    try { cards = JSON.parse(raw); } catch(e) {
+      document.getElementById('fcStatusMsg').textContent = 'Could not parse response.';
+      document.getElementById('fcConfirmBtns').style.display = 'flex';
+      return;
+    }
+    if (!Array.isArray(cards) || cards.length === 0) {
+      document.getElementById('fcStatusMsg').textContent = 'No cards generated.';
+      document.getElementById('fcConfirmBtns').style.display = 'flex';
+      return;
+    }
+    var data = nbLoad();
+    var nb = data[currentNotebookId];
+    if (!nb || !nb.pages[window._currentPageIdx]) {
+      document.getElementById('fcStatusMsg').textContent = 'Page not found.';
+      return;
+    }
+    if (!nb.pages[window._currentPageIdx].flashCards) nb.pages[window._currentPageIdx].flashCards = [];
+    nb.pages[window._currentPageIdx].flashCards = nb.pages[window._currentPageIdx].flashCards.concat(cards);
+    nbSave(data);
+
+    document.getElementById('fcStatusMsg').textContent = '✓ Complete — ' + cards.length + ' cards saved.';
+    setTimeout(function() {
+      document.getElementById('fcConfirmOverlay').classList.remove('open');
+      document.getElementById('fcConfirmBtns').style.display = 'flex';
+      renderPagesList();
+    }, 1500);
+  });
+};
+
+function setupAiHighlight(elId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.addEventListener('mouseup', function(e) {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
+    var context = getSelectionContext(sel);
+    showAiHighlightPopup(e.clientX, e.clientY, sel.toString(), context);
+  });
+  el.addEventListener('touchend', function(e) {
+    setTimeout(function() {
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) { hideAiHighlightPopup(); return; }
+      var context = getSelectionContext(sel);
+      var touch = e.changedTouches[0];
+      showAiHighlightPopup(touch.clientX, touch.clientY, sel.toString(), context);
+    }, 100);
+  });
+}
+
+// ── DELETE FLASH CARDS ──
+window.deleteFlashCards = function(pageIdx) {
+  var data = nbLoad();
+  var nb = data[currentNotebookId];
+  if (!nb || !nb.pages[pageIdx]) return;
+  nb.pages[pageIdx].flashCards = [];
+  nbSave(data);
+  renderPagesList();
+  window.toast('Flash cards deleted.');
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  setupAiHighlight('notesContent');
+  setupAiHighlight('nbPageContent');
+  setupAiHighlight('scReaderContent');
+
+  document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('aiHighlightPopup');
+    if (popup && !popup.contains(e.target)) hideAiHighlightPopup();
+  });
+  document.addEventListener('touchstart', function(e) {
+    var popup = document.getElementById('aiHighlightPopup');
+    if (popup && popup.style.display !== 'none' && !popup.contains(e.target)) hideAiHighlightPopup();
+  }, { passive: true });
+
+  var fco = document.getElementById('fcConfirmOverlay');
+  if (fco) fco.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+var _fcDeleteMode = false;
+
+window.fcToggleDeleteMode = function() {
+  _fcDeleteMode = !_fcDeleteMode;
+  var btn = document.getElementById('nbFcDeleteBtn');
+  var x = document.getElementById('nbFcDeleteX');
+  if (btn) {
+    btn.style.color = _fcDeleteMode ? 'var(--accent)' : '';
+    btn.style.borderColor = _fcDeleteMode ? 'var(--accent)' : '';
+  }
+  if (x) x.style.display = _fcDeleteMode ? 'flex' : 'none';
+  // Disable flip when in delete mode
+  var card = document.getElementById('nbFcCard');
+  if (card) card.onclick = _fcDeleteMode ? null : window.fcFlip;
+};
+
+window.fcDeleteCurrent = async function() {
+  if (!await window.scConfirm('Delete this flash card?')) return;
+  var data = nbLoad();
+  var nb = data[currentNotebookId];
+  if (!nb || !nb.pages[window._currentPageIdx]) return;
+  nb.pages[window._currentPageIdx].flashCards.splice(_fcIdx, 1);
+  nbSave(data);
+  _fcCards = nb.pages[window._currentPageIdx].flashCards;
+  if (_fcCards.length === 0) {
+    // No more cards - exit delete mode and go back
+    _fcDeleteMode = false;
+    renderPagesList();
+    window.showPagesView();
+    window.toast('All flash cards deleted.');
+    return;
+  }
+  if (_fcIdx >= _fcCards.length) _fcIdx = _fcCards.length - 1;
+  renderFcCard();
+  // Keep X visible since still in delete mode
+  var x = document.getElementById('nbFcDeleteX');
+  if (x) x.style.display = 'flex';
+};
+
 </script>
 
 <!-- PASTE JSON MODAL -->
@@ -2902,6 +3363,31 @@ window.ytSearch = function() {
     <div class="modal-actions" style="margin-top:16px">
       <button class="modal-cancel" onclick="document.getElementById('nbPasteJsonOverlay').classList.remove('open')">Cancel</button>
       <button class="modal-save" onclick="if(typeof window.importFromPastedJson==='function'){window.importFromPastedJson()}">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULLSCREEN READER OVERLAY -->
+<div id="scReaderOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box;word-break:break-word;overflow-wrap:break-word;">
+  <div id="scReaderContent" class="notes-content" style="padding:28px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;"></div>
+</div>
+
+<!-- AI HIGHLIGHT POPUP -->
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+  <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Copy</button>
+  <span style="color:var(--border);margin:0 2px">|</span>
+  <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Cards</button>
+</div>
+
+<!-- FLASH CARD CONFIRM MODAL -->
+<div class="modal-overlay" id="fcConfirmOverlay">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title">Make Flash Cards?</div>
+    <div id="fcConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:8px;font-family:system-ui,sans-serif">AI will generate flash cards from your selection.</div>
+    <div id="fcStatusMsg" style="font-size:11px;color:var(--accent);font-family:system-ui,sans-serif;min-height:16px;margin-bottom:12px"></div>
+    <div class="modal-actions" id="fcConfirmBtns">
+      <button class="modal-cancel" onclick="document.getElementById('fcConfirmOverlay').classList.remove('open')">No</button>
+      <button class="modal-save" onclick="window.fcConfirmGenerate()">Yes</button>
     </div>
   </div>
 </div>
