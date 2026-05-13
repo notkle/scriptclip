@@ -3461,7 +3461,12 @@ window.addEventListener('popstate', function(e) {
   // 5. Notebook list → prompt tab
   var nbListView = document.getElementById('nbListView');
   if (nbListView && nbListView.style.display !== 'none') {
-    window.switchTab('builder');
+    switchTab('builder');
+    return;
+  }
+  // Fallback: if on notebook tab at all with no clear view, go to builder
+  if (onNotebook) {
+    switchTab('builder');
     return;
   }
 });
