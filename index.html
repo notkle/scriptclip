@@ -1002,7 +1002,7 @@
     }
 
     #ytPanelInner {
-      padding: 6px 12px 4px;
+      padding: 5px 12px 4px;
       width: 210px;
       box-sizing: border-box;
       display: flex;
@@ -1047,8 +1047,8 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 6px;
-      margin-bottom: 6px;
+      margin-top: 4px;
+      margin-bottom: 4px;
       width: 100%;
     }
     .ytBtn {
@@ -1398,7 +1398,7 @@
     <!-- MAIN PANEL -->
     <div id="ytMainPanel">
       <div id="ytPanelInner">
-        <div class="yt-title-wrap" style="margin-bottom:6px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;display:inline-block;"></div></div>
+        <div class="yt-title-wrap" style="margin-bottom:4px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;display:inline-block;"></div></div>
         <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
 
         <div id="ytControls">
@@ -1406,15 +1406,13 @@
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
-        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:3px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
-        <div id="ytTimes" style="display:flex;justify-content:space-between;">
-          <span id="ytCurrent">0:00</span>
-          <span id="ytDuration">0:00</span>
-        </div>
-        <div style="text-align:center;margin-top:3px">
-          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:1px 14px;letter-spacing:2px;border-color:transparent;color:var(--muted)">···</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span id="ytCurrent" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px">0:00</span>
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:0 10px;letter-spacing:2px;border-color:transparent;color:var(--muted);line-height:1.8">···</button>
+          <span id="ytDuration" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px">0:00</span>
         </div>
       </div>
     </div>
