@@ -1405,7 +1405,7 @@
     <div id="ytMainPanel">
       <div id="ytPanelInner">
         <div class="yt-title-wrap" style="margin-bottom:6px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;display:inline-block;"></div></div>
-        <input type="text" id="ytUrlInput" placeholder="Search or paste link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
+        <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
 
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
@@ -1415,10 +1415,12 @@
         <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
-        <div id="ytTimes" style="display:flex;justify-content:space-between;align-items:center;">
+        <div id="ytTimes" style="display:flex;justify-content:space-between;">
           <span id="ytCurrent">0:00</span>
-          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:1px 10px;letter-spacing:2px;border-color:transparent;color:var(--muted)">···</button>
           <span id="ytDuration">0:00</span>
+        </div>
+        <div style="text-align:center;margin-top:3px">
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:1px 14px;letter-spacing:2px;border-color:transparent;color:var(--muted)">···</button>
         </div>
       </div>
     </div>
