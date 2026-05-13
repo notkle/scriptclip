@@ -2876,6 +2876,8 @@ document.addEventListener('DOMContentLoaded', function() {
       ytVideoId = id;
       var savedPos = localStorage.getItem('sc_yt_pos');
       if (savedPos) ytCurrentSec = parseInt(savedPos) || 0;
+      // Restore title and duration without autoplay
+      fetchYtInfo(id);
     }
   }
 
