@@ -1101,6 +1101,13 @@
       will-change: transform;
     }
 
+
+  .term-core   { color: var(--accent) !important; font-weight: 700; }
+  .term-vocab  { color: var(--n-term); font-weight: 600; }
+  .term-grammar{ color: var(--n-h2);  font-weight: 600; font-style: italic; }
+  .term-nuance { color: var(--n-romaji); font-weight: 600; }
+  .contrast    { color: var(--n-h3); display: block; margin: 4px 0; font-style: italic; }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
@@ -1598,21 +1605,57 @@ window.toast = function(msg) {
 // Safe dispatcher - queues calls if main script hasn't loaded yet
 // switchTab defined below
 
-const PROMPT = `Here is a YouTube transcript. Transform it into structured study notes using this exact format:
+const PROMPT = `You are a study note generator. Transform the following transcript into structured, deeply useful study notes.
 
-**Key Terms** — pull out important vocabulary/concepts and bold them, followed by a concise definition. If any non-English scripts appear (Japanese, Chinese, Arabic, Greek, etc.), always include the romanized/phonetic pronunciation in parentheses immediately after every instance throughout the entire document — not just in the Key Terms section.
+FORMAT — use exactly these markers:
 
-**Core Ideas** — 3-5 bullet points capturing the main takeaways of the video
+# Title (one line — the subject of this content)
 
-**Detailed Notes** — organized by topic/section as it flows through the video. Under each section, include sub-bullets with supporting details, examples, and explanations. Every non-English word or phrase must have its romanized pronunciation in parentheses beside it every single time it appears.
+## Section heading (for each major topic shift)
 
-**Summary** — 2-3 sentence plain-english recap of the whole video
+### Sub-heading (for a specific rule, process, or mechanism within a section)
 
-Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time. Never show a non-English character without its pronunciation beside it.
+**[CORE] term** — definition: for foundational concepts the student absolutely cannot skip. Things that everything else builds on.
+
+**term** — definition: for important but supplementary terms. Good to know, not load-bearing.
+
+(pronunciation) — immediately after every non-English word, every single time, no exceptions.
+
+- Bullet: supporting detail, example, application
+
+⟷ Contrast: when two things are being compared, distinguished, or one corrects a misconception about the other. Use this whenever "unlike X", "but Y", "X vs Y", or "don't confuse" appears in the content.
+
+SUMMARY: 2-3 sentence plain-English recap at the end.
+
+IF NON-ENGLISH CONTENT IS PRESENT (Japanese, Chinese, Korean, Arabic, etc.) — additionally use:
+
+**[VOCAB] term** (pronunciation) — meaning: for words being introduced as vocabulary (what it means)
+
+**[GRAMMAR] pattern** (pronunciation) — rule: for grammatical structures, conjugation patterns, particles, or sentence-building rules (how it works)
+
+**[NUANCE] term** (pronunciation) — nuance: for register, formality, context-of-use, or "don't confuse with X" distinctions (when and how to actually use it)
+
+These three markers replace the standard **[CORE]** and **term** markers when language content is present. Every non-English character still requires pronunciation every time.
+
+COLORIZATION PRINCIPLES:
+- [CORE] = foundational, load-bearing knowledge — student must know this first
+- Standard bold term = supplementary, supporting knowledge
+- ## = orientation, topic shift
+- ### = mechanism, process, specific rule
+- ⟷ Contrast = comparative distinction worth highlighting
+- Bullets = examples, applications, edge cases, memory aids
+- [VOCAB]/[GRAMMAR]/[NUANCE] = three distinct cognitive tasks for language learning
+
+WRITING RULES:
+- Explain every concept as if the reader encounters it for the first time
+- Never use jargon without defining it
+- Simple, direct language — every line earns its place
+- Be comprehensive but not padded
+- Flag contrasts aggressively — they are where understanding is built
 
 Here is the transcript:
 
-`;
+` + '\n\n';
 
 // THEME
 let isDark = true;
@@ -1852,11 +1895,20 @@ function buildTable(rows) {
 }
 
 function applyInline(text) {
-  // romaji — words in parens that are latin/phonetic
-  text = text.replace(/(\([a-zA-ZāīūēōĀĪŪĒŌàèìòùáéíóú\s,'\-&]+\))/g,
-    '<span class="romaji">$1</span>');
-  // **bold** → term
+  // [CORE] foundational term
+  text = text.replace(/\*\*\[CORE\]\s*([^*]+)\*\*/g, '<span class="term term-core">\u2b21 $1</span>');
+  // [VOCAB] vocabulary word
+  text = text.replace(/\*\*\[VOCAB\]\s*([^*]+)\*\*/g, '<span class="term term-vocab">$1</span>');
+  // [GRAMMAR] grammar pattern
+  text = text.replace(/\*\*\[GRAMMAR\]\s*([^*]+)\*\*/g, '<span class="term term-grammar">$1</span>');
+  // [NUANCE] register/nuance
+  text = text.replace(/\*\*\[NUANCE\]\s*([^*]+)\*\*/g, '<span class="term term-nuance">$1</span>');
+  // standard **bold** term
   text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="term">$1</span>');
+  // romaji — words in parens that are latin/phonetic
+  text = text.replace(/(\([a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa\s,'"-&]+\))/g, '<span class="romaji">$1</span>');
+  // contrast marker
+  text = text.replace(/\u27f7\s*Contrast:\s*(.+)/g, '<span class="contrast">\u27f7 $1</span>');
   // *italic*
   text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   return text;
