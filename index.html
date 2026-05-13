@@ -952,12 +952,9 @@
       border: 1px solid var(--border);
       border-left: none;
       border-radius: 0 8px 8px 0;
-      overflow: hidden;
-      transition: border-color 0.2s, height 0.3s cubic-bezier(0.4,0,0.2,1);
-      height: 36px;
+      transition: border-color 0.2s;
     }
     #ytPlayerWrap.open {
-      height: auto;
       align-items: stretch;
     }
     #ytPlayerWrap.reader-hidden { display: none !important; }
@@ -980,6 +977,14 @@
       user-select: none;
       -webkit-user-select: none;
       transition: background 0.2s;
+      align-self: center;
+      min-height: 36px;
+    }
+    #ytPlayerWrap.open #ytTab {
+      align-self: stretch;
+      min-height: unset;
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      padding: 10px 3px;
     }
 
     #ytPanel {
@@ -1005,10 +1010,7 @@
       pointer-events: all;
     }
 
-    #ytPlayerWrap.open #ytTab {
-      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-      padding: 10px 3px;
-    }
+
 
     #ytPanelInner {
       padding: 10px 12px;
