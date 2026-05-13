@@ -940,33 +940,19 @@
 
   /* ── YOUTUBE PLAYER - mobile only ── */
   @media (max-width: 768px) {
-    /* ── COLLAPSED state: small tab only ── */
-    #ytPlayerWrap {
+
+    /* ── MINIMIZED TAB: independent fixed pill ── */
+    #ytTab {
       position: fixed;
       bottom: 80px;
       left: 0;
-      z-index: 8888;
-      display: flex !important;
-      flex-direction: row;
-      align-items: flex-end;
-      pointer-events: none;
+      z-index: 8889;
+      width: 18px;
+      height: 72px;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-left: none;
       border-radius: 0 8px 8px 0;
-      transition: border-color 0.2s;
-      overflow: hidden;
-    }
-    #ytPlayerWrap.reader-hidden { display: none !important; }
-
-    /* Tab: collapsed = 18px wide × 72px tall pill, sits at bottom of wrap */
-    #ytTab {
-      width: 18px;
-      height: 72px;
-      flex-shrink: 0;
-      background: var(--surface);
-      border: none;
-      border-radius: 0 6px 6px 0;
-      padding: 0;
       font-size: 8px;
       color: var(--muted);
       cursor: pointer;
@@ -978,42 +964,74 @@
       letter-spacing: 1px;
       user-select: none;
       -webkit-user-select: none;
-      transition: background 0.2s, height 0.3s cubic-bezier(0.4,0,0.2,1);
+      transition: border-color 0.2s, color 0.2s;
     }
 
-    /* Panel: hidden when collapsed */
-    #ytPanel {
-      width: 0;
-      overflow: hidden;
-      transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+    /* ── EXPANDED PLAYER: separate fixed container ── */
+    #ytPlayerWrap {
+      position: fixed;
+      bottom: 80px;
+      left: 0;
+      z-index: 8888;
+      display: none;
+      flex-direction: row;
+      align-items: stretch;
       pointer-events: none;
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      overflow: hidden;
+      transform-origin: bottom left;
+      transform: scaleX(0) scaleY(0);
+      transition: border-color 0.2s;
+    }
+    #ytPlayerWrap.reader-hidden ~ #ytTab { display: none !important; }
+    #ytPlayerWrap.reader-hidden { display: none !important; }
+
+    /* When open: show wrap, hide tab */
+    #ytPlayerWrap.open {
+      display: flex !important;
+      pointer-events: all;
+      transform: scaleX(1) scaleY(1);
+    }
+    #ytPlayerWrap.open ~ #ytTab,
+    body.yt-open #ytTab {
+      display: none !important;
+    }
+
+    #ytPanel {
+      width: 210px;
+      overflow: hidden;
+      pointer-events: all;
       background: var(--surface);
       border: none;
       border-radius: 0 8px 8px 0;
       display: flex;
       flex-direction: column;
     }
-
-    /* ── OPEN state ── */
-    #ytPlayerWrap.open {
-      align-items: stretch;
-    }
-    #ytPlayerWrap.open #ytTab {
-      height: auto;
-      align-self: stretch;
-      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-      padding: 10px 3px;
-    }
-    #ytPlayerWrap.open #ytPanel {
-      width: 210px;
-      pointer-events: all;
-    }
-
     #ytOptionsPanel {
       display: none;
       flex-direction: column;
       width: 210px;
       box-sizing: border-box;
+    }
+    /* Tab inside expanded player */
+    #ytPlayerWrap #ytTabInner {
+      width: 18px;
+      flex-shrink: 0;
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      border: none;
+      font-size: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      letter-spacing: 1px;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     #ytPanelInner {
@@ -1029,7 +1047,6 @@
       flex-direction: column;
       width: 210px;
     }
-
     #ytUrlInput {
       width: 100%;
       background: var(--bg);
@@ -1041,8 +1058,8 @@
       outline: none;
       box-sizing: border-box;
       margin-bottom: 8px;
+      transition: border-color 0.2s;
     }
-
     #ytControls {
       display: flex;
       align-items: center;
@@ -1052,7 +1069,6 @@
       margin-bottom: 8px;
       width: 100%;
     }
-
     .ytBtn {
       background: none;
       border: 1px solid var(--border);
@@ -1065,14 +1081,12 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-
     #ytPlayBtn {
       font-size: 13px;
       padding: 4px 12px;
       border-color: var(--accent);
       color: var(--accent);
     }
-
     #ytTimes {
       font-size: 9px;
       color: var(--muted);
@@ -1401,8 +1415,9 @@
 
 
 <!-- YOUTUBE AUDIO PLAYER - mobile only -->
+<div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
 <div id="ytPlayerWrap">
-  <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
+  <div id="ytTabInner" onclick="window.ytTogglePanel()" style="cursor:pointer;pointer-events:all;">◀</div>
   <div id="ytPanel">
 <!-- Hidden iframe always present -->
     <!-- MAIN PANEL -->
@@ -2749,11 +2764,13 @@ function ytUpdatePlayBtn() {
   if (btn) btn.textContent = ytPlaying ? '\u275a\u275a' : '\u25b6';
   var wrap = document.getElementById('ytPlayerWrap');
   var tab = document.getElementById('ytTab');
+  // Standalone minimized tab
   if (tab) {
-    tab.textContent = wrap && wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
     tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
-    if (wrap) wrap.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
+    tab.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
   }
+  // Expanded player border
+  if (wrap) wrap.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
   // Banner scrolls only while playing
   var titleEl = document.getElementById('ytTitle');
   if (titleEl && titleEl.classList.contains('yt-title-scroll')) {
@@ -2872,10 +2889,18 @@ window.ytSeek = function(e) {
 
 window.ytTogglePanel = function() {
   var wrap = document.getElementById('ytPlayerWrap');
-  wrap.classList.toggle('open');
   var tab = document.getElementById('ytTab');
-  if (tab) tab.textContent = wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
+  var isOpen = wrap.classList.contains('open');
+  if (isOpen) {
+    wrap.classList.remove('open');
+    if (tab) { tab.style.display = 'flex'; tab.textContent = '\u25b6'; }
+  } else {
+    if (tab) tab.style.display = 'none';
+    wrap.classList.add('open');
+  }
 };
+
+
 
 window.ytClose = function() {
   var wrap = document.getElementById('ytPlayerWrap');
@@ -2929,13 +2954,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close player when tapping outside
   document.addEventListener('click', function(e) {
     var wrap = document.getElementById('ytPlayerWrap');
-    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+    var tab = document.getElementById('ytTab');
+    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target) && e.target !== tab) {
       window.ytClose();
     }
   });
   document.addEventListener('touchstart', function(e) {
     var wrap = document.getElementById('ytPlayerWrap');
-    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+    var tab = document.getElementById('ytTab');
+    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target) && e.target !== tab) {
       window.ytClose();
     }
   }, { passive: true });
@@ -2946,7 +2973,9 @@ document.addEventListener('DOMContentLoaded', function() {
     new MutationObserver(function() {
       var visible = window._isReaderOpen ? window._isReaderOpen() : readerOverlay.style.display !== 'none';
       var wrap = document.getElementById('ytPlayerWrap');
+      var tab = document.getElementById('ytTab');
       if (wrap) wrap.classList.toggle('reader-hidden', visible);
+      if (tab) tab.style.display = visible ? 'none' : 'flex';
     }).observe(readerOverlay, { attributes: true, attributeFilter: ['style'] });
   }
 });
