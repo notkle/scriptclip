@@ -994,9 +994,7 @@
       width: 210px;
       box-sizing: border-box;
     }
-    #ytPlayerWrap.open #ytOptionsPanel {
-      display: flex !important;
-    }
+
     #ytPlayerWrap.open #ytPanel {
       width: 210px;
       pointer-events: all;
@@ -1427,7 +1425,7 @@
     </div>
 
     <!-- OPTIONS PANEL -->
-    <div id="ytOptionsPanel" style="display:none;width:210px;box-sizing:border-box;flex-direction:column;">
+    <div id="ytOptionsPanel" style="display:none;width:210px;box-sizing:border-box;">
       <div style="padding:10px 12px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;flex:1;min-height:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
           <button class="ytBtn" onclick="window.ytShowMain()" style="font-size:9px;padding:2px 8px">← Back</button>
@@ -2026,14 +2024,18 @@ function renderYtHistory() {
 }
 
 window.ytShowOptions = function() {
-  document.getElementById('ytMainPanel').style.display = 'none';
-  document.getElementById('ytOptionsPanel').style.display = 'block';
+  var mp = document.getElementById('ytMainPanel');
+  var op = document.getElementById('ytOptionsPanel');
+  if (mp) mp.style.cssText = mp.style.cssText.replace(/display:[^;]+;?/g,'') + ';display:none';
+  if (op) op.style.cssText = op.style.cssText.replace(/display:[^;]+;?/g,'') + ';display:flex';
   renderYtHistory();
 };
 
 window.ytShowMain = function() {
-  document.getElementById('ytOptionsPanel').style.display = 'none';
-  document.getElementById('ytMainPanel').style.display = 'block';
+  var mp = document.getElementById('ytMainPanel');
+  var op = document.getElementById('ytOptionsPanel');
+  if (op) op.style.cssText = op.style.cssText.replace(/display:[^;]+;?/g,'') + ';display:none';
+  if (mp) mp.style.cssText = mp.style.cssText.replace(/display:[^;]+;?/g,'') + ';display:block';
 };
 
 window.ytToggleLoop = function() {
@@ -2998,6 +3000,15 @@ window.ytSearch = function() {
     inner.innerHTML = '';
   }
 
+  window.readerBack = function() {
+    closeReader();
+    // Navigate to pages list if on notebook page
+    var pageView = document.getElementById('nbPageView');
+    if (pageView && pageView.style.display !== 'none') {
+      window.showPagesView();
+    }
+  };
+
   function handleDoubleTap(el, cb) {
     el._lastTap = 0;
     el.addEventListener('touchend', function(e) {
@@ -3402,12 +3413,14 @@ window.fcDeleteCurrent = async function() {
 
 // ── BACK BUTTON NAVIGATION ──
 window.addEventListener('popstate', function(e) {
-  // 1. Fullscreen reader - back goes to page list
+  // 1. Fullscreen reader - close it and go to pages list
   if (window._isReaderOpen && window._isReaderOpen()) {
-    if (window._closeReader) window._closeReader();
-    // Also navigate back to pages view
-    var pv = document.getElementById('nbPageView');
-    if (pv && pv.style.display !== 'none') {
+    var overlay = document.getElementById('scReaderOverlay');
+    if (overlay) overlay.style.display = 'none';
+    var rc = document.getElementById('scReaderContent');
+    if (rc) rc.innerHTML = '';
+    var pageView = document.getElementById('nbPageView');
+    if (pageView && pageView.style.display !== 'none') {
       window.showPagesView();
     }
     return;
@@ -3461,7 +3474,11 @@ history.replaceState({ nbView: 'list' }, '');
 
 <!-- FULLSCREEN READER OVERLAY -->
 <div id="scReaderOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box;word-break:break-word;overflow-wrap:break-word;">
-  <div id="scReaderContent" class="notes-content" style="padding:28px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;"></div>
+  <div style="position:sticky;top:0;z-index:1;display:flex;align-items:center;padding:10px 16px 6px;background:var(--bg);border-bottom:1px solid var(--border);gap:10px">
+    <button onclick="window.readerBack()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:var(--muted);cursor:pointer;">← Back</button>
+    <div style="font-size:11px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px;flex:1;text-align:right">double-tap to close</div>
+  </div>
+  <div id="scReaderContent" class="notes-content" style="padding:20px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;"></div>
 </div>
 
 <!-- AI HIGHLIGHT POPUP -->
@@ -3480,6 +3497,17 @@ history.replaceState({ nbView: 'list' }, '');
     <div class="modal-actions" id="fcConfirmBtns">
       <button class="modal-save" onclick="window.fcConfirmGenerate()">Yes</button>
       <button class="modal-cancel" onclick="document.getElementById('fcConfirmOverlay').classList.remove('open')">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="scConfirmOverlay">
+  <div class="modal" style="max-width:300px">
+    <div id="scConfirmMsg" style="font-size:14px;color:var(--ink);font-family:system-ui,sans-serif;margin-bottom:20px;line-height:1.5"></div>
+    <div class="modal-actions">
+      <button class="modal-save" onclick="if(window.scConfirmResolve){window.scConfirmResolve(true);document.getElementById('scConfirmOverlay').classList.remove('open')}">Yes</button>
+      <button class="modal-cancel" onclick="if(window.scConfirmResolve){window.scConfirmResolve(false);document.getElementById('scConfirmOverlay').classList.remove('open')}">No</button>
     </div>
   </div>
 </div>
