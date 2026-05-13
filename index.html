@@ -985,6 +985,17 @@
       background: var(--surface);
       border: none;
       border-radius: 0 8px 8px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #ytOptionsPanel {
+      display: none;
+      flex-direction: column;
+      width: 210px;
+      box-sizing: border-box;
+    }
+    #ytPlayerWrap.open #ytOptionsPanel {
+      display: flex !important;
     }
     #ytPlayerWrap.open #ytPanel {
       width: 210px;
@@ -1002,6 +1013,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+    #ytMainPanel {
+      display: flex;
+      flex-direction: column;
+      width: 210px;
     }
 
     #ytUrlInput {
@@ -1396,14 +1412,14 @@
     </div>
 
     <!-- OPTIONS PANEL -->
-    <div id="ytOptionsPanel" style="display:none">
-      <div id="ytPanelInner">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div id="ytOptionsPanel" style="display:none;width:210px;box-sizing:border-box;display:none;flex-direction:column;">
+      <div style="padding:10px 12px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;height:100%;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
           <button class="ytBtn" onclick="window.ytShowMain()" style="font-size:9px;padding:2px 8px">← Back</button>
           <button class="ytBtn" id="ytLoopBtn" onclick="window.ytToggleLoop()" style="font-size:9px;padding:2px 8px;color:var(--muted);border-color:var(--border)">↻ Loop</button>
         </div>
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:system-ui,sans-serif;margin-bottom:6px">History</div>
-        <div id="ytHistoryList"></div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:system-ui,sans-serif;margin-bottom:6px;flex-shrink:0">History</div>
+        <div id="ytHistoryList" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
       </div>
     </div>
 
@@ -2080,6 +2096,7 @@ window.openNotebook = function(id) {
   sessionStorage.setItem('sc_nb_id', id);
   sessionStorage.removeItem('sc_page_idx');
   localStorage.setItem('sc_last_nb', id);
+  history.pushState({ nbView: 'pages', nbId: id }, '');
 };
 
 window.showPagesView = function() {
@@ -2175,6 +2192,7 @@ window.openPage = function(idx) {
   sessionStorage.setItem('sc_page_idx', window._currentPageIdx);
   localStorage.setItem('sc_last_nb', currentNotebookId);
   localStorage.setItem('sc_last_page_' + currentNotebookId, window._currentPageIdx);
+  history.pushState({ nbView: 'page', nbId: currentNotebookId, pageIdx: window._currentPageIdx }, '');
   applyNbFontSize();
   if (window._searchQuery) {
     const q = window._searchQuery; const matchIdx = window._searchMatchIdx || 0;
@@ -2987,8 +3005,7 @@ window.ytSearch = function() {
     if (pc) handleDoubleTap(pc, function() { openReader('nbPageContent'); });
   });
 
-  // Expose closeReader globally for popstate
-  window._closeReader = closeReader;
+  // Expose closeReader globally for   window._closeReader = closeReader;
   window._isReaderOpen = function() {
     var o = document.getElementById('scReaderOverlay');
     return o && o.style.display !== 'none';
@@ -3351,6 +3368,45 @@ window.fcDeleteCurrent = async function() {
   var x = document.getElementById('nbFcDeleteX');
   if (x) x.style.display = 'flex';
 };
+
+// ── BACK BUTTON NAVIGATION ──
+window.addEventListener('popstate', function(e) {
+  // 1. Fullscreen reader
+  if (window._isReaderOpen && window._isReaderOpen()) {
+    if (window._closeReader) window._closeReader();
+    return;
+  }
+
+  var notebookTab = document.getElementById('panel-notebook');
+  var onNotebook = notebookTab && notebookTab.classList.contains('active');
+
+  // 2. Flash card view
+  var fcView = document.getElementById('nbFlashCardView');
+  if (fcView && fcView.style.display !== 'none') {
+    fcView.style.display = 'none';
+    if (onNotebook) window.showPagesView();
+    return;
+  }
+
+  if (!onNotebook) return;
+
+  // 3. Page view → pages list
+  var pageView = document.getElementById('nbPageView');
+  if (pageView && pageView.style.display !== 'none') {
+    window.showPagesView();
+    return;
+  }
+
+  // 4. Pages list → notebook list
+  var pagesView = document.getElementById('nbPagesView');
+  if (pagesView && pagesView.style.display !== 'none') {
+    window.showNotebookList();
+    return;
+  }
+});
+
+// Push initial state so first back press works
+history.replaceState({ nbView: 'list' }, '');
 
 </script>
 
