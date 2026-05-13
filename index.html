@@ -3660,7 +3660,7 @@ window.aiAskCopy = function() {
       ? 'The surrounding context (for reference only):\n"' + context + '"\n\n'
       : '') +
     'The student\'s question about the highlighted text:\n' + question + '\n\n' +
-    'Answer concisely and clearly, focusing specifically on the highlighted text. Under 150 words.';
+    'Answer concisely and clearly, addressing the student\'s question as it relates to the highlighted text. Under 150 words.';
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(prompt).then(function() {
       window.toast('Prompt copied — paste into Claude or Gemini');
