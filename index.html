@@ -426,7 +426,7 @@
   /* SAVE MODAL */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45); z-index: 200;
+    background: rgba(0,0,0,0.45); z-index: 10001;
     align-items: center; justify-content: center; padding: 24px;
   }
   .modal-overlay.open { display: flex; }
@@ -1084,6 +1084,22 @@
     border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
   }
 
+
+    @keyframes ytTitleScroll {
+      0%   { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .yt-title-scroll {
+      display: block;
+      white-space: nowrap;
+      animation: ytTitleScroll 12s linear infinite;
+      will-change: transform;
+    }
+    .yt-title-wrap {
+      overflow: hidden;
+      width: 100%;
+    }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .panel.active > * { animation: fadeUp 0.35s ease forwards; }
 </style>
@@ -1300,13 +1316,12 @@
       <div id="nbFcFront" style="font-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.4"></div>
       <div id="nbFcBack" style="display:none;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--muted);line-height:1.6"></div>
       <div style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase" id="nbFcSide">tap to reveal</div>
-      <div id="nbFcDeleteX" style="display:none;position:absolute;inset:0;background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:12px;align-items:center;justify-content:center;font-size:40px;color:var(--accent);font-weight:300;cursor:pointer;" onclick="if(typeof window.fcDeleteCurrent==='function'){window.fcDeleteCurrent()}">✕</div>
+      <div id="nbFcDeleteX" style="display:none;position:absolute;top:8px;left:10px;width:28px;height:28px;background:var(--accent);border-radius:50%;align-items:center;justify-content:center;font-size:14px;color:white;font-weight:700;cursor:pointer;z-index:10;" onclick="if(typeof window.fcDeleteCurrent==='function'){window.fcDeleteCurrent()}">✕</div>
     </div>
     <div style="display:flex;gap:16px;align-items:center">
       <button class="tool-btn" onclick="window.fcPrev()" style="font-size:16px;padding:6px 14px">←</button>
       <button class="tool-btn" onclick="window.fcNext()" style="font-size:16px;padding:6px 14px">→</button>
     </div>
-    <div style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;text-align:center">tap card to flip · arrows to navigate</div>
   </div>
 </div>
 
@@ -1387,7 +1402,7 @@
     <!-- MAIN PANEL -->
     <div id="ytMainPanel">
       <div id="ytPanelInner">
-        <div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px"></div>
+        <div class="yt-title-wrap" style="margin-bottom:6px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;display:inline-block;"></div></div>
         <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
         <div style="display:flex;gap:4px;width:100%">
           <input type="text" id="ytSearchInput" placeholder="Search (e.g. jazz)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytSearch()}" style="flex:1;transition:border-color 0.2s;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;"/>
@@ -1412,8 +1427,8 @@
     </div>
 
     <!-- OPTIONS PANEL -->
-    <div id="ytOptionsPanel" style="display:none;width:210px;box-sizing:border-box;display:none;flex-direction:column;">
-      <div style="padding:10px 12px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;height:100%;">
+    <div id="ytOptionsPanel" style="display:none;width:210px;box-sizing:border-box;flex-direction:column;">
+      <div style="padding:10px 12px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;flex:1;min-height:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
           <button class="ytBtn" onclick="window.ytShowMain()" style="font-size:9px;padding:2px 8px">← Back</button>
           <button class="ytBtn" id="ytLoopBtn" onclick="window.ytToggleLoop()" style="font-size:9px;padding:2px 8px;color:var(--muted);border-color:var(--border)">↻ Loop</button>
@@ -1983,7 +1998,10 @@ function renderYtHistory() {
       ytCurrentSec = 0;
       ytDurSec = 0;
       var titleEl = document.getElementById('ytTitle');
-      if (titleEl) titleEl.textContent = item.title;
+      if (titleEl) {
+        titleEl.textContent = item.title;
+        titleEl.className = item.title.length > 22 ? 'yt-title-scroll' : '';
+      }
       ytBuildIframe(item.id, 0);
       localStorage.setItem('sc_yt_url', item.url);
       window.ytShowMain();
@@ -2736,7 +2754,10 @@ function fetchYtInfo(id) {
     console.log('[YT] info received:', JSON.stringify(info).substring(0,100));
     if (info.title) {
       var titleEl = document.getElementById('ytTitle');
-      if (titleEl) titleEl.textContent = info.title;
+      if (titleEl) {
+        titleEl.textContent = info.title;
+        titleEl.className = info.title.length > 22 ? 'yt-title-scroll' : '';
+      }
       if (_ytFromUrl) {
         var url = document.getElementById('ytUrlInput').value.trim();
         // Don't overwrite if it exists as a favorite
@@ -2926,7 +2947,10 @@ window.ytSearch = function() {
       _ytFromUrl = true; // save to history
       if (res.title) {
         var titleEl = document.getElementById('ytTitle');
-        if (titleEl) titleEl.textContent = res.title;
+        if (titleEl) {
+          titleEl.textContent = res.title;
+          titleEl.className = res.title.length > 22 ? 'yt-title-scroll' : '';
+        }
       }
       if (res.duration) {
         var h=0,min=0,sec=0;
@@ -3098,9 +3122,13 @@ function renderFcCard() {
   document.getElementById('nbFcBack').textContent = card.back;
   document.getElementById('nbFcCounter').textContent = (_fcIdx + 1) + ' / ' + _fcCards.length;
   document.getElementById('nbFcSide').textContent = 'tap to reveal';
-  // Reset card border
   var cardEl = document.getElementById('nbFcCard');
   cardEl.style.borderColor = 'var(--border)';
+  // Re-show X if in delete mode
+  var x = document.getElementById('nbFcDeleteX');
+  if (x) x.style.display = _fcDeleteMode ? 'flex' : 'none';
+  // Wire flip only when not in delete mode
+  cardEl.onclick = _fcDeleteMode ? null : window.fcFlip;
 }
 
 window.fcFlip = function() {
@@ -3233,7 +3261,10 @@ window.fcConfirmGenerate = function() {
     'Determine the appropriate number of flash cards (typically 2-6). ' +
     'Return ONLY a JSON array, no markdown:\n' +
     '[{"front":"term or question","back":"definition or answer"}]\n\n' +
-    'Make fronts concise. Backs clear and under 60 words.';
+    'Make fronts concise. Backs clear and under 60 words. ' +
+    'IMPORTANT: If any term on either the front OR back is a foreign language (Japanese, Chinese, Korean, etc), ' +
+    'always include the romanization in parentheses immediately after the term, e.g. "食べる (taberu)". ' +
+    'Never omit romanization for any foreign language term on either side of any card.';
 
   fetch(WORKER_URL, {
     method: 'POST',
@@ -3371,9 +3402,14 @@ window.fcDeleteCurrent = async function() {
 
 // ── BACK BUTTON NAVIGATION ──
 window.addEventListener('popstate', function(e) {
-  // 1. Fullscreen reader
+  // 1. Fullscreen reader - back goes to page list
   if (window._isReaderOpen && window._isReaderOpen()) {
     if (window._closeReader) window._closeReader();
+    // Also navigate back to pages view
+    var pv = document.getElementById('nbPageView');
+    if (pv && pv.style.display !== 'none') {
+      window.showPagesView();
+    }
     return;
   }
 
@@ -3442,8 +3478,8 @@ history.replaceState({ nbView: 'list' }, '');
     <div id="fcConfirmMsg" style="font-size:13px;color:var(--muted);margin-bottom:8px;font-family:system-ui,sans-serif">AI will generate flash cards from your selection.</div>
     <div id="fcStatusMsg" style="font-size:11px;color:var(--accent);font-family:system-ui,sans-serif;min-height:16px;margin-bottom:12px"></div>
     <div class="modal-actions" id="fcConfirmBtns">
-      <button class="modal-cancel" onclick="document.getElementById('fcConfirmOverlay').classList.remove('open')">No</button>
       <button class="modal-save" onclick="window.fcConfirmGenerate()">Yes</button>
+      <button class="modal-cancel" onclick="document.getElementById('fcConfirmOverlay').classList.remove('open')">No</button>
     </div>
   </div>
 </div>
