@@ -1002,7 +1002,7 @@
     }
 
     #ytPanelInner {
-      padding: 8px 12px;
+      padding: 6px 12px 4px;
       width: 210px;
       box-sizing: border-box;
       display: flex;
@@ -1405,11 +1405,8 @@
     <div id="ytMainPanel">
       <div id="ytPanelInner">
         <div class="yt-title-wrap" style="margin-bottom:6px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif;display:inline-block;"></div></div>
-        <input type="text" id="ytUrlInput" placeholder="YouTube URL" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
-        <div style="display:flex;gap:4px;width:100%">
-          <input type="text" id="ytSearchInput" placeholder="Search (e.g. jazz)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytSearch()}" />
-          <button class="ytBtn" id="ytSearchBtn" onclick="window.ytSearch()" style="flex-shrink:0;padding:3px 8px;">▶</button>
-        </div>
+        <input type="text" id="ytUrlInput" placeholder="Search or paste link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)" style="transition:border-color 0.2s"/>
+
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">−30</button>
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">▶</button>
@@ -1418,12 +1415,10 @@
         <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
-        <div id="ytTimes" style="display:flex;justify-content:space-between;">
+        <div id="ytTimes" style="display:flex;justify-content:space-between;align-items:center;">
           <span id="ytCurrent">0:00</span>
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:1px 10px;letter-spacing:2px;border-color:transparent;color:var(--muted)">···</button>
           <span id="ytDuration">0:00</span>
-        </div>
-        <div style="text-align:center;margin-top:4px;margin-bottom:2px">
-          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:11px;padding:1px 12px;letter-spacing:2px">···</button>
         </div>
       </div>
     </div>
@@ -2816,21 +2811,68 @@ function fetchYtInfo(id) {
 }
 
 window.ytLoad = function() {
-  var url = document.getElementById('ytUrlInput').value.trim();
-  if (!url) return;
-  var id = extractYtId(url);
-  if (!id) { window.toast('Invalid YouTube URL'); return; }
-  ytVideoId = id;
-  ytCurrentSec = 0;
-  ytDurSec = 0;
-  _ytFromUrl = true;
-  localStorage.setItem('sc_yt_url', url);
-  // Highlight URL field, clear search field
-  document.getElementById('ytUrlInput').style.borderColor = 'var(--accent)';
-  var si = document.getElementById('ytSearchInput');
-  if (si) si.style.borderColor = '';
-  ytBuildIframe(id, 0);
-  fetchYtInfo(id);
+  var input = document.getElementById('ytUrlInput').value.trim();
+  if (!input) return;
+  // Unified: URL or search
+  if (input.includes('youtube.com') || input.includes('youtu.be')) {
+    var id = extractYtId(input);
+    if (!id) { window.toast('Could not read that link.'); return; }
+    ytVideoId = id;
+    ytCurrentSec = 0;
+    ytDurSec = 0;
+    _ytFromUrl = true;
+    localStorage.setItem('sc_yt_url', input);
+    document.getElementById('ytUrlInput').style.borderColor = 'var(--accent)';
+    ytBuildIframe(id, 0);
+    fetchYtInfo(id);
+  } else {
+    // Treat as search
+    var fullQuery = input + ' study music';
+    document.getElementById('ytUrlInput').style.borderColor = '';
+    var btn = document.getElementById('ytPlayBtn');
+    var origText = btn ? btn.textContent : '';
+    if (btn) btn.textContent = '…';
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ytSearch', query: fullQuery })
+    })
+    .then(function(r) { return r.json(); })
+    .catch(function() { return {}; })
+    .then(function(res) {
+      if (btn) btn.textContent = origText || '▶';
+      if (!res.videoId) { window.toast('No results for: ' + input); return; }
+      var url = 'https://www.youtube.com/watch?v=' + res.videoId;
+      document.getElementById('ytUrlInput').value = url;
+      document.getElementById('ytUrlInput').style.borderColor = 'var(--accent)';
+      localStorage.setItem('sc_yt_url', url);
+      ytVideoId = res.videoId;
+      ytCurrentSec = 0; ytDurSec = 0;
+      _ytFromUrl = true;
+      if (res.title) {
+        var titleEl = document.getElementById('ytTitle');
+        if (titleEl) {
+          var txt = res.title;
+          if (txt.length > 22) {
+            titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
+            titleEl.className = 'yt-title-scroll';
+          } else { titleEl.textContent = txt; titleEl.className = ''; }
+        }
+      }
+      if (res.duration) {
+        var h=0,min=0,sec=0;
+        var hm=res.duration.match(/([0-9]+)H/); if(hm) h=parseInt(hm[1]);
+        var mm=res.duration.match(/([0-9]+)M/); if(mm) min=parseInt(mm[1]);
+        var sm=res.duration.match(/([0-9]+)S/); if(sm) sec=parseInt(sm[1]);
+        ytDurSec = h*3600+min*60+sec;
+        var durEl = document.getElementById('ytDuration');
+        if (durEl) durEl.textContent = fmtTime(ytDurSec);
+      }
+      ytBuildIframe(res.videoId, 0);
+      // Also save to history since _ytFromUrl=true, fetchYtInfo will handle it
+      fetchYtInfo(res.videoId);
+    });
+  }
 };
 
 window.ytTogglePlay = function() {
@@ -2958,58 +3000,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-window.ytSearch = function() {
-  var query = document.getElementById('ytSearchInput').value.trim();
-  if (!query) return;
-  var fullQuery = query + ' study music';
-  document.getElementById('ytSearchBtn').textContent = '...';
-  fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'ytSearch', query: fullQuery })
-  })
-  .then(function(r) { return r.json(); })
-  .catch(function() { return {}; })
-  .then(function(res) {
-    document.getElementById('ytSearchBtn').textContent = '▶';
-    if (res.videoId) {
-      // Load the result
-      var url = 'https://www.youtube.com/watch?v=' + res.videoId;
-      document.getElementById('ytUrlInput').value = url;
-      localStorage.setItem('sc_yt_url', url);
-      document.getElementById('ytUrlInput').style.borderColor = '';
-      document.getElementById('ytSearchInput').style.borderColor = 'var(--accent)';
-      ytVideoId = res.videoId;
-      ytCurrentSec = 0; ytDurSec = 0;
-      _ytFromUrl = true; // save to history
-      if (res.title) {
-        var titleEl = document.getElementById('ytTitle');
-        if (titleEl) {
-          var txt = res.title;
-          if (txt.length > 22) {
-            titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
-            titleEl.className = 'yt-title-scroll';
-          } else {
-            titleEl.textContent = txt;
-            titleEl.className = '';
-          }
-        }
-      }
-      if (res.duration) {
-        var h=0,min=0,sec=0;
-        var hm=res.duration.match(/([0-9]+)H/); if(hm) h=parseInt(hm[1]);
-        var mm=res.duration.match(/([0-9]+)M/); if(mm) min=parseInt(mm[1]);
-        var sm=res.duration.match(/([0-9]+)S/); if(sm) sec=parseInt(sm[1]);
-        ytDurSec = h*3600+min*60+sec;
-        var durEl = document.getElementById('ytDuration');
-        if (durEl) durEl.textContent = fmtTime(ytDurSec);
-      }
-      ytBuildIframe(res.videoId, 0);
-    } else {
-      window.toast('No results found for: ' + query);
-    }
-  });
-};
+// ytSearch merged into ytLoad
 
 // ── FULLSCREEN READING MODE (double-tap to open, double-tap to close) ──
 (function() {
