@@ -940,6 +940,7 @@
 
   /* ── YOUTUBE PLAYER - mobile only ── */
   @media (max-width: 768px) {
+    /* ── COLLAPSED state: small tab only ── */
     #ytPlayerWrap {
       position: fixed;
       bottom: 80px;
@@ -947,29 +948,25 @@
       z-index: 8888;
       display: flex !important;
       flex-direction: row;
-      align-items: center;
+      align-items: flex-end;
       pointer-events: none;
       border: 1px solid var(--border);
       border-left: none;
       border-radius: 0 8px 8px 0;
       transition: border-color 0.2s;
-      height: 34px;
-      overflow: visible;
-      width: 36px;
-    }
-    #ytPlayerWrap.open {
-      height: auto;
-      align-items: stretch;
       overflow: hidden;
     }
     #ytPlayerWrap.reader-hidden { display: none !important; }
 
+    /* Tab: collapsed = 18px wide × 72px tall pill, sits at bottom of wrap */
     #ytTab {
-      width: 100%;
+      width: 18px;
+      height: 72px;
+      flex-shrink: 0;
       background: var(--surface);
       border: none;
       border-radius: 0 6px 6px 0;
-      padding: 6px 3px;
+      padding: 0;
       font-size: 8px;
       color: var(--muted);
       cursor: pointer;
@@ -981,22 +978,14 @@
       letter-spacing: 1px;
       user-select: none;
       -webkit-user-select: none;
-      transition: background 0.2s;
-      align-self: center;
-      min-height: 36px;
-    }
-    #ytPlayerWrap.open #ytTab {
-      width: 18px;
-      align-self: stretch;
-      min-height: unset;
-      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-      padding: 10px 3px;
+      transition: background 0.2s, height 0.3s cubic-bezier(0.4,0,0.2,1);
     }
 
+    /* Panel: hidden when collapsed */
     #ytPanel {
       width: 0;
       overflow: hidden;
-      transition: width 0.25s ease;
+      transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
       pointer-events: none;
       background: var(--surface);
       border: none;
@@ -1004,19 +993,28 @@
       display: flex;
       flex-direction: column;
     }
+
+    /* ── OPEN state ── */
+    #ytPlayerWrap.open {
+      align-items: stretch;
+    }
+    #ytPlayerWrap.open #ytTab {
+      height: auto;
+      align-self: stretch;
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      padding: 10px 3px;
+    }
+    #ytPlayerWrap.open #ytPanel {
+      width: 210px;
+      pointer-events: all;
+    }
+
     #ytOptionsPanel {
       display: none;
       flex-direction: column;
       width: 210px;
       box-sizing: border-box;
     }
-
-    #ytPlayerWrap.open #ytPanel {
-      width: 210px;
-      pointer-events: all;
-    }
-
-
 
     #ytPanelInner {
       padding: 10px 12px;
@@ -1312,7 +1310,6 @@
 <!-- FLASH CARD VIEW -->
 <div class="nb-view" id="nbFlashCardView" style="display:none">
   <div class="nb-header">
-    <button class="tool-btn" id="nbFcBackBtn" onclick="if(typeof window.showPagesView==='function'){window.showPagesView()}">← Back</button>
     <div class="nb-title" id="nbFcTitle" style="flex:1"></div>
     <div style="font-size:11px;color:var(--muted);font-family:system-ui,sans-serif;margin-right:10px" id="nbFcCounter"></div>
     <button class="tool-btn" id="nbFcDeleteBtn" onclick="if(typeof window.fcToggleDeleteMode==='function'){window.fcToggleDeleteMode()}">Delete</button>
@@ -1341,7 +1338,6 @@
   <!-- PAGES VIEW -->
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
-      <button class="tool-btn" onclick="if(typeof window.showNotebookList==='function'){window.showNotebookList()}">← Back</button>
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
       <button class="nb-new-btn" onclick="if(typeof window.openExportModal==='function'){window.openExportModal(currentNotebookId)}" title="Export" style="margin-right:6px">↓ Export</button>
       <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
@@ -1362,7 +1358,6 @@
   <!-- PAGE READ VIEW -->
   <div class="nb-view" id="nbPageView" style="display:none">
     <div class="nb-header">
-      <button class="tool-btn" onclick="if(typeof window.showPagesView==='function'){window.showPagesView()}">← Back</button>
       <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <div id="nbFontControls" style="display:flex;align-items:center;gap:4px">
         <button class="tool-btn" onclick="if(typeof window.nbFontAdj==='function'){window.nbFontAdj(-1)}" style="width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;"><svg width="10" height="2" viewBox="0 0 10 2"><rect x="0" y="0" width="10" height="2" fill="currentColor"/></svg></button>
@@ -1653,7 +1648,7 @@ window.switchTab = function switchTab(name) {
     setTimeout(function() {
       if (typeof window.showNotebookList === 'function') window.showNotebookList();
     }, 10);
-    history.replaceState({ nbView: 'list' }, '');
+    history.pushState({ nbView: 'list' }, '');
   }
   sessionStorage.setItem('sc_tab', name);
   sessionStorage.setItem('sc_nb_view', 'list');
@@ -3460,6 +3455,13 @@ window.addEventListener('popstate', function(e) {
   var pagesView = document.getElementById('nbPagesView');
   if (pagesView && pagesView.style.display !== 'none') {
     window.showNotebookList();
+    return;
+  }
+
+  // 5. Notebook list → prompt tab
+  var nbListView = document.getElementById('nbListView');
+  if (nbListView && nbListView.style.display !== 'none') {
+    window.switchTab('builder');
     return;
   }
 });
