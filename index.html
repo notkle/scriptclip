@@ -3542,9 +3542,8 @@ window.aiColorize = function(rawNotes, callback) {
     body: JSON.stringify({ action: 'generate', prompt: prompt })
   })
   .then(function(r) { return r.json(); })
-  .catch(function(e) { console.log('[Colorize] fetch error:', e); return {}; })
+  .catch(function() { return {}; })
   .then(function(res) {
-    console.log('[Colorize] response:', JSON.stringify(res).substring(0,100));
     if (!res.text) { window.toast('AI colorization unavailable — static colors applied.'); callback(null); return; }
     var raw = res.text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
     try {
@@ -3563,10 +3562,10 @@ function applyAiColorization(html, entries) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  // Sort longest first to avoid partial matches
   entries.sort(function(a, b) { return b.phrase.length - a.phrase.length; });
 
   entries.forEach(function(entry) {
+    if (!entry || !entry.phrase) return;
     var phrase = entry.phrase.trim();
     if (!phrase || phrase.length < 2) return;
     var cls = '';
@@ -3575,15 +3574,19 @@ function applyAiColorization(html, entries) {
     else if (entry.type === 'romaji') cls = 'romaji';
     else cls = 'term';
 
-    // Walk text nodes and wrap matches
     var walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT);
     var nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
+    var node;
+    while ((node = walker.nextNode())) nodes.push(node);
 
     nodes.forEach(function(node) {
+      if (!node || !node.parentNode) return;
       var parent = node.parentNode;
-      // Don't re-wrap already colorized spans
-      if (parent && parent.classList && (parent.classList.contains('term') || parent.classList.contains('romaji') || parent.classList.contains('contrast-inline'))) return;
+      if (parent && parent.classList && (
+        parent.classList.contains('term') ||
+        parent.classList.contains('romaji') ||
+        parent.classList.contains('contrast-inline')
+      )) return;
       var text = node.textContent;
       var regex = new RegExp('(' + escapeRegex(phrase) + ')', 'gi');
       if (!regex.test(text)) return;
@@ -3600,12 +3603,13 @@ function applyAiColorization(html, entries) {
         last = match.index + match[1].length;
       }
       if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-      parent.replaceChild(frag, node);
+      try { parent.replaceChild(frag, node); } catch(e) {}
     });
   });
 
   return div.innerHTML;
 }
+
 
 </script>
 
