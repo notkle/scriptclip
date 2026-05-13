@@ -955,6 +955,7 @@
       transition: border-color 0.2s;
       height: 34px;
       overflow: visible;
+      width: 36px;
     }
     #ytPlayerWrap.open {
       height: auto;
@@ -964,7 +965,7 @@
     #ytPlayerWrap.reader-hidden { display: none !important; }
 
     #ytTab {
-      width: 18px;
+      width: 100%;
       background: var(--surface);
       border: none;
       border-radius: 0 6px 6px 0;
@@ -985,6 +986,7 @@
       min-height: 36px;
     }
     #ytPlayerWrap.open #ytTab {
+      width: 18px;
       align-self: stretch;
       min-height: unset;
       background: color-mix(in srgb, var(--accent) 12%, var(--surface));
@@ -1327,7 +1329,7 @@
       <div id="nbFcFront" style="font-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.4"></div>
       <div id="nbFcBack" style="display:none;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--muted);line-height:1.6"></div>
       <div style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase" id="nbFcSide">tap to reveal</div>
-      <div id="nbFcDeleteX" style="display:none;position:absolute;top:8px;left:10px;width:28px;height:28px;background:var(--accent);border-radius:50%;align-items:center;justify-content:center;font-size:14px;color:white;font-weight:700;cursor:pointer;z-index:10;" onclick="if(typeof window.fcDeleteCurrent==='function'){window.fcDeleteCurrent()}">✕</div>
+      <div id="nbFcDeleteX" style="display:none">✕</div>
     </div>
     <div style="display:flex;gap:16px;align-items:center">
       <button class="tool-btn" onclick="window.fcPrev()" style="font-size:16px;padding:6px 14px">←</button>
@@ -3153,9 +3155,7 @@ window.showFlashCards = function(idx) {
   document.getElementById('nbFcTitle').textContent = page.name;
   document.getElementById('nbPagesView').style.display = 'none';
   document.getElementById('nbFlashCardView').style.display = 'flex';
-  _fcDeleteMode = false;
-  var dbtn = document.getElementById('nbFcDeleteBtn');
-  if (dbtn) { dbtn.style.color = ''; dbtn.style.borderColor = ''; }
+
   renderFcCard();
   history.pushState({ nbView: 'flashcards' }, '');
 };
@@ -3173,10 +3173,7 @@ function renderFcCard() {
   var cardEl = document.getElementById('nbFcCard');
   cardEl.style.borderColor = 'var(--border)';
   // Re-show X if in delete mode
-  var x = document.getElementById('nbFcDeleteX');
-  if (x) x.style.display = _fcDeleteMode ? 'flex' : 'none';
-  // Wire flip only when not in delete mode
-  cardEl.onclick = _fcDeleteMode ? null : window.fcFlip;
+  cardEl.onclick = window.fcFlip;
 }
 
 window.fcFlip = function() {
@@ -3411,41 +3408,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 var _fcDeleteMode = false;
 
-window.fcToggleDeleteMode = function() {
-  _fcDeleteMode = !_fcDeleteMode;
-  var btn = document.getElementById('nbFcDeleteBtn');
-  var x = document.getElementById('nbFcDeleteX');
-  if (btn) {
-    btn.style.color = _fcDeleteMode ? 'var(--accent)' : '';
-    btn.style.borderColor = _fcDeleteMode ? 'var(--accent)' : '';
-  }
-  if (x) x.style.display = _fcDeleteMode ? 'flex' : 'none';
-  // Disable flip when in delete mode
-  var card = document.getElementById('nbFcCard');
-  if (card) card.onclick = _fcDeleteMode ? null : window.fcFlip;
-};
-
-window.fcDeleteCurrent = async function() {
-  if (!await window.scConfirm('Delete this flash card?')) return;
+window.fcToggleDeleteMode = async function() {
+  if (!await window.scConfirm('Delete all flash cards for this page?')) return;
   var data = nbLoad();
   var nb = data[currentNotebookId];
   if (!nb || !nb.pages[window._currentPageIdx]) return;
-  nb.pages[window._currentPageIdx].flashCards.splice(_fcIdx, 1);
+  nb.pages[window._currentPageIdx].flashCards = [];
   nbSave(data);
-  _fcCards = nb.pages[window._currentPageIdx].flashCards;
-  if (_fcCards.length === 0) {
-    // No more cards - exit delete mode and go back
-    _fcDeleteMode = false;
-    renderPagesList();
-    window.showPagesView();
-    window.toast('All flash cards deleted.');
-    return;
-  }
-  if (_fcIdx >= _fcCards.length) _fcIdx = _fcCards.length - 1;
-  renderFcCard();
-  // Keep X visible since still in delete mode
-  var x = document.getElementById('nbFcDeleteX');
-  if (x) x.style.display = 'flex';
+  _fcCards = [];
+  renderPagesList();
+  window.showPagesView();
+  window.toast('All flash cards deleted.');
 };
 
 // ── BACK BUTTON NAVIGATION ──
