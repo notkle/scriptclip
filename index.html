@@ -947,13 +947,18 @@
       z-index: 8888;
       display: flex !important;
       flex-direction: row;
-      align-items: stretch;
+      align-items: center;
       pointer-events: none;
       border: 1px solid var(--border);
       border-left: none;
       border-radius: 0 8px 8px 0;
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, height 0.3s cubic-bezier(0.4,0,0.2,1);
+      height: 36px;
+    }
+    #ytPlayerWrap.open {
+      height: auto;
+      align-items: stretch;
     }
     #ytPlayerWrap.reader-hidden { display: none !important; }
 
@@ -962,7 +967,7 @@
       background: var(--surface);
       border: none;
       border-radius: 0 6px 6px 0;
-      padding: 10px 3px;
+      padding: 6px 3px;
       font-size: 8px;
       color: var(--muted);
       cursor: pointer;
@@ -1002,6 +1007,7 @@
 
     #ytPlayerWrap.open #ytTab {
       background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      padding: 10px 3px;
     }
 
     #ytPanelInner {
