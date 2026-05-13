@@ -1760,10 +1760,7 @@ function parseMarkdown(md) {
   let inSummary = false;
   let summaryBuffer = '';
 
-  function flushList() {
-    if (inUL) { html += '</ul>'; inUL = false; }
-  }
-
+  function flushList() { if (inUL) { html += '</ul>'; inUL = false; } }
   function flushSummary() {
     if (inSummary) {
       html += `<div class="summary-block">${summaryBuffer}</div>`;
@@ -1775,110 +1772,76 @@ function parseMarkdown(md) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // blank line — just spacing, no hr
-    if (!trimmed) {
-      flushList();
-      i++; continue;
-    }
+    if (!trimmed) { flushList(); i++; continue; }
 
-    // explicit horizontal rule --- or *** or ___
     if (/^[-*_]{3,}$/.test(trimmed)) {
-      flushList(); flushSummary();
-      html += '<hr>';
-      i++; continue;
+      flushList(); flushSummary(); html += '<hr>'; i++; continue;
     }
 
-    // TABLE — detect pipe rows
+    // TABLE
     if (trimmed.startsWith('|')) {
       flushList(); flushSummary();
-      // collect all table lines
       const tableLines = [];
-      while (i < lines.length && lines[i].trim().startsWith('|')) {
-        tableLines.push(lines[i].trim());
-        i++;
-      }
-      html += buildTable(tableLines);
-      continue;
+      while (i < lines.length && lines[i].trim().startsWith('|')) { tableLines.push(lines[i].trim()); i++; }
+      html += buildTable(tableLines); continue;
     }
 
-    // HEADINGS
-    const h3m = trimmed.match(/^###\s+(.+)/);
-    const h2m = trimmed.match(/^##\s+(.+)/);
+    // HEADINGS — correct hierarchy
     const h1m = trimmed.match(/^#\s+(.+)/);
+    const h2m = trimmed.match(/^##\s+(.+)/);
+    const h3m = trimmed.match(/^###\s+(.+)/);
 
-    if (h3m) {
-      flushList(); flushSummary();
-      html += `<h2>${applyInline(h3m[1])}</h2>`;
+    if (h3m) { flushList(); flushSummary(); html += `<h3>${applyInline(h3m[1])}</h3>`; i++; continue; }
+    if (h2m) { flushList(); flushSummary(); html += `<h2>${applyInline(h2m[1])}</h2>`; i++; continue; }
+    if (h1m) { flushList(); flushSummary(); html += `<h1>${applyInline(h1m[1])}</h1>`; i++; continue; }
+
+    // SUMMARY block
+    if (/^SUMMARY:/i.test(trimmed)) {
+      flushList();
+      const rest = trimmed.replace(/^SUMMARY:\s*/i, '');
+      inSummary = true;
+      summaryBuffer = rest ? applyInline(rest) + ' ' : '';
       i++; continue;
     }
-    if (h2m) {
-      flushList(); flushSummary();
-      html += `<h1>${applyInline(h2m[1])}</h1>`;
-      i++; continue;
+    if (inSummary) {
+      if (trimmed) { summaryBuffer += applyInline(trimmed) + ' '; i++; continue; }
+      else { flushSummary(); i++; continue; }
     }
-    if (h1m) {
-      flushList(); flushSummary();
-      html += `<h1>${applyInline(h1m[1])}</h1>`;
+
+    // BULLETS
+    const bulm = trimmed.match(/^[-*]\s+(.+)/);
+    if (bulm) {
+      flushSummary();
+      if (!inUL) { html += '<ul>'; inUL = true; }
+      html += `<li>${applyInline(bulm[1])}</li>`;
       i++; continue;
     }
 
-    // **Heading** standalone (bold-only line = section heading)
+    // CONTRAST line starting with ⟷
+    if (trimmed.startsWith('⟷')) {
+      flushList(); flushSummary();
+      html += `<div class="contrast">${applyInline(trimmed)}</div>`;
+      i++; continue;
+    }
+
+    // **bold-only line** — standalone heading style (legacy support)
     if (/^\*\*[^*]+\*\*\s*$/.test(trimmed)) {
       flushList(); flushSummary();
-      const text = trimmed.replace(/\*\*/g, '');
-      // detect summary section
-      if (/summary/i.test(text)) {
-        html += `<h1>${text}</h1>`;
-        inSummary = true;
-        i++; continue;
-      }
-      html += `<h1>${applyInline(trimmed)}</h1>`;
+      const text = applyInline(trimmed);
+      html += `<h2>${text}</h2>`;
       i++; continue;
     }
 
-    // **Heading** — with em dash description (e.g. **Key Terms** — ...)
-    if (/^\*\*[^*]+\*\*\s*[—\-–]/.test(trimmed)) {
-      flushList(); flushSummary();
-      const text = trimmed.replace(/^\*\*([^*]+)\*\*\s*[—\-–]\s*(.*)$/, (_, h, rest) => {
-        if (/summary/i.test(h)) { inSummary = true; return `<h1>${h}</h1>`; }
-        return `<h1>${h}</h1>${rest ? `<p>${applyInline(rest)}</p>` : ''}`;
-      });
-      html += text;
-      i++; continue;
-    }
-
-    // BULLETS — track nesting via indent level
-    const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)/);
-    if (bulletMatch) {
-      flushSummary();
-      const content = applyInline(bulletMatch[2]);
-      if (!inUL) { html += '<ul>'; inUL = true; }
-      // detect sub-indent (4+ spaces or 1+ tab)
-      const indentLen = bulletMatch[1].length;
-      if (indentLen >= 4) {
-        html += `<ul><li>${content}</li></ul>`;
-      } else if (indentLen >= 2) {
-        html += `<ul><li>${content}</li></ul>`;
-      } else {
-        html += `<li>${content}</li>`;
-      }
-      i++; continue;
-    }
-
-    // regular paragraph
-    flushList();
-    if (inSummary) {
-      summaryBuffer += `<p>${applyInline(trimmed)}</p>`;
-    } else {
-      html += `<p>${applyInline(trimmed)}</p>`;
-    }
+    // Default paragraph — pass through applyInline
+    flushList(); flushSummary();
+    html += `<p>${applyInline(trimmed)}</p>`;
     i++;
   }
 
-  flushList();
-  flushSummary();
+  flushList(); flushSummary();
   return html;
 }
+
 
 function buildTable(rows) {
   if (rows.length < 2) return '';
