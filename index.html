@@ -393,9 +393,17 @@
   }
 
   /* TABLES */
+  .notes-content .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 14px 0;
+    border-radius: 6px;
+  }
   .notes-content table {
     width: 100%; border-collapse: collapse;
-    margin: 14px 0; font-size: 13px;
+    min-width: 420px;
+    font-size: 13px;
     border-radius: 6px; overflow: hidden;
   }
   .notes-content th {
@@ -1848,7 +1856,7 @@ function parseMarkdown(md) {
 
 function buildTable(rows) {
   if (rows.length < 2) return '';
-  let html = '<table>';
+  let html = '<div class="table-wrap"><table>';
   rows.forEach((row, idx) => {
     // separator row (---|---|---)
     if (/^\|[-|\s:]+\|$/.test(row)) return;
@@ -1856,7 +1864,7 @@ function buildTable(rows) {
     const tag = idx === 0 ? 'th' : 'td';
     html += '<tr>' + cells.map(c => `<${tag}>${applyInline(c.trim())}</${tag}>`).join('') + '</tr>';
   });
-  html += '</table>';
+  html += '</table></div>';
   return html;
 }
 
