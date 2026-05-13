@@ -1747,19 +1747,10 @@ window.renderNotes = function renderNotes() {
   const raw = document.getElementById('notesTextarea').value.trim();
   if (!raw) { window.toast('Paste your Claude notes first.'); return; }
   window._lastRawNotes = raw;
-  // Render immediately with static parser
-  var baseHtml = parseMarkdown(raw);
-  document.getElementById('notesContent').innerHTML = baseHtml;
+  document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
   window.setTheme(currentTheme);
   document.getElementById('notesInputArea').style.display = 'none';
   document.getElementById('notesRendered').classList.add('visible');
-  // Then enhance with AI colorization
-  window.aiColorize(raw, function(entries) {
-    if (!entries) return; // fail silently, static render already shown
-    var enhanced = applyAiColorization(parseMarkdown(raw), entries);
-    document.getElementById('notesContent').innerHTML = enhanced;
-    window.setTheme(currentTheme);
-  });
 }
 
 // ── MARKDOWN PARSER ──
@@ -1774,7 +1765,7 @@ function parseMarkdown(md) {
   function flushList() { if (inUL) { html += '</ul>'; inUL = false; } }
   function flushSummary() {
     if (inSummary) {
-      html += `<div class="summary-block">${summaryBuffer}</div>`;
+      html += '<div class="summary-block">' + summaryBuffer + '</div>';
       inSummary = false; summaryBuffer = '';
     }
   }
@@ -1783,8 +1774,10 @@ function parseMarkdown(md) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    if (!trimmed) { flushList(); i++; continue; }
+    // blank
+    if (!trimmed) { flushList(); flushSummary(); i++; continue; }
 
+    // horizontal rule
     if (/^[-*_]{3,}$/.test(trimmed)) {
       flushList(); flushSummary(); html += '<hr>'; i++; continue;
     }
@@ -1793,59 +1786,90 @@ function parseMarkdown(md) {
     if (trimmed.startsWith('|')) {
       flushList(); flushSummary();
       const tableLines = [];
-      while (i < lines.length && lines[i].trim().startsWith('|')) { tableLines.push(lines[i].trim()); i++; }
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i].trim()); i++;
+      }
       html += buildTable(tableLines); continue;
     }
 
-    // HEADINGS — correct hierarchy
-    const h1m = trimmed.match(/^#\s+(.+)/);
-    const h2m = trimmed.match(/^##\s+(.+)/);
+    // HEADINGS — ### before ## before # to avoid partial matches
     const h3m = trimmed.match(/^###\s+(.+)/);
+    const h2m = trimmed.match(/^##\s+(.+)/);
+    const h1m = trimmed.match(/^#\s+(.+)/);
+    if (h3m) { flushList(); flushSummary(); html += '<h3>' + applyInline(h3m[1]) + '</h3>'; i++; continue; }
+    if (h2m) { flushList(); flushSummary(); html += '<h2>' + applyInline(h2m[1]) + '</h2>'; i++; continue; }
+    if (h1m) { flushList(); flushSummary(); html += '<h1>' + applyInline(h1m[1]) + '</h1>'; i++; continue; }
 
-    if (h3m) { flushList(); flushSummary(); html += `<h3>${applyInline(h3m[1])}</h3>`; i++; continue; }
-    if (h2m) { flushList(); flushSummary(); html += `<h2>${applyInline(h2m[1])}</h2>`; i++; continue; }
-    if (h1m) { flushList(); flushSummary(); html += `<h1>${applyInline(h1m[1])}</h1>`; i++; continue; }
-
-    // SUMMARY block
-    if (/^SUMMARY:/i.test(trimmed)) {
-      flushList();
-      const rest = trimmed.replace(/^SUMMARY:\s*/i, '');
-      inSummary = true;
-      summaryBuffer = rest ? applyInline(rest) + ' ' : '';
-      i++; continue;
-    }
-    if (inSummary) {
-      if (trimmed) { summaryBuffer += applyInline(trimmed) + ' '; i++; continue; }
-      else { flushSummary(); i++; continue; }
-    }
-
-    // BULLETS
-    const bulm = trimmed.match(/^[-*]\s+(.+)/);
-    if (bulm) {
-      flushSummary();
-      if (!inUL) { html += '<ul>'; inUL = true; }
-      html += `<li>${applyInline(bulm[1])}</li>`;
-      i++; continue;
-    }
-
-    // CONTRAST line starting with ⟷
-    if (trimmed.startsWith('⟷')) {
+    // SUMMARY — catch all common variations Claude might use
+    if (/^\*?\*?summary\*?\*?:?\s*$/i.test(trimmed) || /^SUMMARY:/i.test(trimmed)) {
       flushList(); flushSummary();
-      html += `<div class="contrast">${applyInline(trimmed)}</div>`;
+      const rest = trimmed.replace(/^\*?\*?summary\*?\*?:?\s*/i, '').trim();
+      inSummary = true;
+      if (rest) summaryBuffer += '<p>' + applyInline(rest) + '</p>';
       i++; continue;
     }
 
-    // **bold-only line** — standalone heading style (legacy support)
+    // **Section Heading** standalone bold-only line → always h2 (section, not title)
     if (/^\*\*[^*]+\*\*\s*$/.test(trimmed)) {
       flushList(); flushSummary();
-      const text = applyInline(trimmed);
-      html += `<h2>${text}</h2>`;
+      const inner = trimmed.replace(/\*\*/g, '').trim();
+      // If it's a summary heading, start summary block
+      if (/^summary$/i.test(inner)) {
+        inSummary = true; i++; continue;
+      }
+      html += '<h2>' + applyInline(trimmed) + '</h2>';
       i++; continue;
     }
 
-    // Default paragraph — pass through applyInline
+    // **Section** — em dash description e.g. **Key Terms** — pull out...
+    // Section heading + inline description → h2 + paragraph
+    if (/^\*\*[^*]+\*\*\s*[—\-–]/.test(trimmed)) {
+      flushList(); flushSummary();
+      const m = trimmed.match(/^(\*\*[^*]+\*\*)\s*[—\-–]\s*(.*)/);
+      if (m) {
+        const heading = m[1].replace(/\*\*/g, '').trim();
+        const rest = m[2].trim();
+        if (/^summary$/i.test(heading)) {
+          inSummary = true;
+          if (rest) summaryBuffer += '<p>' + applyInline(rest) + '</p>';
+        } else {
+          html += '<h2>' + heading + '</h2>';
+          if (rest) html += '<p>' + applyInline(rest) + '</p>';
+        }
+      } else {
+        html += '<p>' + applyInline(trimmed) + '</p>';
+      }
+      i++; continue;
+    }
+
+    // BULLETS — handle +, -, * markers
+    const bulletM = line.match(/^(\s*)[-*+]\s+(.+)/);
+    if (bulletM) {
+      flushSummary();
+      const indent = bulletM[1].length;
+      const bContent = applyInline(bulletM[2]);
+      if (inSummary) {
+        summaryBuffer += '<li>' + bContent + '</li>';
+        i++; continue;
+      }
+      if (!inUL) { html += '<ul>'; inUL = true; }
+      if (indent >= 2) {
+        html += '<ul><li>' + bContent + '</li></ul>';
+      } else {
+        html += '<li>' + bContent + '</li>';
+      }
+      i++; continue;
+    }
+
+    // SUMMARY continuation lines
+    if (inSummary && trimmed) {
+      summaryBuffer += '<p>' + applyInline(trimmed) + '</p>';
+      i++; continue;
+    }
+
+    // DEFAULT paragraph
     flushList(); flushSummary();
-    html += `<p>${applyInline(trimmed)}</p>`;
+    html += '<p>' + applyInline(trimmed) + '</p>';
     i++;
   }
 
@@ -1869,24 +1893,18 @@ function buildTable(rows) {
 }
 
 function applyInline(text) {
-  // [CORE] foundational term
-  text = text.replace(/\*\*\[CORE\]\s*([^*]+)\*\*/g, '<span class="term term-core">\u2b21 $1</span>');
-  // [VOCAB] vocabulary word
-  text = text.replace(/\*\*\[VOCAB\]\s*([^*]+)\*\*/g, '<span class="term term-vocab">$1</span>');
-  // [GRAMMAR] grammar pattern
-  text = text.replace(/\*\*\[GRAMMAR\]\s*([^*]+)\*\*/g, '<span class="term term-grammar">$1</span>');
-  // [NUANCE] register/nuance
-  text = text.replace(/\*\*\[NUANCE\]\s*([^*]+)\*\*/g, '<span class="term term-nuance">$1</span>');
-  // standard **bold** term
+  // **bold** → term (do this first before romaji so bold isn't broken)
   text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="term">$1</span>');
-  // romaji — words in parens that are latin/phonetic
-  text = text.replace(/(\([a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa\s,'"-&]+\))/g, '<span class="romaji">$1</span>');
-  // contrast marker
-  text = text.replace(/\u27f7\s*Contrast:\s*(.+)/g, '<span class="contrast">\u27f7 $1</span>');
+  // romaji — strictly phonetic content in parens
+  // must start with a letter, only letters/spaces/apostrophes/hyphens/commas/periods, max 60 chars
+  text = text.replace(/\(([a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa][a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa\s,'.-]{0,58})\)/g,
+    '<span class="romaji">($1)</span>');
   // *italic*
   text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   return text;
 }
+
+
 
 window.copyRenderedText = async function copyRenderedText() {
   const content = document.getElementById('notesContent').innerText;
