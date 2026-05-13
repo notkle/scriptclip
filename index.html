@@ -1091,20 +1091,14 @@
   }
 
 
-    @keyframes ytTitleScroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+    .yt-title-wrap {
+      overflow: hidden;
+      width: 100%;
     }
     .yt-title-scroll {
       display: inline-block;
       white-space: nowrap;
-      animation: ytTitleScroll 10s linear infinite;
-      animation-play-state: paused;
       will-change: transform;
-    }
-    .yt-title-wrap {
-      overflow: hidden;
-      width: 100%;
     }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -2748,10 +2742,7 @@ function ytUpdatePlayBtn() {
   }
   if (wrap) wrap.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
   // Banner scrolls only while playing
-  var titleEl = document.getElementById('ytTitle');
-  if (titleEl && titleEl.classList.contains('yt-title-scroll')) {
-    titleEl.style.animationPlayState = ytPlaying ? 'running' : 'paused';
-  }
+  if (ytPlaying) { ytStartScroll(); } else { ytStopScroll(); }
 }
 
 function fetchYtInfo(id) {
@@ -2766,17 +2757,7 @@ function fetchYtInfo(id) {
   .then(function(info) {
     console.log('[YT] info received:', JSON.stringify(info).substring(0,100));
     if (info.title) {
-      var titleEl = document.getElementById('ytTitle');
-      if (titleEl) {
-        var txt = info.title;
-        if (txt.length > 22) {
-          titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
-          titleEl.className = 'yt-title-scroll';
-        } else {
-          titleEl.textContent = txt;
-          titleEl.className = '';
-        }
-      }
+      ytSetTitle(info.title);
       if (_ytFromUrl) {
         var url = document.getElementById('ytUrlInput').value.trim();
         // Don't overwrite if it exists as a favorite
@@ -2851,16 +2832,7 @@ window.ytLoad = function() {
       ytVideoId = res.videoId;
       ytCurrentSec = 0; ytDurSec = 0;
       _ytFromUrl = true;
-      if (res.title) {
-        var titleEl = document.getElementById('ytTitle');
-        if (titleEl) {
-          var txt = res.title;
-          if (txt.length > 22) {
-            titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
-            titleEl.className = 'yt-title-scroll';
-          } else { titleEl.textContent = txt; titleEl.className = ''; }
-        }
-      }
+      if (res.title) ytSetTitle(res.title);
       if (res.duration) {
         var h=0,min=0,sec=0;
         var hm=res.duration.match(/([0-9]+)H/); if(hm) h=parseInt(hm[1]);
@@ -3473,6 +3445,50 @@ window.addEventListener('popstate', function(e) {
 
 // Push initial state so first back press works
 history.replaceState({ nbView: 'list' }, '');
+
+// ── TITLE BANNER SCROLL ──
+var _ytScrollRAF = null;
+var _ytScrollX = 0;
+var _ytScrollSpeed = 0.5; // px per frame
+
+function ytStartScroll() {
+  var el = document.getElementById('ytTitle');
+  if (!el || !el.classList.contains('yt-title-scroll')) return;
+  cancelAnimationFrame(_ytScrollRAF);
+  // Measure single copy width (half the total since text is doubled)
+  var fullW = el.scrollWidth / 2;
+  function step() {
+    _ytScrollX -= _ytScrollSpeed;
+    if (Math.abs(_ytScrollX) >= fullW) _ytScrollX = 0;
+    el.style.transform = 'translateX(' + _ytScrollX + 'px)';
+    _ytScrollRAF = requestAnimationFrame(step);
+  }
+  _ytScrollRAF = requestAnimationFrame(step);
+}
+
+function ytStopScroll() {
+  cancelAnimationFrame(_ytScrollRAF);
+  _ytScrollRAF = null;
+}
+
+function ytSetTitle(txt) {
+  var titleEl = document.getElementById('ytTitle');
+  if (!titleEl) return;
+  ytStopScroll();
+  _ytScrollX = 0;
+  titleEl.style.transform = '';
+  if (txt && txt.length > 22) {
+    // Duplicate with gap for seamless loop
+    titleEl.innerHTML = txt +
+      '<span style="display:inline-block;width:48px"></span>' +
+      txt +
+      '<span style="display:inline-block;width:48px"></span>';
+    titleEl.className = 'yt-title-scroll';
+  } else {
+    titleEl.textContent = txt || '';
+    titleEl.className = '';
+  }
+}
 
 </script>
 
