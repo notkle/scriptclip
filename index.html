@@ -1410,6 +1410,7 @@
 
 
 <!-- YOUTUBE AUDIO PLAYER - mobile only -->
+<div id="ytOverlay" style="display:none;position:fixed;inset:0;z-index:8887;" onclick="window.ytClose()"></div>
 <div id="ytPlayerWrap">
   <div id="ytTab" onclick="window.ytTogglePanel()">▶</div>
   <div id="ytPanel">
@@ -1428,10 +1429,12 @@
         <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:3px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-          <span id="ytCurrent" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px;min-width:36px;display:inline-block;">0:00</span>
-          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:0 10px;letter-spacing:2px;border-color:transparent;color:var(--muted);line-height:1.8">···</button>
-          <span id="ytDuration" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px;min-width:36px;display:inline-block;text-align:right;">0:00</span>
+        <div style="text-align:center;width:100%;margin-bottom:2px">
+          <button class="ytBtn" onclick="window.ytShowOptions()" style="font-size:10px;padding:0 16px;letter-spacing:2px;border-color:transparent;color:var(--muted);line-height:1.8">···</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <span id="ytCurrent" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px;">0:00</span>
+          <span id="ytDuration" style="font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:0.5px;">0:00</span>
         </div>
       </div>
     </div>
@@ -1897,7 +1900,7 @@ function applyInline(text) {
   text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="term">$1</span>');
   // romaji — strictly phonetic content in parens
   // must start with a letter, only letters/spaces/apostrophes/hyphens/commas/periods, max 60 chars
-  text = text.replace(/\(([a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa][a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa\s,'.-]{0,58})\)/g,
+  text = text.replace(/\(([a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa][a-zA-Z\u0101\u012b\u016b\u0113\u014d\u0100\u012a\u016a\u0112\u014c\xe0\xe8\xec\xf2\xf9\xe1\xe9\xed\xf3\xfa\s,'.!?\-]{0,58})\)/g,
     '<span class="romaji">($1)</span>');
   // *italic*
   text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -2926,15 +2929,20 @@ window.ytSeek = function(e) {
 
 window.ytTogglePanel = function() {
   var wrap = document.getElementById('ytPlayerWrap');
+  var overlay = document.getElementById('ytOverlay');
   wrap.classList.toggle('open');
+  var isOpen = wrap.classList.contains('open');
+  if (overlay) overlay.style.display = isOpen ? 'block' : 'none';
   var tab = document.getElementById('ytTab');
-  if (tab) tab.textContent = wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
+  if (tab) tab.textContent = isOpen ? '\u25c0' : '\u25b6';
 };
 
 window.ytClose = function() {
   var wrap = document.getElementById('ytPlayerWrap');
   if (wrap && wrap.classList.contains('open')) {
     wrap.classList.remove('open');
+    var overlay = document.getElementById('ytOverlay');
+    if (overlay) overlay.style.display = 'none';
     var tab = document.getElementById('ytTab');
     if (tab) tab.textContent = '\u25b6';
   }
@@ -2992,18 +3000,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Close player when tapping outside
-  document.addEventListener('click', function(e) {
-    var wrap = document.getElementById('ytPlayerWrap');
-    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
-      window.ytClose();
-    }
-  });
-  document.addEventListener('touchstart', function(e) {
-    var wrap = document.getElementById('ytPlayerWrap');
-    if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
-      window.ytClose();
-    }
-  }, { passive: true });
+
 
   // Hide when reading mode opens
   var readerOverlay = document.getElementById('scReaderOverlay');
@@ -3628,6 +3625,66 @@ function applyAiColorization(html, entries) {
   return div.innerHTML;
 }
 
+// ── AI ASK ──
+window.aiAskOpen = function() {
+  var popup = document.getElementById('aiHighlightPopup');
+  if (popup) popup.style.display = 'none';
+  var ask = document.getElementById('aiAskPopup');
+  // Position near selection
+  var sel = window.getSelection();
+  var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
+  var vw = window.innerWidth;
+  if (rect) {
+    var top = rect.bottom + window.scrollY + 10;
+    var left = Math.min(Math.max(rect.left + rect.width / 2 - 130, 10), vw - 270);
+    ask.style.top = top + 'px';
+    ask.style.left = left + 'px';
+  }
+  ask.style.display = 'block';
+  setTimeout(function(){ document.getElementById('aiAskInput').focus(); }, 50);
+};
+
+window.aiAskClose = function() {
+  document.getElementById('aiAskPopup').style.display = 'none';
+  document.getElementById('aiAskInput').value = '';
+};
+
+window.aiAskCopy = function() {
+  var question = document.getElementById('aiAskInput').value.trim();
+  if (!question) return;
+  var highlighted = _aiHighlightText.trim();
+  var context = _aiHighlightContext.trim();
+  var prompt = 'You are helping a student studying from notes.\n\n' +
+    'The student has highlighted the following:\n"' + highlighted + '"\n\n' +
+    (context && context !== highlighted
+      ? 'The surrounding context (for reference only):\n"' + context + '"\n\n'
+      : '') +
+    'The student\'s question about the highlighted text:\n' + question + '\n\n' +
+    'Answer concisely and clearly, focusing specifically on the highlighted text. Under 150 words.';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt).then(function() {
+      window.toast('Prompt copied — paste into Claude or Gemini');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = prompt; ta.style.cssText = 'position:fixed;top:-9999px';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,99999);
+    document.execCommand('copy'); document.body.removeChild(ta);
+    window.toast('Prompt copied — paste into Claude or Gemini');
+  }
+  window.aiAskClose();
+  window.getSelection().removeAllRanges();
+};
+
+// Close AI Ask when clicking outside
+document.addEventListener('mousedown', function(e) {
+  var ask = document.getElementById('aiAskPopup');
+  if (ask && ask.style.display !== 'none' && !ask.contains(e.target)) window.aiAskClose();
+});
+document.addEventListener('touchstart', function(e) {
+  var ask = document.getElementById('aiAskPopup');
+  if (ask && ask.style.display !== 'none' && !ask.contains(e.target)) window.aiAskClose();
+}, { passive: true });
 
 </script>
 
@@ -3653,7 +3710,7 @@ function applyAiColorization(html, entries) {
 <div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
   <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Copy</button>
   <span style="color:var(--border);margin:0 2px">|</span>
-  <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Cards</button>
+  <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Cards</button><span style="color:var(--border);margin:0 2px">|</span><button onclick="window.aiAskOpen()" style="background:none;border:none;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">✦ AI Ask</button>
 </div>
 
 <!-- FLASH CARD CONFIRM MODAL -->
@@ -3680,6 +3737,16 @@ function applyAiColorization(html, entries) {
   </div>
 </div>
 <div id="ytIframeWrap" style="position:fixed;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-10px;left:-10px;z-index:-1"></div>
+
+<!-- AI ASK POPUP -->
+<div id="aiAskPopup" style="display:none;position:fixed;z-index:10001;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,0.35);pointer-events:all;width:260px;">
+  <button onclick="window.aiAskClose()" style="position:absolute;top:8px;left:10px;background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0;line-height:1;">✕</button>
+  <div style="font-family:system-ui,-apple-system,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center;">Ask about highlight</div>
+  <input id="aiAskInput" type="text" placeholder="Your question…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:8px;"
+    onkeydown="if(event.key==='Enter'){window.aiAskCopy()}"/>
+  <button onclick="window.aiAskCopy()" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Ask</button>
+</div>
 </body>
 </html>
   </div>
