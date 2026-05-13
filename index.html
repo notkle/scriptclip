@@ -1084,13 +1084,14 @@
 
 
     @keyframes ytTitleScroll {
-      0%   { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
     .yt-title-scroll {
-      display: block;
+      display: inline-block;
       white-space: nowrap;
-      animation: ytTitleScroll 12s linear infinite;
+      animation: ytTitleScroll 10s linear infinite;
+      animation-play-state: paused;
       will-change: transform;
     }
     .yt-title-wrap {
@@ -1995,8 +1996,14 @@ function renderYtHistory() {
       ytDurSec = 0;
       var titleEl = document.getElementById('ytTitle');
       if (titleEl) {
-        titleEl.textContent = item.title;
-        titleEl.className = item.title.length > 22 ? 'yt-title-scroll' : '';
+        var txt = item.title;
+        if (txt.length > 22) {
+          titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
+          titleEl.className = 'yt-title-scroll';
+        } else {
+          titleEl.textContent = txt;
+          titleEl.className = '';
+        }
       }
       ytBuildIframe(item.id, 0);
       localStorage.setItem('sc_yt_url', item.url);
@@ -2736,8 +2743,12 @@ function ytUpdatePlayBtn() {
   if (tab) {
     tab.textContent = wrap && wrap.classList.contains('open') ? '\u25c0' : '\u25b6';
     tab.style.color = ytPlaying ? 'var(--accent)' : 'var(--muted)';
-    var wrapEl = document.getElementById('ytPlayerWrap');
-    if (wrapEl) wrapEl.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
+    if (wrap) wrap.style.borderColor = ytPlaying ? 'var(--accent)' : 'var(--border)';
+  }
+  // Banner scrolls only while playing
+  var titleEl = document.getElementById('ytTitle');
+  if (titleEl && titleEl.classList.contains('yt-title-scroll')) {
+    titleEl.style.animationPlayState = ytPlaying ? 'running' : 'paused';
   }
 }
 
@@ -2755,8 +2766,14 @@ function fetchYtInfo(id) {
     if (info.title) {
       var titleEl = document.getElementById('ytTitle');
       if (titleEl) {
-        titleEl.textContent = info.title;
-        titleEl.className = info.title.length > 22 ? 'yt-title-scroll' : '';
+        var txt = info.title;
+        if (txt.length > 22) {
+          titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
+          titleEl.className = 'yt-title-scroll';
+        } else {
+          titleEl.textContent = txt;
+          titleEl.className = '';
+        }
       }
       if (_ytFromUrl) {
         var url = document.getElementById('ytUrlInput').value.trim();
@@ -2952,8 +2969,14 @@ window.ytSearch = function() {
       if (res.title) {
         var titleEl = document.getElementById('ytTitle');
         if (titleEl) {
-          titleEl.textContent = res.title;
-          titleEl.className = res.title.length > 22 ? 'yt-title-scroll' : '';
+          var txt = res.title;
+          if (txt.length > 22) {
+            titleEl.innerHTML = txt + '<span style="display:inline-block;width:40px"></span>' + txt;
+            titleEl.className = 'yt-title-scroll';
+          } else {
+            titleEl.textContent = txt;
+            titleEl.className = '';
+          }
         }
       }
       if (res.duration) {
