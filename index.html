@@ -4051,7 +4051,7 @@ function fcAdvance() {
     _fcCards = _fcCards.sort(function() { return Math.random() - 0.5; }); // shuffle first
     _fcCards = _fcCards.sort(function(a, b) { return (b.units || 0) - (a.units || 0); });
     _fcIdx = 0;
-    window.toast('Stack reset');
+    window.toast('Stack shuffled');
   }
   renderFcCard();
 }
