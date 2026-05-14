@@ -1987,7 +1987,7 @@ window.doSave = function doSave() {
       'td{padding:8px 12px;border-bottom:1px solid ' + s.border + '}' +
       'tr:nth-child(even) td{background:' + s.rowAlt + '}';
     const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
-      '<style>' + css + '</style></head><body>' + content.innerHTML + '</body></html>';
+      '<style>' + css + '</style></head><body>' + content.innerHTML + '</' + 'body></' + 'html>';
     const blob = new Blob([html], {type:'text/html'});
     triggerDownload(URL.createObjectURL(blob), title + '.html');
   } else {
