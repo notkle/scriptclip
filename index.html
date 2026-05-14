@@ -3642,15 +3642,28 @@ window.aiAskOpen = function() {
   var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
   var vw = window.innerWidth;
   var vh = window.innerHeight;
+
+  // If in fullscreen reader, move popup inside it so coordinates align
+  var reader = document.getElementById('scReaderOverlay');
+  var inReader = reader && reader.style.display !== 'none';
+  if (inReader && ask.parentNode !== reader) {
+    reader.appendChild(ask);
+  } else if (!inReader && ask.parentNode !== document.body) {
+    document.body.appendChild(ask);
+  }
+
   if (rect) {
-    // Use fixed positioning relative to viewport
     var top = rect.bottom + 10;
     var left = Math.min(Math.max(rect.left + rect.width / 2 - 130, 10), vw - 270);
-    // If too close to bottom, show above selection
-    if (top + 120 > vh) top = rect.top - 130;
+    if (top + 140 > vh) top = Math.max(rect.top - 145, 10);
     ask.style.position = 'fixed';
     ask.style.top = top + 'px';
     ask.style.left = left + 'px';
+  } else {
+    ask.style.position = 'fixed';
+    ask.style.top = '50%';
+    ask.style.left = '50%';
+    ask.style.transform = 'translate(-50%,-50%)';
   }
   ask.style.display = 'block';
   setTimeout(function(){ document.getElementById('aiAskInput').focus(); }, 50);
