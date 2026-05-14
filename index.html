@@ -1326,6 +1326,7 @@
   <div class="nb-header">
     <div class="nb-title" id="nbFcTitle" style="flex:1"></div>
     <div style="font-size:11px;color:var(--muted);font-family:system-ui,sans-serif;margin-right:10px" id="nbFcCounter"></div>
+    <button class="tool-btn" onclick="if(typeof window.fcReset==='function'){window.fcReset()}" style="margin-right:6px">↺ Reset</button>
     <button class="tool-btn" id="nbFcDeleteBtn" onclick="if(typeof window.fcToggleDeleteMode==='function'){window.fcToggleDeleteMode()}">Delete</button>
   </div>
   <div id="nbFcArea" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px 0">
@@ -4050,10 +4051,18 @@ function fcAdvance() {
     _fcCards = _fcCards.sort(function() { return Math.random() - 0.5; }); // shuffle first
     _fcCards = _fcCards.sort(function(a, b) { return (b.units || 0) - (a.units || 0); });
     _fcIdx = 0;
-    window.toast('Stack complete — sorted by difficulty');
+    window.toast('Stack reset');
   }
   renderFcCard();
 }
+
+window.fcReset = function() {
+  _fcCards.forEach(function(c) { c.units = 0; });
+  _fcIdx = 0;
+  _fcFlipped = false;
+  renderFcCard();
+  window.toast('Cards reset');
+};
 
 </script>
 
