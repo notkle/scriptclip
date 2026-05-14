@@ -3981,6 +3981,36 @@ window.toggleQuizHistoryEntry = function(ei) {
   toggle.textContent = isOpen ? '▼' : '▲';
 };
 
+// ── DISABLE PULL-TO-REFRESH ──
+(function() {
+  var lastY = 0;
+  document.addEventListener('touchstart', function(e) {
+    lastY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    var y = e.touches[0].clientY;
+    var el = e.target;
+    // Walk up to find scrollable element
+    while (el && el !== document.body) {
+      var st = el.scrollTop;
+      var sh = el.scrollHeight;
+      var ch = el.clientHeight;
+      var isScrollable = sh > ch;
+      if (isScrollable) {
+        // At top scrolling up — let the element handle it, block overscroll
+        if (st === 0 && y > lastY) { e.preventDefault(); return; }
+        // Not at boundary — let it scroll normally
+        if (st > 0 && st + ch < sh) return;
+        if (st + ch >= sh && y < lastY) return;
+        return;
+      }
+      el = el.parentElement;
+    }
+    // No scrollable parent — block
+    e.preventDefault();
+  }, { passive: false });
+})();
+
 </script>
 
 <!-- PASTE JSON MODAL -->
