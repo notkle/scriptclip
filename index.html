@@ -1215,7 +1215,10 @@
   <!-- SETUP STATE -->
   <div class="quiz-setup" id="quizSetup">
     <div class="quiz-setup-inner">
-      <div class="quiz-setup-title">Generate a Quiz</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="quiz-setup-title" style="margin-bottom:0">Generate a Quiz</div>
+        <button class="nb-page-btn" onclick="window.openQuizHistory()" style="flex-shrink:0">History</button>
+      </div>
       <div class="quiz-setup-sub">Drop a file, paste notes, or load from a notebook</div>
       <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;">📓 Load from Notebook</button>
 
@@ -3882,6 +3885,7 @@ function showResults(results, userAnswers) {
   });
   document.getElementById('quizActive').style.display = 'none';
   document.getElementById('quizResults').style.display = 'block';
+  saveQuizResult(results, userAnswers);
 }
 
 function toggleFeedback(idx) {
@@ -3905,6 +3909,77 @@ window.resetQuiz = function() {
 document.addEventListener('DOMContentLoaded', function() {
   setupDropZone();
 });
+
+// ── QUIZ HISTORY ──
+var QUIZ_HISTORY_KEY = 'sc_quiz_history';
+
+function saveQuizResult(results, userAnswers) {
+  var score = results.filter(function(r) { return r.correct; }).length;
+  var total = results.length;
+  var entry = {
+    date: Date.now(),
+    score: score,
+    total: total,
+    pct: Math.round((score/total)*100),
+    questions: quizData.map(function(q, idx) {
+      return {
+        question: q.question,
+        type: q.type,
+        answer: q.answer,
+        userAnswer: userAnswers[idx] || '(no answer)',
+        correct: results[idx] ? results[idx].correct : false,
+        explanation: q.explanation
+      };
+    })
+  };
+  var history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY) || '[]');
+  history.unshift(entry);
+  if (history.length > 10) history = history.slice(0, 10);
+  localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(history));
+}
+
+window.openQuizHistory = function() {
+  var history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY) || '[]');
+  var list = document.getElementById('quizHistoryList');
+  list.innerHTML = '';
+  if (history.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;font-family:system-ui,sans-serif">No quiz history yet.</div>';
+  } else {
+    history.forEach(function(entry, ei) {
+      var card = document.createElement('div');
+      card.style.cssText = 'border:1px solid var(--border);border-radius:8px;overflow:hidden;';
+      var pct = entry.pct;
+      var color = pct >= 90 ? 'var(--n-summary-border)' : pct >= 60 ? 'var(--n-h2)' : 'var(--accent)';
+      var dateStr = new Date(entry.date).toLocaleDateString() + ' ' + new Date(entry.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      card.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:var(--surface);" onclick="toggleQuizHistoryEntry(' + ei + ')">' +
+        '<div><div style="font-family:system-ui,sans-serif;font-size:12px;font-weight:700;color:var(--ink)">' + dateStr + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + entry.total + ' questions</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span style="font-family:system-ui,sans-serif;font-size:18px;font-weight:800;color:' + color + '">' + entry.score + '/' + entry.total + '</span>' +
+        '<span style="font-size:10px;color:var(--muted);font-family:system-ui,sans-serif">' + pct + '%</span>' +
+        '<span id="qhtoggle-' + ei + '" style="font-size:10px;color:var(--muted)">▼</span></div></div>' +
+        '<div id="qhbody-' + ei + '" style="display:none;padding:0 14px 10px;">' +
+        entry.questions.map(function(q, qi) {
+          return '<div style="padding:8px 0;border-top:1px solid var(--border);font-size:11px;font-family:system-ui,sans-serif">' +
+            '<div style="color:' + (q.correct ? 'var(--n-summary-border)' : 'var(--accent)') + ';font-weight:700;margin-bottom:3px">' + (q.correct ? '✓' : '✗') + ' ' + (qi+1) + '. ' + q.question + '</div>' +
+            (!q.correct ? '<div style="color:var(--muted);margin-bottom:2px">Your answer: ' + q.userAnswer + '</div>' +
+            '<div style="color:var(--muted)">Correct: ' + q.answer + '</div>' : '') +
+            '</div>';
+        }).join('') +
+        '</div>';
+      list.appendChild(card);
+    });
+  }
+  document.getElementById('quizHistoryOverlay').classList.add('open');
+};
+
+window.toggleQuizHistoryEntry = function(ei) {
+  var body = document.getElementById('qhbody-' + ei);
+  var toggle = document.getElementById('qhtoggle-' + ei);
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.textContent = isOpen ? '▼' : '▲';
+};
 
 </script>
 
@@ -3986,6 +4061,17 @@ document.addEventListener('DOMContentLoaded', function() {
       <button class="modal-cancel" onclick="document.getElementById('nbExportOverlay').classList.remove('open')">Cancel</button>
       <button class="modal-save" onclick="if(typeof window.doExportNotebook==='function'){window.doExportNotebook()}">Export</button>
     </div>
+  </div>
+</div>
+
+<!-- QUIZ HISTORY OVERLAY -->
+<div class="modal-overlay" id="quizHistoryOverlay">
+  <div class="modal" style="max-width:420px;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin-bottom:0">Quiz History</div>
+      <button class="modal-cancel" onclick="document.getElementById('quizHistoryOverlay').classList.remove('open')" style="flex:none;padding:6px 12px">Close</button>
+    </div>
+    <div id="quizHistoryList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 </div>
 </body>
