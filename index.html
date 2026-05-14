@@ -3187,7 +3187,7 @@ function renderFcCard() {
   document.getElementById('nbFcFront').textContent = card.front;
   document.getElementById('nbFcBack').textContent = card.back;
   var units = card.units || 0;
-  var unitsHtml = units > 0 ? ' <span style="font-size:9px;color:var(--accent);font-family:system-ui,sans-serif;font-weight:700;">+' + units + '</span>' : '';
+  var unitsHtml = units > 0 ? ' <span style="font-size:9px;color:var(--accent);font-family:system-ui,sans-serif;font-weight:700;">-' + units + '</span>' : '';
   document.getElementById('nbFcCounter').innerHTML = (_fcIdx + 1) + ' / ' + _fcCards.length + unitsHtml;
   document.getElementById('nbFcSide').textContent = 'tap to reveal';
   var checkRow = document.getElementById('nbFcCheckRow');
