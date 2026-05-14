@@ -3123,13 +3123,15 @@ window.aiGenerateFlashCards = function() {
 
   window.toast('Generating flash cards…');
 
-  var prompt = 'You are a study tool. Based on the highlighted term and its context, generate flash cards for studying.\n\n' +
-    'Highlighted: "' + highlight + '"\n\n' +
-    (context && context !== highlight ? 'Context: "' + context + '"\n\n' : '') +
-    'Determine the appropriate number of flash cards (typically 2-6) based on how much there is to learn.\n' +
+  var prompt = 'You are a flash card generator. The user has highlighted a specific term or phrase to turn into flash cards.\n\n' +
+    'HIGHLIGHTED — this is the precise subject of the flash cards:\n"' + highlight + '"\n\n' +
+    (context && context !== highlight
+      ? 'SURROUNDING CONTEXT — use only to clarify or refine your understanding of the highlighted subject. The context may cover broader topics unrelated to the highlight. Never generate cards about the context itself:\n"' + context + '"\n\n'
+      : '') +
+    'Generate flash cards exclusively about the highlighted subject. Context exists only to help you understand what the highlight means more precisely — never to expand scope.\n' +
+    'Determine the appropriate number of cards (typically 2-5).\n' +
     'Return ONLY a JSON array, no markdown, no explanation:\n' +
-    '[{"front": "term or question", "back": "definition or answer"}]\n\n' +
-    'Make fronts concise (a term, phrase, or short question). Backs clear and complete but under 60 words.';
+    '[{"front": "concise term or question", "back": "clear answer under 50 words"}]';
 
   fetch(WORKER_URL, {
     method: 'POST',
@@ -4062,6 +4064,53 @@ window.fcReset = function() {
   _fcFlipped = false;
   renderFcCard();
   window.toast('Cards reset');
+};
+
+function nbLoad() { try { return JSON.parse(localStorage.getItem(NB_KEY) || '{}'); } catch(e) { return {}; } }
+function nbSave(data) { localStorage.setItem(NB_KEY, JSON.stringify(data)); }
+
+
+
+
+// ── COLORIZE THEMES ──
+
+window.setTheme = function(name) {
+  if (!THEMES[name]) return;
+  currentTheme = name;
+  const th = THEMES[name];
+  const root = document.documentElement;
+  root.style.setProperty('--n-h1', th.h1);
+  root.style.setProperty('--n-h2', th.h2);
+  root.style.setProperty('--n-h3', th.h3);
+  root.style.setProperty('--n-term', th.term);
+  root.style.setProperty('--n-romaji', th.romaji);
+  root.style.setProperty('--n-bullet-marker', th.bulletMarker);
+  root.style.setProperty('--n-bullet', th.bullet);
+  root.style.setProperty('--n-summary-bg', th.sumBg);
+  root.style.setProperty('--n-summary-border', th.sumBorder);
+  root.style.setProperty('--n-summary-text', th.sumText);
+  // Sync all dropdowns
+  ['themeSelect','themeSelectInput','themeSelectInline'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.value = name;
+  });
+  // Always re-render from stored raw to prevent color leaking
+  const nc = document.getElementById('notesContent');
+  if (nc && window._lastRawNotes) {
+    nc.innerHTML = parseMarkdown(window._lastRawNotes);
+  }
+};
+
+window.scConfirmResolve = null;
+window.scConfirm = function(msg) {
+  return new Promise(function(resolve) {
+    document.getElementById('scConfirmMsg').textContent = msg;
+    document.getElementById('scConfirmOverlay').classList.add('open');
+    window.scConfirmResolve = function(val) {
+      document.getElementById('scConfirmOverlay').classList.remove('open');
+      resolve(val);
+    };
+  });
 };
 
 </script>
