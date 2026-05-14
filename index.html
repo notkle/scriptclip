@@ -2987,6 +2987,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Auto-pause on visibility change
   document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
+      localStorage.setItem('sc_yt_was_playing', ytPlaying ? '1' : '0');
       if (ytPlaying) {
         localStorage.setItem('sc_yt_pos', ytCurrentSec);
         document.getElementById('ytIframeWrap').innerHTML = '';
@@ -2995,9 +2996,9 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(ytInterval);
       }
     } else {
-      if (ytVideoId && !ytPlaying) {
+      var wasPlaying = localStorage.getItem('sc_yt_was_playing') === '1';
+      if (ytVideoId && wasPlaying) {
         ytBuildIframe(ytVideoId, ytCurrentSec);
-        // Restore title and duration from API
         fetchYtInfo(ytVideoId);
       }
     }
