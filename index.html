@@ -1898,8 +1898,8 @@ function buildTable(rows) {
 function applyInline(text) {
   // **bold** → term
   text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="term">$1</span>');
-  // (anything) → romaji — simple: open paren to close paren, same line, max 80 chars
-  text = text.replace(/\(([^()\n]{1,80})\)/g, '<span class="romaji">($1)</span>');
+  // (anything) → romaji — open paren to close paren, same line
+  text = text.replace(/\(([^()\n]+)\)/g, '<span class="romaji">($1)</span>');
   // *italic*
   text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   return text;
