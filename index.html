@@ -1767,8 +1767,16 @@ function parseMarkdown(md) {
 
   function flushList() { if (inUL) { html += '</ul>'; inUL = false; } }
   function flushSummary() {
-    if (inSummary) {
+    if (inSummary && summaryBuffer) {
       html += '<div class="summary-block">' + summaryBuffer + '</div>';
+      inSummary = false; summaryBuffer = '';
+    } else if (inSummary) {
+      // Don't flush empty summary — blank line after **Summary** heading, keep waiting
+    }
+  }
+  function forceFlushSummary() {
+    if (inSummary) {
+      if (summaryBuffer) html += '<div class="summary-block">' + summaryBuffer + '</div>';
       inSummary = false; summaryBuffer = '';
     }
   }
@@ -1777,17 +1785,17 @@ function parseMarkdown(md) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // blank
-    if (!trimmed) { flushList(); flushSummary(); i++; continue; }
+    // blank line — flush list but DON'T flush summary (Claude often has blank after **Summary**)
+    if (!trimmed) { flushList(); i++; continue; }
 
     // horizontal rule
     if (/^[-*_]{3,}$/.test(trimmed)) {
-      flushList(); flushSummary(); html += '<hr>'; i++; continue;
+      flushList(); forceFlushSummary(); html += '<hr>'; i++; continue;
     }
 
     // TABLE
     if (trimmed.startsWith('|')) {
-      flushList(); flushSummary();
+      flushList(); forceFlushSummary();
       const tableLines = [];
       while (i < lines.length && lines[i].trim().startsWith('|')) {
         tableLines.push(lines[i].trim()); i++;
@@ -1795,28 +1803,27 @@ function parseMarkdown(md) {
       html += buildTable(tableLines); continue;
     }
 
-    // HEADINGS — ### before ## before # to avoid partial matches
+    // HEADINGS — new heading ends summary
     const h3m = trimmed.match(/^###\s+(.+)/);
     const h2m = trimmed.match(/^##\s+(.+)/);
     const h1m = trimmed.match(/^#\s+(.+)/);
-    if (h3m) { flushList(); flushSummary(); html += '<h3>' + applyInline(h3m[1]) + '</h3>'; i++; continue; }
-    if (h2m) { flushList(); flushSummary(); html += '<h2>' + applyInline(h2m[1]) + '</h2>'; i++; continue; }
-    if (h1m) { flushList(); flushSummary(); html += '<h1>' + applyInline(h1m[1]) + '</h1>'; i++; continue; }
+    if (h3m) { flushList(); forceFlushSummary(); html += '<h3>' + applyInline(h3m[1]) + '</h3>'; i++; continue; }
+    if (h2m) { flushList(); forceFlushSummary(); html += '<h2>' + applyInline(h2m[1]) + '</h2>'; i++; continue; }
+    if (h1m) { flushList(); forceFlushSummary(); html += '<h1>' + applyInline(h1m[1]) + '</h1>'; i++; continue; }
 
-    // SUMMARY — catch all common variations Claude might use
+    // SUMMARY detection
     if (/^\*?\*?summary\*?\*?:?\s*$/i.test(trimmed) || /^SUMMARY:/i.test(trimmed)) {
-      flushList(); flushSummary();
+      flushList();
       const rest = trimmed.replace(/^\*?\*?summary\*?\*?:?\s*/i, '').trim();
       inSummary = true;
       if (rest) summaryBuffer += '<p>' + applyInline(rest) + '</p>';
       i++; continue;
     }
 
-    // **Section Heading** standalone bold-only line → always h2 (section, not title)
+    // **Section Heading** standalone bold-only line
     if (/^\*\*[^*]+\*\*\s*$/.test(trimmed)) {
-      flushList(); flushSummary();
+      flushList(); forceFlushSummary();
       const inner = trimmed.replace(/\*\*/g, '').trim();
-      // If it's a summary heading, start summary block
       if (/^summary$/i.test(inner)) {
         inSummary = true; i++; continue;
       }
@@ -1824,10 +1831,9 @@ function parseMarkdown(md) {
       i++; continue;
     }
 
-    // **Section** — em dash description e.g. **Key Terms** — pull out...
-    // Section heading + inline description → h2 + paragraph
+    // **Section** — em dash description
     if (/^\*\*[^*]+\*\*\s*[—\-–]/.test(trimmed)) {
-      flushList(); flushSummary();
+      flushList(); forceFlushSummary();
       const m = trimmed.match(/^(\*\*[^*]+\*\*)\s*[—\-–]\s*(.*)/);
       if (m) {
         const heading = m[1].replace(/\*\*/g, '').trim();
@@ -1845,10 +1851,9 @@ function parseMarkdown(md) {
       i++; continue;
     }
 
-    // BULLETS — handle +, -, * markers
+    // BULLETS
     const bulletM = line.match(/^(\s*)[-*+]\s+(.+)/);
     if (bulletM) {
-      flushSummary();
       const indent = bulletM[1].length;
       const bContent = applyInline(bulletM[2]);
       if (inSummary) {
@@ -1864,19 +1869,19 @@ function parseMarkdown(md) {
       i++; continue;
     }
 
-    // SUMMARY continuation lines
-    if (inSummary && trimmed) {
+    // Summary continuation
+    if (inSummary) {
       summaryBuffer += '<p>' + applyInline(trimmed) + '</p>';
       i++; continue;
     }
 
-    // DEFAULT paragraph
-    flushList(); flushSummary();
+    // Default paragraph
+    flushList();
     html += '<p>' + applyInline(trimmed) + '</p>';
     i++;
   }
 
-  flushList(); flushSummary();
+  flushList(); forceFlushSummary();
   return html;
 }
 
