@@ -2955,14 +2955,7 @@ window.ytClose = function() {
 
 
 
-window.ytClose = function() {
-  var wrap = document.getElementById('ytPlayerWrap');
-  if (wrap && wrap.classList.contains('open')) {
-    wrap.classList.remove('open');
-    var tab = document.getElementById('ytTab');
-    if (tab) tab.textContent = '\u25b6';
-  }
-};
+
 
 document.addEventListener('DOMContentLoaded', function() {
   // Init loop button as active (default on)
