@@ -164,7 +164,7 @@
   .tab:hover:not(.active) { color: var(--ink); }
 
   /* PANELS */
-  .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; min-height: 0; }
+  .panel { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px 28px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; min-height: 0; overscroll-behavior: none; }
   .panel.active { display: flex; }
 
   /* BUILDER */
@@ -2033,9 +2033,6 @@ function renderYtHistory() {
     row.appendChild(star);
     row.appendChild(label);
     row.addEventListener('click', function() {
-      document.getElementById('ytUrlInput').value = item.url;
-      document.getElementById('ytUrlInput').style.borderColor = 'var(--accent)';
-      var si = document.getElementById('ytSearchInput'); if (si) si.style.borderColor = '';
       ytVideoId = item.id;
       ytCurrentSec = 0;
       ytDurSec = 0;
@@ -3638,13 +3635,17 @@ window.aiAskOpen = function() {
   var popup = document.getElementById('aiHighlightPopup');
   if (popup) popup.style.display = 'none';
   var ask = document.getElementById('aiAskPopup');
-  // Position near selection
   var sel = window.getSelection();
   var rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null;
   var vw = window.innerWidth;
+  var vh = window.innerHeight;
   if (rect) {
-    var top = rect.bottom + window.scrollY + 10;
+    // Use fixed positioning relative to viewport
+    var top = rect.bottom + 10;
     var left = Math.min(Math.max(rect.left + rect.width / 2 - 130, 10), vw - 270);
+    // If too close to bottom, show above selection
+    if (top + 120 > vh) top = rect.top - 130;
+    ask.style.position = 'fixed';
     ask.style.top = top + 'px';
     ask.style.left = left + 'px';
   }
