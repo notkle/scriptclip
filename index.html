@@ -2698,6 +2698,8 @@ function applyNbFontSize() {
   nc.querySelectorAll('h1').forEach(function(el){ el.style.fontSize = Math.round(s * 1.8) + 'px'; });
   nc.querySelectorAll('h2').forEach(function(el){ el.style.fontSize = Math.round(s * 1.35) + 'px'; });
   nc.querySelectorAll('h3').forEach(function(el){ el.style.fontSize = Math.round(s * 1.1) + 'px'; });
+  nc.querySelectorAll('td, th').forEach(function(el){ el.style.fontSize = s + 'px'; });
+  nc.querySelectorAll('.summary-block, .summary-block p, .summary-block li').forEach(function(el){ el.style.fontSize = s + 'px'; });
 }
 
 // ── YOUTUBE AUDIO PLAYER ──
@@ -3751,6 +3753,25 @@ document.addEventListener('touchstart', function(e) {
     style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:8px;"
     onkeydown="if(event.key==='Enter'){window.aiAskCopy()}"/>
   <button onclick="window.aiAskCopy()" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Ask</button>
+</div>
+
+<!-- EXPORT NOTEBOOK MODAL -->
+<div class="modal-overlay" id="nbExportOverlay">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">Export Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Notebook</label>
+      <select id="nbExportSelect" class="modal-filename-input" style="cursor:pointer"></select>
+    </div>
+    <div class="modal-filename-wrap" style="margin-top:12px">
+      <label class="modal-filename-label">Filename</label>
+      <input type="text" id="nbExportFilename" class="modal-filename-input" placeholder="filename" spellcheck="false" autocorrect="off" autocapitalize="off"/>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="document.getElementById('nbExportOverlay').classList.remove('open')">Cancel</button>
+      <button class="modal-save" onclick="if(typeof window.doExportNotebook==='function'){window.doExportNotebook()}">Export</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
