@@ -520,6 +520,7 @@
     font-size: 9px; font-weight: 700; letter-spacing: 1px;
     text-transform: uppercase; color: var(--muted);
     cursor: pointer; outline: none; transition: border-color 0.2s;
+    text-align: center; text-align-last: center;
   }
   @media (hover: hover) and (pointer: fine) {
     .notes-theme-select:hover { border-color: var(--accent); color: var(--accent); }
@@ -1219,7 +1220,7 @@
         <div class="quiz-setup-title" style="margin-bottom:0">Generate a Quiz</div>
         <button class="nb-page-btn" onclick="window.openQuizHistory()" style="flex-shrink:0">History</button>
       </div>
-      <div class="quiz-setup-sub">Drop a file, paste notes, or load from a notebook</div>
+
       <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:system-ui,-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;">📓 Load from Notebook</button>
 
       <!-- COMBINED DROP + PASTE AREA -->
