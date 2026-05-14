@@ -1340,6 +1340,10 @@
       <div id="nbFcFront" style="font-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.4"></div>
       <div id="nbFcBack" style="display:none;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--muted);line-height:1.6"></div>
       <div style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--muted);font-family:system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase" id="nbFcSide">tap to reveal</div>
+      <div id="nbFcCheckRow" style="display:none;position:absolute;bottom:12px;left:0;right:0;justify-content:center;gap:24px;align-items:center;">
+        <button onclick="event.stopPropagation();window.fcCorrect()" style="background:none;border:2px solid var(--n-summary-border);border-radius:50%;width:40px;height:40px;font-size:20px;color:var(--n-summary-border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">✓</button>
+        <button onclick="event.stopPropagation();window.fcIncorrect()" style="background:none;border:2px solid var(--accent);border-radius:50%;width:40px;height:40px;font-size:18px;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">✕</button>
+      </div>
       <div id="nbFcDeleteX" style="display:none">✕</div>
     </div>
     <div style="display:flex;gap:16px;align-items:center">
@@ -3160,7 +3164,9 @@ window.showFlashCards = function(idx) {
   if (!page || !page.flashCards || page.flashCards.length === 0) return;
 
   window._currentPageIdx = idx;
-  _fcCards = page.flashCards;
+  _fcCards = page.flashCards.map(function(c) {
+    return { front: c.front, back: c.back, units: 0 };
+  });
   _fcIdx = 0;
   _fcFlipped = false;
 
@@ -3180,28 +3186,27 @@ function renderFcCard() {
   document.getElementById('nbFcBack').style.display = 'none';
   document.getElementById('nbFcFront').textContent = card.front;
   document.getElementById('nbFcBack').textContent = card.back;
-  document.getElementById('nbFcCounter').textContent = (_fcIdx + 1) + ' / ' + _fcCards.length;
+  var units = card.units || 0;
+  var unitsHtml = units > 0 ? ' <span style="font-size:9px;color:var(--accent);font-family:system-ui,sans-serif;font-weight:700;">+' + units + '</span>' : '';
+  document.getElementById('nbFcCounter').innerHTML = (_fcIdx + 1) + ' / ' + _fcCards.length + unitsHtml;
   document.getElementById('nbFcSide').textContent = 'tap to reveal';
+  var checkRow = document.getElementById('nbFcCheckRow');
+  if (checkRow) checkRow.style.display = 'none';
   var cardEl = document.getElementById('nbFcCard');
   cardEl.style.borderColor = 'var(--border)';
-  // Re-show X if in delete mode
   cardEl.onclick = window.fcFlip;
 }
 
 window.fcFlip = function() {
-  _fcFlipped = !_fcFlipped;
+  if (_fcFlipped) return; // already revealed
+  _fcFlipped = true;
   var cardEl = document.getElementById('nbFcCard');
-  if (_fcFlipped) {
-    document.getElementById('nbFcFront').style.display = 'none';
-    document.getElementById('nbFcBack').style.display = 'block';
-    document.getElementById('nbFcSide').textContent = 'tap to hide';
-    cardEl.style.borderColor = 'var(--accent)';
-  } else {
-    document.getElementById('nbFcFront').style.display = 'block';
-    document.getElementById('nbFcBack').style.display = 'none';
-    document.getElementById('nbFcSide').textContent = 'tap to reveal';
-    cardEl.style.borderColor = 'var(--border)';
-  }
+  document.getElementById('nbFcFront').style.display = 'none';
+  document.getElementById('nbFcBack').style.display = 'block';
+  document.getElementById('nbFcSide').textContent = '';
+  document.getElementById('nbFcCheckRow').style.display = 'flex';
+  cardEl.style.borderColor = 'var(--accent)';
+  cardEl.onclick = null; // disable flip tap after reveal
 };
 
 window.fcNext = function() {
@@ -4025,6 +4030,30 @@ window.toggleQuizHistoryEntry = function(ei) {
     e.preventDefault();
   }, { passive: false });
 })();
+
+window.fcCorrect = function() {
+  var card = _fcCards[_fcIdx];
+  card.units = Math.max(0, (card.units || 0) - 1);
+  fcAdvance();
+};
+
+window.fcIncorrect = function() {
+  var card = _fcCards[_fcIdx];
+  card.units = (card.units || 0) + 1;
+  fcAdvance();
+};
+
+function fcAdvance() {
+  _fcIdx++;
+  if (_fcIdx >= _fcCards.length) {
+    // End of stack — shuffle then sort by units descending
+    _fcCards = _fcCards.sort(function() { return Math.random() - 0.5; }); // shuffle first
+    _fcCards = _fcCards.sort(function(a, b) { return (b.units || 0) - (a.units || 0); });
+    _fcIdx = 0;
+    window.toast('Stack complete — sorted by difficulty');
+  }
+  renderFcCard();
+}
 
 </script>
 
