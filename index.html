@@ -1162,6 +1162,10 @@
 <!-- PANEL 1 -->
 <div class="panel active" id="panel-builder">
   <div class="builder-inner">
+    <input type="text" id="ytPromptInput" placeholder="Paste YouTube link…"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:12px;transition:border-color 0.2s;text-align:center;"
+      onkeydown="if(event.key==='Enter'){window.handleBuild()}"/>
     <button class="main-btn" id="mainBtn" onclick="if(typeof window.handleBuild==='function'){window.handleBuild()}">
       <div class="btn-inner" id="btnInner"><span>⌘</span><span>Build Study Prompt</span></div>
     </button>
@@ -1169,7 +1173,7 @@
     <div class="steps-wrap">
       <div class="steps-label">How it works</div>
       <div class="steps-row">
-        <div class="step-item"><div class="step-num">1</div><div class="step-label">Copy YouTube transcript</div></div>
+        <div class="step-item"><div class="step-num">1</div><div class="step-label">Paste YouTube link above</div></div>
         <div class="step-connector"></div>
         <div class="step-item"><div class="step-num">2</div><div class="step-label">Tap the button</div></div>
         <div class="step-connector"></div>
@@ -1278,7 +1282,7 @@
       <div id="scoreLabel" class="quiz-score-label"></div>
     </div>
     <div class="quiz-feedback-list" id="quizFeedbackList"></div>
-    <button class="quiz-generate-btn" onclick="if(typeof window.resetQuiz==='function'){window.resetQuiz()}" style="margin-top:20px">↩ Try Again</button>
+    <button class="quiz-generate-btn" onclick="if(typeof window.resetQuiz==='function'){window.resetQuiz()}" style="margin-top:20px">← Back</button>
   </div>
 
 </div>
@@ -1745,25 +1749,69 @@ window.setBtn = function setBtn(state) {
 }
 
 window.handleBuild = async function handleBuild() {
+  var linkInput = document.getElementById('ytPromptInput');
+  var link = linkInput ? linkInput.value.trim() : '';
+  var videoId = link ? extractYtId(link) : null;
+
   setBtn('loading');
-  let transcript = '';
-  try { transcript = await navigator.clipboard.readText(); }
+  setStatus('', '');
+
+  // If a YouTube link was provided, try to fetch transcript automatically
+  if (videoId) {
+    setStatus('Fetching transcript…', '');
+    var transcript = '';
+    var method = '';
+
+    // Try method B first (ytInitialPlayerResponse), then A (timedtext)
+    for (var m of ['transcriptB', 'transcriptA']) {
+      try {
+        var res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: m, videoId: videoId })
+        }).then(function(r) { return r.json(); });
+        if (res.transcript && res.transcript.length > 100) {
+          transcript = res.transcript;
+          method = res.method;
+          break;
+        }
+      } catch(e) {}
+    }
+
+    if (transcript) {
+      var isLanguage = detectLanguageLearning(transcript);
+      var full = (isLanguage ? PROMPT_LANGUAGE : PROMPT_GENERAL) + transcript.trim();
+      try {
+        await navigator.clipboard.writeText(full);
+        if (linkInput) linkInput.value = '';
+        setBtn('success');
+        setStatus('Prompt ready — paste into Claude. (Method ' + method + ')', 'ok');
+      } catch(e) {
+        setBtn('default'); setStatus('Clipboard write failed.', 'bad');
+      }
+      return;
+    } else {
+      // Both methods failed — fall back to clipboard
+      setStatus('Auto-fetch failed — paste transcript from clipboard instead.', 'bad');
+      setBtn('default');
+      return;
+    }
+  }
+
+  // No link — fall back to original clipboard method
+  let clipText = '';
+  try { clipText = await navigator.clipboard.readText(); }
   catch(e) { setBtn('default'); setStatus('Tap Allow when asked to read clipboard, then try again.', 'bad'); return; }
-  if (!transcript || transcript.trim().length < 50) {
+  if (!clipText || clipText.trim().length < 50) {
     setBtn('default'); setStatus('Clipboard too short. Copy your transcript first.', 'bad'); return;
   }
-  const isLanguage = detectLanguageLearning(transcript);
-  const full = (isLanguage ? PROMPT_LANGUAGE : PROMPT_GENERAL) + transcript.trim();
+  var isLang2 = detectLanguageLearning(clipText);
+  var full = (isLang2 ? PROMPT_LANGUAGE : PROMPT_GENERAL) + clipText.trim();
   try {
     await navigator.clipboard.writeText(full);
     setBtn('success'); setStatus('Prompt ready. Paste into Claude, then bring notes to tab ②.', 'ok');
   } catch(e) {
-    const ta = document.createElement('textarea');
-    ta.value = full; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy'); setBtn('success'); setStatus('Prompt ready. Paste into Claude.', 'ok'); }
-    catch(e2) { setBtn('default'); setStatus('Clipboard write failed. Try again.', 'bad'); }
-    document.body.removeChild(ta);
+    setBtn('default'); setStatus('Clipboard write failed. Try again.', 'bad');
   }
 }
 
@@ -3817,7 +3865,15 @@ window.generateQuiz = async function() {
   btnInner.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
   statusEl.textContent = 'Generating questions\u2026';
 
-  var prompt = 'You are a quiz generator. Based on the study notes below, generate exactly 10 quiz questions that genuinely test understanding \u2014 not just surface recall.\n\nMix these types:\n- Multiple choice (4 options, one correct) \u2014 type "mc"\n- Fill in the blank (1-3 word answer) \u2014 type "fitb"\n- True or False \u2014 type "tf"\n- Short answer (2-3 sentence response) \u2014 type "sa"\n\nReturn ONLY a valid JSON array, no markdown, no backticks. Each object:\n{"type":"mc"|"fitb"|"tf"|"sa","question":"...","options":["A","B","C","D"],"answer":"exact correct answer","explanation":"2-3 sentence explanation"}\n\nFor mc: answer must exactly match one option. For tf: answer is exactly "True" or "False". For fitb: answer is the missing word(s). For sa: answer is a model answer.\n\nSTUDY NOTES:\n' + notes.substring(0, 12000);
+  var prompt = 'You are a quiz generator. Based on the study notes below, generate exactly 10 quiz questions that genuinely test understanding \u2014 not just surface recall.\n\n' +
+    'Use ONLY these two types:\n' +
+    '- Multiple choice (4 options, one correct) \u2014 type "mc"\n' +
+    '- True or False \u2014 type "tf"\n\n' +
+    'Aim for 8 multiple choice and 2 true/false questions.\n\n' +
+    'Return ONLY a valid JSON array, no markdown, no backticks. Each object:\n' +
+    '{"type":"mc"|"tf","question":"...","options":["A","B","C","D"],"answer":"exact correct answer","explanation":"2-3 sentence explanation"}\n\n' +
+    'For mc: options array required, answer must exactly match one option. For tf: no options needed, answer is exactly "True" or "False".\n\n' +
+    'STUDY NOTES:\n' + notes.substring(0, 12000);
 
   try {
     var data = await fetch(WORKER_URL, {
@@ -3842,7 +3898,6 @@ function renderQuiz(questions) {
   var container = document.getElementById('quizQuestions');
   container.innerHTML = '';
   document.getElementById('quizProgressText').textContent = questions.length + ' questions';
-  var typeLabels = { mc:'Multiple Choice', fitb:'Fill in the Blank', tf:'True / False', sa:'Short Answer' };
   questions.forEach(function(q, idx) {
     var div = document.createElement('div');
     div.className = 'quiz-q'; div.dataset.idx = idx;
@@ -3853,16 +3908,26 @@ function renderQuiz(questions) {
         return '<div class="quiz-mc-opt" onclick="selectMC(' + idx + ',' + oi + ')" data-opt="' + oi + '"><span class="quiz-mc-letter">' + letters[oi] + '</span>' + opt + '</div>';
       }).join('') + '</div>';
     } else if (q.type === 'tf') {
-      inputHTML = ['<div class="quiz-tf-wrap">',
-        '<button class="quiz-tf-btn" onclick="selectTF(' + idx + ',\"True\")" data-val="True">True</button>',
-        '<button class="quiz-tf-btn" onclick="selectTF(' + idx + ',\"False\")" data-val="False">False</button>',
-        '</div>'].join('');
-    } else {
-      var ph = q.type === 'fitb' ? 'Type your answer\u2026' : 'Write your answer (2-3 sentences)\u2026';
-      var rows = q.type === 'sa' ? 'style="min-height:80px;resize:vertical"' : '';
-      inputHTML = '<textarea class="quiz-text-input" data-idx="' + idx + '" placeholder="' + ph + '" ' + rows + '></textarea>';
+      var tfTrue = document.createElement('button');
+      tfTrue.className = 'quiz-tf-btn';
+      tfTrue.textContent = 'True';
+      tfTrue.dataset.val = 'True';
+      tfTrue.addEventListener('click', function() { selectTF(idx, 'True'); });
+      var tfFalse = document.createElement('button');
+      tfFalse.className = 'quiz-tf-btn';
+      tfFalse.textContent = 'False';
+      tfFalse.dataset.val = 'False';
+      tfFalse.addEventListener('click', function() { selectTF(idx, 'False'); });
+      var tfWrap = document.createElement('div');
+      tfWrap.className = 'quiz-tf-wrap';
+      tfWrap.appendChild(tfTrue);
+      tfWrap.appendChild(tfFalse);
+      div.innerHTML = '<div class="quiz-q-type tf">True / False</div><div class="quiz-q-text">' + (idx+1) + '. ' + q.question + '</div>';
+      div.appendChild(tfWrap);
+      container.appendChild(div);
+      return;
     }
-    div.innerHTML = '<div class="quiz-q-type ' + q.type + '">' + typeLabels[q.type] + '</div><div class="quiz-q-text">' + (idx+1) + '. ' + q.question + '</div>' + inputHTML;
+    div.innerHTML = '<div class="quiz-q-type ' + q.type + '">' + (q.type === 'mc' ? 'Multiple Choice' : q.type) + '</div><div class="quiz-q-text">' + (idx+1) + '. ' + q.question + '</div>' + inputHTML;
     container.appendChild(div);
   });
   document.getElementById('quizSetup').style.display = 'none';
@@ -3904,31 +3969,7 @@ window.submitQuiz = async function() {
     return null;
   });
 
-  var aiQueue = quizData.map(function(q, idx) {
-    return (q.type !== 'mc' && q.type !== 'tf') ? { idx: idx, q: q, userAnswer: userAnswers[idx] } : null;
-  }).filter(Boolean);
-
-  if (aiQueue.length > 0) {
-    var gradingPrompt = 'Grade these answers. Return ONLY a JSON array, one object per question in order:\n[{"correct":true/false,"explanation":"2-3 sentence feedback"}]\n\n' +
-      aiQueue.map(function(item, i) {
-        return (i+1) + '. Type: ' + item.q.type + '\nQuestion: ' + item.q.question + '\nCorrect answer: ' + item.q.answer + '\nStudent answer: ' + (item.userAnswer || '(blank)');
-      }).join('\n\n') +
-      '\n\nLenient on spelling, strict on meaning. For short answer, grade conceptual understanding.';
-    try {
-      var data = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'grade', prompt: gradingPrompt })
-      }).then(function(r) { return r.json(); });
-      var raw = (data.text || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      var aiRes = JSON.parse(raw);
-      aiQueue.forEach(function(item, i) {
-        results[item.idx] = { correct: aiRes[i] && aiRes[i].correct || false, explanation: aiRes[i] && aiRes[i].explanation || item.q.explanation };
-      });
-    } catch(e) {
-      aiQueue.forEach(function(item) { results[item.idx] = { correct: false, explanation: item.q.explanation }; });
-    }
-  }
+  // No AI grading needed - MC and TF are exact match only
 
   showResults(results, userAnswers);
   submitBtn.disabled = false; submitBtn.textContent = 'Submit for Grading';
