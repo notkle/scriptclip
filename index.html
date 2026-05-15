@@ -1521,10 +1521,21 @@ window.setTheme = function(name) {
     const el = document.getElementById(id);
     if (el) el.value = name;
   });
-  // Always re-render from stored raw to prevent color leaking
+  // Re-render if notes are visible to apply new theme colors
   const nc = document.getElementById('notesContent');
   if (nc && window._lastRawNotes) {
     nc.innerHTML = parseMarkdown(window._lastRawNotes);
+    // Re-apply CSS vars after re-render (parseMarkdown doesn't reset them)
+    root.style.setProperty('--n-h1', th.h1);
+    root.style.setProperty('--n-h2', th.h2);
+    root.style.setProperty('--n-h3', th.h3);
+    root.style.setProperty('--n-term', th.term);
+    root.style.setProperty('--n-romaji', th.romaji);
+    root.style.setProperty('--n-bullet-marker', th.bulletMarker);
+    root.style.setProperty('--n-bullet', th.bullet);
+    root.style.setProperty('--n-summary-bg', th.sumBg);
+    root.style.setProperty('--n-summary-border', th.sumBorder);
+    root.style.setProperty('--n-summary-text', th.sumText);
   }
 };
 
@@ -1684,6 +1695,12 @@ window.switchTab = function switchTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('panel-' + name).classList.add('active');
+  // Reset prompt tab state when leaving
+  if (name !== 'builder') {
+    window.setBtn('default');
+    var sl = document.getElementById('statusLine');
+    if (sl) { sl.textContent = ''; sl.className = 'status-line'; }
+  }
   if (name === 'notebook') {
     setTimeout(function() {
       if (typeof window.showNotebookList === 'function') window.showNotebookList();
@@ -1759,9 +1776,23 @@ window.renderNotes = function renderNotes() {
   if (!raw) { window.toast('Paste your Claude notes first.'); return; }
   window._lastRawNotes = raw;
   document.getElementById('notesContent').innerHTML = parseMarkdown(raw);
-  window.setTheme(currentTheme);
+  // Apply theme vars without re-rendering
+  var th2 = THEMES[currentTheme];
+  if (th2) {
+    var r2 = document.documentElement;
+    r2.style.setProperty('--n-h1', th2.h1); r2.style.setProperty('--n-h2', th2.h2);
+    r2.style.setProperty('--n-h3', th2.h3); r2.style.setProperty('--n-term', th2.term);
+    r2.style.setProperty('--n-romaji', th2.romaji);
+    r2.style.setProperty('--n-bullet-marker', th2.bulletMarker);
+    r2.style.setProperty('--n-bullet', th2.bullet);
+    r2.style.setProperty('--n-summary-bg', th2.sumBg);
+    r2.style.setProperty('--n-summary-border', th2.sumBorder);
+    r2.style.setProperty('--n-summary-text', th2.sumText);
+  }
   document.getElementById('notesInputArea').style.display = 'none';
   document.getElementById('notesRendered').classList.add('visible');
+  // Clear textarea after colorizing
+  document.getElementById('notesTextarea').value = '';
 }
 
 // ── MARKDOWN PARSER ──
@@ -4094,10 +4125,21 @@ window.setTheme = function(name) {
     const el = document.getElementById(id);
     if (el) el.value = name;
   });
-  // Always re-render from stored raw to prevent color leaking
+  // Re-render if notes are visible to apply new theme colors
   const nc = document.getElementById('notesContent');
   if (nc && window._lastRawNotes) {
     nc.innerHTML = parseMarkdown(window._lastRawNotes);
+    // Re-apply CSS vars after re-render (parseMarkdown doesn't reset them)
+    root.style.setProperty('--n-h1', th.h1);
+    root.style.setProperty('--n-h2', th.h2);
+    root.style.setProperty('--n-h3', th.h3);
+    root.style.setProperty('--n-term', th.term);
+    root.style.setProperty('--n-romaji', th.romaji);
+    root.style.setProperty('--n-bullet-marker', th.bulletMarker);
+    root.style.setProperty('--n-bullet', th.bullet);
+    root.style.setProperty('--n-summary-bg', th.sumBg);
+    root.style.setProperty('--n-summary-border', th.sumBorder);
+    root.style.setProperty('--n-summary-text', th.sumText);
   }
 };
 
@@ -4204,6 +4246,22 @@ window.scConfirm = function(msg) {
       <button class="modal-cancel" onclick="document.getElementById('quizHistoryOverlay').classList.remove('open')" style="flex:none;padding:6px 12px">Close</button>
     </div>
     <div id="quizHistoryList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
+<!-- NOTEBOOK NAME MODAL -->
+<div class="modal-overlay" id="nbNameOverlay">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title">New Notebook</div>
+    <div class="modal-filename-wrap">
+      <label class="modal-filename-label">Name</label>
+      <input type="text" id="nbNameInput" class="modal-filename-input" placeholder="Notebook name" spellcheck="false" autocorrect="off" autocapitalize="off"
+        onkeydown="if(event.key==='Enter'){window.confirmNbName()}"/>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-cancel" onclick="window.closeNbNameModal()">Cancel</button>
+      <button class="modal-save" onclick="window.confirmNbName()">Save</button>
+    </div>
   </div>
 </div>
 </body>
