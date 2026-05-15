@@ -1756,46 +1756,32 @@ window.handleBuild = async function handleBuild() {
   setBtn('loading');
   setStatus('', '');
 
-  // If a YouTube link was provided, try to fetch transcript automatically
+  // If a YouTube link was provided, fetch transcript automatically
   if (videoId) {
     setStatus('Fetching transcript…', '');
-    var transcript = '';
-    var method = '';
+    try {
+      var res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'transcript', videoId: videoId })
+      }).then(function(r) { return r.json(); });
 
-    // Try method B first (ytInitialPlayerResponse), then A (timedtext)
-    for (var m of ['transcriptB', 'transcriptA']) {
-      try {
-        var res = await fetch(WORKER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: m, videoId: videoId })
-        }).then(function(r) { return r.json(); });
-        if (res.transcript && res.transcript.length > 100) {
-          transcript = res.transcript;
-          method = res.method;
-          break;
-        }
-      } catch(e) {}
-    }
-
-    if (transcript) {
-      var isLanguage = detectLanguageLearning(transcript);
-      var full = (isLanguage ? PROMPT_LANGUAGE : PROMPT_GENERAL) + transcript.trim();
-      try {
+      if (res.transcript && res.transcript.length > 100) {
+        var isLanguage = detectLanguageLearning(res.transcript);
+        var full = (isLanguage ? PROMPT_LANGUAGE : PROMPT_GENERAL) + res.transcript.trim();
         await navigator.clipboard.writeText(full);
         if (linkInput) linkInput.value = '';
         setBtn('success');
-        setStatus('Prompt ready — paste into Claude. (Method ' + method + ')', 'ok');
-      } catch(e) {
-        setBtn('default'); setStatus('Clipboard write failed.', 'bad');
+        setStatus('Prompt ready — paste into Claude.', 'ok');
+      } else {
+        setBtn('default');
+        setStatus('Could not fetch transcript: ' + (res.error || 'unknown error'), 'bad');
       }
-      return;
-    } else {
-      // Both methods failed — fall back to clipboard
-      setStatus('Auto-fetch failed — paste transcript from clipboard instead.', 'bad');
+    } catch(e) {
       setBtn('default');
-      return;
+      setStatus('Transcript fetch failed. Try again.', 'bad');
     }
+    return;
   }
 
   // No link — fall back to original clipboard method
