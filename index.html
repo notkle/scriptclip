@@ -4184,7 +4184,7 @@ window.copyNotebookJson = function() {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(json).then(function() {
       var btn = document.getElementById('nbCopyJsonBtn');
-      if (btn) { var orig = btn.textContent; btn.textContent = '\u2713 Copied'; setTimeout(function(){ btn.textContent = orig; }, 1500); }
+      if (btn) { var orig = btn.textContent; btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = orig; }, 1500); }
     });
   } else {
     var ta = document.createElement('textarea');
@@ -4273,7 +4273,7 @@ window.copyNotebookJson = function() {
     </div>
     <div class="modal-actions" style="margin-top:20px">
       <button class="modal-cancel" onclick="document.getElementById('nbExportOverlay').classList.remove('open')">Cancel</button>
-      <button class="tool-btn" id="nbCopyJsonBtn" onclick="window.copyNotebookJson()" style="flex:1">⌘ Copy JSON</button>
+      <button class="tool-btn" id="nbCopyJsonBtn" onclick="window.copyNotebookJson()" style="flex:1">Copy JSON</button>
       <button class="modal-save" onclick="if(typeof window.doExportNotebook==='function'){window.doExportNotebook()}">Export</button>
     </div>
   </div>
