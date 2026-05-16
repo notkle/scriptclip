@@ -390,15 +390,19 @@
     <button class="quiz-generate-btn" onclick="if(typeof window.resetQuiz==='function'){window.resetQuiz()}" style="margin-top:20px">&#8592; Back</button>
   </div>
 
-  <!-- QUIZ HISTORY PAGE -->
-  <div id="quizHistoryPage" style="display:none;flex-direction:column;flex:1;overflow:hidden;padding:20px 28px 28px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-shrink:0;">
-      <button class="tool-btn" onclick="window.closeQuizHistory()">&#8592; Back</button>
-      <div style="font-family:system-ui,-apple-system,sans-serif;font-size:17px;font-weight:700;color:var(--ink);">Quiz History</div>
-    </div>
-    <div id="quizHistoryList" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:10px;"></div>
-  </div>
 
+</div>
+
+<!-- QUIZ HISTORY OVERLAY -->
+<div id="quizHistoryOverlay" style="display:none;position:fixed;inset:0;z-index:10002;pointer-events:all;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);" onclick="window.closeQuizHistory()"></div>
+  <div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);width:92%;max-width:420px;height:80vh;background:var(--bg);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div class="modal-title" style="margin-bottom:0">Quiz History</div>
+      <button class="modal-cancel" onclick="window.closeQuizHistory()" style="flex:none;padding:6px 12px">Close</button>
+    </div>
+    <div id="quizHistoryList" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
 </div>
 
 <!-- SAVE MODAL -->
@@ -1444,22 +1448,11 @@ const QUIZ_HISTORY_KEY='sc_quiz_history';
 function saveQuizResult(results,userAnswers){const score=results.filter(r=>r.correct).length,total=results.length;const entry={date:Date.now(),score,total,pct:Math.round(score/total*100),questions:quizData.map((q,idx)=>({question:q.question,type:q.type,answer:q.answer,userAnswer:userAnswers[idx]||'(no answer)',correct:results[idx]?results[idx].correct:false,explanation:q.explanation}))};const history=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]');history.unshift(entry);if(history.length>10)history.length=10;localStorage.setItem(QUIZ_HISTORY_KEY,JSON.stringify(history));}
 
 window.closeQuizHistory=function(){
-  document.getElementById('quizHistoryPage').style.display='none';
-  // restore whichever quiz state was visible
-  if(quizData&&document.getElementById('quizActive').style.display!=='none'){
-    // already showing
-  } else {
-    document.getElementById('quizSetup').style.display='block';
-  }
-  history.back();
+  document.getElementById('quizHistoryOverlay').style.display='none';
 };
 
 window.openQuizHistory=function(){
-  document.getElementById('quizSetup').style.display='none';
-  document.getElementById('quizActive').style.display='none';
-  document.getElementById('quizResults').style.display='none';
-  document.getElementById('quizHistoryPage').style.display='flex';
-  history.pushState({quizHistory:true},'');
+  document.getElementById('quizHistoryOverlay').style.display='block';
   const quizLog=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
   if(quizLog.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No quiz history yet.</div>';return;}
   quizLog.forEach(function(entry,ei){
@@ -1479,13 +1472,7 @@ window.addEventListener('popstate',function(){
   if(window._isReaderOpen&&window._isReaderOpen()){document.getElementById('scReaderOverlay').style.display='none';document.getElementById('scReaderContent').innerHTML='';const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none')window.showPagesView();return;}
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
   const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';if(onNb)window.showPagesView();return;}
-  // Quiz history page back
-  const qhPage=document.getElementById('quizHistoryPage');
-  if(qhPage&&qhPage.style.display!=='none'){
-    qhPage.style.display='none';
-    document.getElementById('quizSetup').style.display='block';
-    return;
-  }
+
   if(!onNb)return;
   const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
   const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
