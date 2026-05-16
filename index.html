@@ -138,6 +138,10 @@
   .notes-theme-label { font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
   .notes-theme-select { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:6px 10px; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); cursor:pointer; outline:none; transition:border-color 0.2s; }
   .notes-content::-webkit-scrollbar{width:4px} .notes-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  @media (max-width:768px){
+    *::-webkit-scrollbar{display:none}
+    *{-ms-overflow-style:none;scrollbar-width:none}
+  }
   .nb-panel{justify-content:flex-start;align-items:stretch;padding:0}
   .nb-view{display:none;flex-direction:column;flex:1;overflow-x:hidden;overflow-y:hidden;padding:24px 28px 28px}
   #nbListView{display:flex}
@@ -271,7 +275,7 @@
 <body>
 <div class="frame"></div>
 <div class="topbar">
-  <div class="logo">
+  <div class="logo" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" style="cursor:pointer">
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
@@ -298,11 +302,11 @@
     <div class="steps-wrap">
       <div class="steps-label">How it works</div>
       <div class="steps-row">
-        <div class="step-item"><div class="step-num">1</div><div class="step-label">Copy YouTube transcript</div></div>
+        <div class="step-item"><div class="step-num">1</div><div class="step-label">Copy a YouTube URL</div></div>
         <div class="step-connector"></div>
-        <div class="step-item"><div class="step-num">2</div><div class="step-label">Tap the button</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-label">Get Transcript &amp; copy it</div></div>
         <div class="step-connector"></div>
-        <div class="step-item"><div class="step-num">3</div><div class="step-label">Paste into Claude</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-label">Build prompt &amp; paste into Claude</div></div>
         <div class="step-connector"></div>
         <div class="step-item"><div class="step-num">4</div><div class="step-label">Colorize in tab &#9313;</div></div>
       </div>
@@ -783,7 +787,7 @@ window.handleGetTranscript=async function(){
   try{text=await navigator.clipboard.readText();}catch(e){window.toast('Tap Allow when asked to read clipboard, then try again.');return;}
   const m=text.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
   if(!m){window.toast('No YouTube link found in clipboard. Copy a YouTube URL first.');return;}
-  window.location.href='https://youtubetotranscript.com/transcript?v='+m[1];
+  window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');
 };
 
 window.handleBuild=async function(){
