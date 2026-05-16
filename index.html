@@ -1496,10 +1496,11 @@ history.replaceState({nbView:'list'},'');
   let lastY=0;
   document.addEventListener('touchstart',function(e){lastY=e.touches[0].clientY;},{passive:true});
   document.addEventListener('touchmove',function(e){
-    // Never interfere when any modal or the history overlay is open
+    // Never interfere when any modal, history overlay, or quiz tab is active
     const anyModalOpen=document.querySelector('.modal-overlay.open');
     const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
-    if(anyModalOpen||historyOpen)return;
+    const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
+    if(anyModalOpen||historyOpen||quizActive)return;
     const y=e.touches[0].clientY;
     let el=e.target;
     while(el&&el!==document.body){
