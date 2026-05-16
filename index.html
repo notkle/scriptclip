@@ -142,6 +142,7 @@
     *::-webkit-scrollbar{display:none}
     *{-ms-overflow-style:none;scrollbar-width:none}
   }
+  body.scroll-locked{position:fixed;left:0;right:0;overflow-y:hidden;}
   .modal-overlay.open{touch-action:none;}
   .modal-overlay.open .modal{touch-action:pan-y;}
 
@@ -1441,12 +1442,26 @@ window.resetQuiz=function(){quizData=null;document.getElementById('quizPasteArea
 const QUIZ_HISTORY_KEY='sc_quiz_history';
 function saveQuizResult(results,userAnswers){const score=results.filter(r=>r.correct).length,total=results.length;const entry={date:Date.now(),score,total,pct:Math.round(score/total*100),questions:quizData.map((q,idx)=>({question:q.question,type:q.type,answer:q.answer,userAnswer:userAnswers[idx]||'(no answer)',correct:results[idx]?results[idx].correct:false,explanation:q.explanation}))};const history=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]');history.unshift(entry);if(history.length>10)history.length=10;localStorage.setItem(QUIZ_HISTORY_KEY,JSON.stringify(history));}
 
+function lockScroll(){
+  const y=window.scrollY;
+  document.body.style.top='-'+y+'px';
+  document.body.classList.add('scroll-locked');
+}
+function unlockScroll(){
+  const y=parseInt(document.body.style.top||'0')*-1;
+  document.body.classList.remove('scroll-locked');
+  document.body.style.top='';
+  window.scrollTo(0,y);
+}
+
 window.closeQuizHistory=function(){
   document.getElementById('quizHistoryOverlay').style.display='none';
   document.getElementById('quizHistoryBlocker').style.display='none';
+  unlockScroll();
 };
 
 window.openQuizHistory=function(){
+  lockScroll();
   document.getElementById('quizHistoryBlocker').style.display='block';
   document.getElementById('quizHistoryOverlay').style.display='block';
   const quizLog=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
