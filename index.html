@@ -178,7 +178,7 @@
   .nb-done-reorder.visible{display:block}
   .nb-page-content{flex:1;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);border-radius:8px;padding:28px}
   .quiz-panel{justify-content:flex-start;align-items:stretch;padding:0;overflow:hidden}
-  .quiz-setup{flex:1;overflow-y:auto;padding:28px}
+  .quiz-setup{flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:28px}
   .quiz-setup-inner{max-width:520px;margin:0 auto}
   .quiz-setup-title{font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;transition:color 0.3s}
   [data-theme="dark"] .quiz-setup-title{color:var(--n-h1)}
@@ -200,7 +200,7 @@
   .quiz-active{display:flex;flex-direction:column;flex:1;overflow:hidden;padding:20px 28px 28px}
   .quiz-active-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0}
   .quiz-progress-text{font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
-  .quiz-questions{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:24px;padding-right:4px;min-height:0}
+  .quiz-questions{flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:24px;padding-right:4px;min-height:0}
   .quiz-q{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;transition:background 0.3s,border-color 0.3s}
   .quiz-q-type{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;transition:color 0.3s}
   .quiz-q-type.mc{color:var(--n-h2)} .quiz-q-type.tf{color:var(--n-h3)}
@@ -220,7 +220,7 @@
   .quiz-tf-btn.wrong{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent)}
   .quiz-submit-btn{margin-top:20px;width:100%;flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:4px;padding:16px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.12s}
   .quiz-submit-btn:active{transform:scale(0.98)} .quiz-submit-btn:disabled{opacity:0.4;cursor:not-allowed}
-  .quiz-results{flex:1;overflow-y:auto;padding:28px}
+  .quiz-results{flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:28px}
   .quiz-results-header{text-align:center;margin-bottom:28px}
   .quiz-score-num{font-size:64px;font-weight:800;color:var(--n-h2);line-height:1}
   .quiz-score-denom{font-size:28px;color:var(--muted)}
@@ -775,14 +775,7 @@ window.switchTab=function(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
-  // Quiz tab needs body scroll unlocked so inner panels can scroll on iOS
-  if(name==='quiz'){
-    document.documentElement.style.overflowY='auto';
-    document.body.style.overflowY='auto';
-  } else {
-    document.documentElement.style.overflowY='';
-    document.body.style.overflowY='';
-  }
+
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
   if(name==='notebook'){setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);history.pushState({nbView:'list'},'');}
   sessionStorage.setItem('sc_tab',name);
@@ -1488,11 +1481,10 @@ history.replaceState({nbView:'list'},'');
   let lastY=0;
   document.addEventListener('touchstart',function(e){lastY=e.touches[0].clientY;},{passive:true});
   document.addEventListener('touchmove',function(e){
-    // Never interfere when any modal, overlay, or quiz tab is active
+    // Never interfere when any modal or the history overlay is open
     const anyModalOpen=document.querySelector('.modal-overlay.open');
     const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
-    const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
-    if(anyModalOpen||historyOpen||quizActive)return;
+    if(anyModalOpen||historyOpen)return;
     const y=e.touches[0].clientY;
     let el=e.target;
     while(el&&el!==document.body){
