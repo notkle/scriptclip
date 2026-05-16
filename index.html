@@ -1499,7 +1499,8 @@ history.replaceState({nbView:'list'},'');
     // Never interfere when any modal or quiz tab is active
     const anyModalOpen=document.querySelector('.modal-overlay.open');
     const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
-    if(anyModalOpen||quizActive){e.preventDefault();return;}
+    if(anyModalOpen)return;
+    if(quizActive)return;
     // History overlay: return early, let everything work naturally
     const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
     if(historyOpen)return;
