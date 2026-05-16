@@ -1345,14 +1345,21 @@ document.addEventListener('DOMContentLoaded',function(){
   const qhList=document.getElementById('quizHistoryList');
   if(qhOverlay&&qhList){
     qhOverlay.addEventListener('touchmove',function(e){
-      // Allow scroll only if touch is inside the list and list is scrollable
       if(qhList.contains(e.target)&&qhList.scrollHeight>qhList.clientHeight){
-        e.stopPropagation();
+        e.stopPropagation(); // let list scroll freely
       }else{
-        e.preventDefault();
+        e.preventDefault(); // block bleed to background
       }
     },{passive:false});
   }
+
+  // Allow scroll inside quiz questions and results panels
+  const quizScrollables=['quizQuestions','quizResults','quizSetup'];
+  quizScrollables.forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
+  });
 });
 
 // ── FULLSCREEN READER ──
