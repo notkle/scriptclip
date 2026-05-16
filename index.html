@@ -770,6 +770,14 @@ window.switchTab=function(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
+  // Quiz tab needs body scroll unlocked so inner panels can scroll on iOS
+  if(name==='quiz'){
+    document.documentElement.style.overflowY='auto';
+    document.body.style.overflowY='auto';
+  } else {
+    document.documentElement.style.overflowY='';
+    document.body.style.overflowY='';
+  }
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
   if(name==='notebook'){setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);history.pushState({nbView:'list'},'');}
   sessionStorage.setItem('sc_tab',name);
