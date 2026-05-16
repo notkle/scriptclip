@@ -545,7 +545,7 @@
 <div id="ytIframeWrap" style="position:fixed;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-10px;left:-10px;z-index:-1"></div>
 
 <!-- AI HIGHLIGHT POPUP -->
-<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;">
+<div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;white-space:nowrap;">
   <button onclick="window.aiHighlightCopy()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Copy</button>
   <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.aiAskOpen()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Ask</button>
@@ -951,9 +951,9 @@ function ytStartTimer(){
 }
 
 var _ytScrollRAF=null,_ytScrollX=0;
-function ytStartScroll(){const el=document.getElementById('ytTitle');if(!el||!el.classList.contains('yt-title-scroll'))return;cancelAnimationFrame(_ytScrollRAF);const fullW=el.scrollWidth/2;function step(){_ytScrollX-=0.5;if(Math.abs(_ytScrollX)>=fullW)_ytScrollX=0;el.style.transform='translateX('+_ytScrollX+'px)';_ytScrollRAF=requestAnimationFrame(step);}_ytScrollRAF=requestAnimationFrame(step);}
+function ytStartScroll(){const el=document.getElementById('ytTitle');if(!el||!el.classList.contains('yt-title-scroll'))return;cancelAnimationFrame(_ytScrollRAF);const oneW=el.scrollWidth/3;function step(){_ytScrollX-=0.5;if(Math.abs(_ytScrollX)>=oneW)_ytScrollX+=oneW;el.style.transform='translateX('+_ytScrollX+'px)';_ytScrollRAF=requestAnimationFrame(step);}_ytScrollRAF=requestAnimationFrame(step);}
 function ytStopScroll(){cancelAnimationFrame(_ytScrollRAF);_ytScrollRAF=null;}
-function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
+function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
 
 function ytUpdatePlayBtn(){
   const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u25B6';
@@ -1285,7 +1285,21 @@ window.fcToggleDeleteMode=async function(){if(!await window.scConfirm('Delete al
 // ── AI HIGHLIGHT ──
 let _aiHighlightText='',_aiHighlightContext='';
 function getSelectionContext(sel){if(!sel||sel.isCollapsed)return'';const range=sel.getRangeAt(0),cont=range.commonAncestorContainer;let block=cont.nodeType===3?cont.parentElement:cont;while(block&&!['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName))block=block.parentElement;return block?(block.innerText||block.textContent):'';}
-function showAiHighlightPopup(x,y,selected,context){_aiHighlightText=selected;_aiHighlightContext=context;const popup=document.getElementById('aiHighlightPopup');popup.style.display='block';const vw=window.innerWidth,sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;if(rect){popup.style.top=(rect.bottom+window.scrollY+10)+'px';popup.style.left=Math.min(Math.max(rect.left+rect.width/2,80),vw-80)+'px';}else{popup.style.top=(y+10)+'px';popup.style.left=Math.min(Math.max(x,80),vw-80)+'px';}popup.style.transform='translateX(-50%)';}
+function showAiHighlightPopup(x,y,selected,context){
+  _aiHighlightText=selected;_aiHighlightContext=context;
+  const popup=document.getElementById('aiHighlightPopup');
+  // Show off-screen first to measure natural width
+  popup.style.transform='none';popup.style.left='-9999px';popup.style.top='-9999px';popup.style.display='block';
+  const pw=popup.offsetWidth,vw=window.innerWidth,margin=8;
+  const sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;
+  // Ideal center: mid-point of selection
+  const idealCenter=rect?rect.left+rect.width/2:x;
+  // Start centered, then clamp so popup never clips either edge
+  let left=idealCenter-pw/2;
+  left=Math.max(margin,Math.min(left,vw-pw-margin));
+  const top=rect?rect.bottom+10:y+10;
+  popup.style.left=left+'px';popup.style.top=top+'px';popup.style.transform='none';
+}
 function hideAiHighlightPopup(){const p=document.getElementById('aiHighlightPopup');if(p)p.style.display='none';}
 function setupAiHighlight(elId){const el=document.getElementById(elId);if(!el)return;el.addEventListener('mouseup',function(e){const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAiHighlightPopup();return;}showAiHighlightPopup(e.clientX,e.clientY,sel.toString(),getSelectionContext(sel));});el.addEventListener('touchend',function(e){setTimeout(function(){const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAiHighlightPopup();return;}const t=e.changedTouches[0];showAiHighlightPopup(t.clientX,t.clientY,sel.toString(),getSelectionContext(sel));},100);});}
 
