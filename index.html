@@ -1500,16 +1500,19 @@ history.replaceState({nbView:'list'},'');
     const anyModalOpen=document.querySelector('.modal-overlay.open');
     const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
     if(anyModalOpen||quizActive){e.preventDefault();return;}
-    // History overlay: block pull-to-refresh only, allow scroll within list
+    // History overlay: let list scroll naturally, only block pull-to-refresh at top
     const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
     if(historyOpen){
       const list=document.getElementById('quizHistoryList');
       if(list&&list.contains(e.target)){
-        if(list.scrollTop===0&&e.touches[0].clientY>lastY){e.preventDefault();}
-        // do NOT return — let the event reach the list so it scrolls naturally
-      }else{
-        e.preventDefault();
+        // Mimic what the DOM walker does for normal scrollable elements
+        const st=list.scrollTop,sh=list.scrollHeight,ch=list.clientHeight;
+        if(st===0&&e.touches[0].clientY>lastY){e.preventDefault();return;}
+        if(st>0&&st+ch<sh)return;
+        if(st+ch>=sh&&e.touches[0].clientY<lastY)return;
+        return;
       }
+      e.preventDefault();
       return;
     }
     const y=e.touches[0].clientY;
