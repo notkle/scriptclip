@@ -1452,9 +1452,9 @@ window.openQuizHistory=function(){
   document.getElementById('quizResults').style.display='none';
   document.getElementById('quizHistoryPage').style.display='flex';
   history.pushState({quizHistory:true},'');
-  const history=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
-  if(history.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No quiz history yet.</div>';return;}
-  history.forEach(function(entry,ei){
+  const quizLog=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
+  if(quizLog.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No quiz history yet.</div>';return;}
+  quizLog.forEach(function(entry,ei){
     const card=document.createElement('div');card.style.cssText='border:1px solid var(--border);border-radius:8px;overflow:hidden;';
     const pct=entry.pct,color=pct>=90?'var(--n-summary-border)':pct>=60?'var(--n-h2)':'var(--accent)';
     const dateStr=new Date(entry.date).toLocaleDateString()+' '+new Date(entry.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
