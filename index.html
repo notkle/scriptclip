@@ -24,9 +24,10 @@
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   *, *::before, *::after { max-width:100%; box-sizing:border-box; }
   img, video, pre, code { max-width:100%; }
-  html { height:100%; overflow-x:hidden; max-width:100vw; }
+  html { height:100%; overflow-x:hidden; max-width:100vw; overscroll-behavior-y:none; }
   body {
-    overscroll-behavior:none; background:var(--bg); color:var(--ink);
+    overscroll-behavior:none;
+    overscroll-behavior-y:none; background:var(--bg); color:var(--ink);
     font-family:'Inter','SF Pro Text',system-ui,-apple-system,sans-serif;
     min-height:100dvh; height:100dvh; display:flex; flex-direction:column;
     transition:background 0.3s,color 0.3s; overflow-x:hidden; overflow-y:hidden;
@@ -1491,34 +1492,7 @@ window.addEventListener('popstate',function(){
 });
 history.replaceState({nbView:'list'},'');
 
-// ── PULL-TO-REFRESH DISABLE ──
-(function(){
-  let lastY=0;
-  document.addEventListener('touchstart',function(e){lastY=e.touches[0].clientY;},{passive:true});
-  document.addEventListener('touchmove',function(e){
-    // Never interfere when any modal or quiz tab is active
-    const anyModalOpen=document.querySelector('.modal-overlay.open');
-    const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
-    if(anyModalOpen)return;
-    if(quizActive)return;
-    // History overlay: return early, let everything work naturally
-    const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
-    if(historyOpen)return;
-    const y=e.touches[0].clientY;
-    let el=e.target;
-    while(el&&el!==document.body){
-      const st=el.scrollTop,sh=el.scrollHeight,ch=el.clientHeight;
-      if(sh>ch){
-        if(st===0&&y>lastY){e.preventDefault();return;}
-        if(st>0&&st+ch<sh)return;
-        if(st+ch>=sh&&y<lastY)return;
-        return;
-      }
-      el=el.parentElement;
-    }
-    e.preventDefault();
-  },{passive:false});
-})();
+// pull-to-refresh disabled via CSS overscroll-behavior-y:none
 </script>
 </body>
 </html>
