@@ -1500,7 +1500,7 @@ history.replaceState({nbView:'list'},'');
     const anyModalOpen=document.querySelector('.modal-overlay.open');
     const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
     const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
-    if(anyModalOpen||historyOpen||quizActive)return;
+    if(anyModalOpen||historyOpen||quizActive){e.preventDefault();return;}
     const y=e.touches[0].clientY;
     let el=e.target;
     while(el&&el!==document.body){
