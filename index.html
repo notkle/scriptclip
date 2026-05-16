@@ -1496,11 +1496,22 @@ history.replaceState({nbView:'list'},'');
   let lastY=0;
   document.addEventListener('touchstart',function(e){lastY=e.touches[0].clientY;},{passive:true});
   document.addEventListener('touchmove',function(e){
-    // Never interfere when any modal, history overlay, or quiz tab is active
+    // Never interfere when any modal or quiz tab is active
     const anyModalOpen=document.querySelector('.modal-overlay.open');
-    const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
     const quizActive=document.getElementById('panel-quiz')&&document.getElementById('panel-quiz').classList.contains('active');
-    if(anyModalOpen||historyOpen||quizActive){e.preventDefault();return;}
+    if(anyModalOpen||quizActive){e.preventDefault();return;}
+    // History overlay: block pull-to-refresh only, allow scroll within list
+    const historyOpen=document.getElementById('quizHistoryOverlay')&&document.getElementById('quizHistoryOverlay').style.display!=='none';
+    if(historyOpen){
+      const list=document.getElementById('quizHistoryList');
+      if(list&&list.contains(e.target)){
+        // At top pulling down = pull-to-refresh, block it; otherwise let list scroll
+        if(list.scrollTop===0&&e.touches[0].clientY>lastY){e.preventDefault();}
+      }else{
+        e.preventDefault();
+      }
+      return;
+    }
     const y=e.touches[0].clientY;
     let el=e.target;
     while(el&&el!==document.body){
