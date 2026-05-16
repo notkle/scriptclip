@@ -1449,10 +1449,12 @@ function saveQuizResult(results,userAnswers){const score=results.filter(r=>r.cor
 
 window.closeQuizHistory=function(){
   document.getElementById('quizHistoryOverlay').style.display='none';
+  document.getElementById('panel-quiz').inert=false;
 };
 
 window.openQuizHistory=function(){
   document.getElementById('quizHistoryOverlay').style.display='block';
+  document.getElementById('panel-quiz').inert=true;
   const quizLog=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
   if(quizLog.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No quiz history yet.</div>';return;}
   quizLog.forEach(function(entry,ei){
