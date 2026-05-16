@@ -665,7 +665,7 @@
       <div class="modal-title" style="margin-bottom:0">Quiz History</div>
       <button class="modal-cancel" onclick="window.closeQuizHistory()" style="flex:none;padding:6px 12px">Close</button>
     </div>
-    <div id="quizHistoryList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
+    <div id="quizHistoryList" style="overflow-y:scroll;flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
   </div>
 </div>
 
@@ -1435,9 +1435,10 @@ function saveQuizResult(results,userAnswers){const score=results.filter(r=>r.cor
 
 window.closeQuizHistory=function(){
   document.getElementById('quizHistoryOverlay').classList.remove('open');
+  document.body.style.overflow='';
 };
 
-window.openQuizHistory=function(){
+window.openQuizHistory=function(){document.body.style.overflow='hidden';
   const history=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]'),list=document.getElementById('quizHistoryList');list.innerHTML='';
   if(history.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No quiz history yet.</div>';document.getElementById('quizHistoryOverlay').classList.add('open');return;}
   history.forEach(function(entry,ei){
