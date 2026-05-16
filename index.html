@@ -1505,8 +1505,8 @@ history.replaceState({nbView:'list'},'');
     if(historyOpen){
       const list=document.getElementById('quizHistoryList');
       if(list&&list.contains(e.target)){
-        // At top pulling down = pull-to-refresh, block it; otherwise let list scroll
         if(list.scrollTop===0&&e.touches[0].clientY>lastY){e.preventDefault();}
+        // do NOT return — let the event reach the list so it scrolls naturally
       }else{
         e.preventDefault();
       }
