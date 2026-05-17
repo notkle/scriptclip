@@ -179,7 +179,7 @@
   .nb-done-reorder{margin-top:14px;flex-shrink:0;background:none;border:1px solid var(--n-h2);border-radius:4px;padding:10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--n-h2);cursor:pointer;transition:all 0.2s;display:none}
   .nb-done-reorder.visible{display:block}
   .nb-page-content{flex:1;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);border-radius:8px;padding:28px}
-  #nbPageView{transition:opacity 0.15s ease;}
+
   .quiz-panel{justify-content:flex-start;align-items:stretch;padding:0;overflow:hidden}
   .quiz-setup{flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:28px}
   .quiz-setup-inner{max-width:520px;margin:0 auto}
@@ -1234,33 +1234,23 @@ window.openPage=function(idx){
   const data=nbLoad(),page=data[currentNotebookId].pages[idx];if(!page)return;
   window._currentPageIdx=idx;document.getElementById('nbPageTitle').textContent=page.name;window._currentPageHtml=page.html;document.getElementById('nbPageContent').innerHTML=page.html;
   window.setPageTheme(page.theme||currentTheme,false);
-  const pageView=document.getElementById('nbPageView');
-  pageView.style.opacity='0';
-  pageView.style.transition='none';
   document.getElementById('nbPagesView').style.display='none';
+  const pageView=document.getElementById('nbPageView');
   pageView.style.display='flex';
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
-  // Restore scroll then fade in only once position is confirmed set
-  (function tryRestore(attempts){
+  // Show overlay to hide scroll restoration, then fade it out
+  const plo=document.getElementById('pageLoadOverlay');
+  plo.style.transition='none';plo.style.opacity='1';plo.style.display='block';
+  requestAnimationFrame(function(){
     requestAnimationFrame(function(){
       restoreScrollKey('nbPageContent');
-      const el=document.getElementById('nbPageContent');
-      const key=_scrollKey();
-      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-      const textKey=s&&key?s[key]:null;
-      const match=textKey?findMatchingElement(el,textKey):null;
-      // Check if the match is now at or near the top of the container
-      const ready=!match||Math.abs(el.scrollTop - (function(){let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}()))<10;
-      if(ready||attempts>=5){
-        pageView.style.transition='opacity 0.18s ease';
-        pageView.style.opacity='1';
-      } else {
-        tryRestore(attempts+1);
-      }
+      plo.style.transition='opacity 0.2s ease';
+      plo.style.opacity='0';
+      setTimeout(function(){plo.style.display='none';},220);
     });
-  })(0);
+  });
   startScrollSave();
   setupScrollToTop();
 };
@@ -1789,5 +1779,6 @@ history.replaceState({nbView:'list'},'');
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
 </script>
   <div id="scrollToTopBtn" onclick="window.scrollPageToTop()">&#8593;</div>
+  <div id="pageLoadOverlay" style="display:none;position:fixed;inset:0;z-index:9000;background:var(--bg);pointer-events:none;transition:opacity 0.2s ease;opacity:1;"></div>
 </body>
 </html>
