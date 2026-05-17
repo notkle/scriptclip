@@ -500,7 +500,8 @@
   </div>
 
   <!-- PAGE READ VIEW -->
-  <div class="nb-view" id="nbPageView" style="display:none">
+  <div class="nb-view" id="nbPageView" style="display:none;position:relative">
+    <div id="pageLoadOverlay" style="display:none;position:absolute;inset:0;z-index:9000;background:var(--bg);pointer-events:none;opacity:1;border-radius:inherit;"></div>
     <div class="nb-header">
       <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <div id="nbFontControls" style="display:flex;align-items:center;gap:4px">
@@ -1791,6 +1792,6 @@ history.replaceState({nbView:'list'},'');
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
 </script>
   <div id="scrollToTopBtn" onclick="window.scrollPageToTop()">&#8593;</div>
-  <div id="pageLoadOverlay" style="display:none;position:fixed;inset:0;z-index:9000;background:var(--bg);pointer-events:none;transition:opacity 0.2s ease;opacity:1;"></div>
+
 </body>
 </html>
