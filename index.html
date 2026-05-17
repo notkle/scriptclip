@@ -698,7 +698,7 @@
 <script>
 const NB_KEY='sc_notebooks';
 function saveScroll(id){const el=document.getElementById(id);if(el){try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');s[id]=el.scrollTop;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}}}
-function restoreScroll(id){try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const el=document.getElementById(id);if(el&&s[id])el.scrollTop=s[id];}catch(e){}}
+function restoreScroll(id){try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const el=document.getElementById(id);if(el&&s[id]!==undefined)el.scrollTop=s[id];}catch(e){}}
 function nbLoad(){try{return JSON.parse(localStorage.getItem(NB_KEY)||'{}')}catch(e){return{}}}
 function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data))}
 
@@ -1068,15 +1068,7 @@ window.showNotebookList=function(){
   const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';
   renderNotebookList();history.replaceState({nbView:'list'},'');
 
-// Save scroll positions when app is backgrounded, tab switched, or page unloaded
-document.addEventListener('visibilitychange',function(){
-  if(document.hidden){
-    saveScroll('nbPageContent');
-  }
-});
-window.addEventListener('pagehide',function(){
-  saveScroll('nbPageContent');
-});
+
 };
 
 function renderNotebookList(){
