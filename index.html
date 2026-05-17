@@ -1452,15 +1452,65 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
 // ── FULLSCREEN READER ──
 (function(){
   var _readerSourceId=null;
-  function openReader(sourceId){const source=document.getElementById(sourceId);if(!source)return;_readerSourceId=sourceId;const inner=document.getElementById('scReaderContent');let pageName='';if(sourceId==='nbPageContent'&&window._currentPageIdx!==undefined){const nb=nbLoad()[currentNotebookId];if(nb&&nb.pages[window._currentPageIdx])pageName=nb.pages[window._currentPageIdx].name;}else if(sourceId==='notesContent'){const h1=source.querySelector('h1');if(h1)pageName=h1.innerText;}inner.innerHTML=(pageName?'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">'+pageName+'</div>':'')+source.innerHTML;const overlay=document.getElementById('scReaderOverlay');overlay.style.display='block';
-    // Sync scroll position from source to overlay
-    overlay.scrollTop=source.scrollTop;
-    history.pushState({reader:true},'');}
+
+  // Find the first block element whose top edge is at or just below the container's visible top
+  function findTopmostElement(container){
+    const top=container.getBoundingClientRect().top;
+    const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
+    for(let i=0;i<els.length;i++){
+      const r=els[i].getBoundingClientRect();
+      if(r.bottom>top+2)return els[i]; // first element still visible at top
+    }
+    return null;
+  }
+
+  // Find matching element in target container by text content key
+  function findMatchingElement(container,textKey){
+    if(!textKey)return null;
+    const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
+    for(let i=0;i<els.length;i++){
+      if(els[i].textContent.trim().substring(0,60)===textKey)return els[i];
+    }
+    return null;
+  }
+
+  function openReader(sourceId){
+    const source=document.getElementById(sourceId);if(!source)return;
+    _readerSourceId=sourceId;
+    // Capture which element is at the top before copying HTML
+    const topEl=findTopmostElement(source);
+    const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
+    const inner=document.getElementById('scReaderContent');
+    let pageName='';
+    if(sourceId==='nbPageContent'&&window._currentPageIdx!==undefined){const nb=nbLoad()[currentNotebookId];if(nb&&nb.pages[window._currentPageIdx])pageName=nb.pages[window._currentPageIdx].name;}
+    else if(sourceId==='notesContent'){const h1=source.querySelector('h1');if(h1)pageName=h1.innerText;}
+    inner.innerHTML=(pageName?'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">'+pageName+'</div>':'')+source.innerHTML;
+    const overlay=document.getElementById('scReaderOverlay');
+    overlay.style.display='block';
+    // Scroll to matching element in fullscreen
+    setTimeout(function(){
+      const match=findMatchingElement(inner,topKey);
+      if(match)match.scrollIntoView({block:'start'});
+    },30);
+    history.pushState({reader:true},'');
+  }
+
   function closeReader(){
     const overlay=document.getElementById('scReaderOverlay');
-    // Restore scroll position back to source element
-    if(_readerSourceId){const src=document.getElementById(_readerSourceId);if(src)src.scrollTop=overlay.scrollTop;}
-    overlay.style.display='none';document.getElementById('scReaderContent').innerHTML='';_readerSourceId=null;}
+    const inner=document.getElementById('scReaderContent');
+    // Find topmost element in fullscreen and match it back in source
+    const topEl=findTopmostElement(overlay);
+    const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
+    overlay.style.display='none';
+    if(_readerSourceId&&topKey){
+      const src=document.getElementById(_readerSourceId);
+      if(src){
+        const match=findMatchingElement(src,topKey);
+        if(match)setTimeout(function(){match.scrollIntoView({block:'start'});},30);
+      }
+    }
+    inner.innerHTML='';_readerSourceId=null;
+  }
   window._isReaderOpen=function(){const o=document.getElementById('scReaderOverlay');return o&&o.style.display!=='none';};
   function handleDoubleTap(el,cb){el._lastTap=0;el.addEventListener('touchend',function(e){const sel=window.getSelection();if(sel&&!sel.isCollapsed)return;const now=Date.now(),gap=now-(el._lastTap||0);el._lastTap=now;if(gap<300&&gap>30){e.preventDefault();e.stopPropagation();cb();}},{passive:false});}
   document.addEventListener('DOMContentLoaded',function(){const overlay=document.getElementById('scReaderOverlay');if(!overlay)return;handleDoubleTap(overlay,closeReader);const nc=document.getElementById('notesContent');if(nc)handleDoubleTap(nc,()=>openReader('notesContent'));const pc=document.getElementById('nbPageContent');if(pc)handleDoubleTap(pc,()=>openReader('nbPageContent'));});
