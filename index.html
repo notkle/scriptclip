@@ -727,7 +727,17 @@ var _scrollInterval=null;
 function startScrollSave(id){
   id=id||'nbPageContent';
   clearInterval(_scrollInterval);
-  _scrollInterval=setInterval(function(){saveScroll(id);},5000);
+  _scrollInterval=setInterval(function(){
+    // Always save to the per-page key, but read from whichever element is active
+    const el=document.getElementById(id);
+    if(!el)return;
+    try{
+      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+      const key=_scrollKey()||'nbPageContent';
+      s[key]=el.scrollTop;
+      localStorage.setItem('sc_scroll',JSON.stringify(s));
+    }catch(e){}
+  },5000);
 }
 function stopScrollSave(){
   clearInterval(_scrollInterval);
