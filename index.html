@@ -1235,22 +1235,34 @@ window.openPage=function(idx){
   window._currentPageIdx=idx;document.getElementById('nbPageTitle').textContent=page.name;window._currentPageHtml=page.html;document.getElementById('nbPageContent').innerHTML=page.html;
   window.setPageTheme(page.theme||currentTheme,false);
   document.getElementById('nbPagesView').style.display='none';
-  const pageView=document.getElementById('nbPageView');
+  var pageView=document.getElementById('nbPageView');
   pageView.style.display='flex';
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
   // Show overlay to hide scroll restoration, then fade it out
-  const plo=document.getElementById('pageLoadOverlay');
+  var plo=document.getElementById('pageLoadOverlay');
   plo.style.transition='none';plo.style.opacity='1';plo.style.display='block';
-  requestAnimationFrame(function(){
+  restoreScrollKey('nbPageContent');
+  // Poll until scroll position matches target, then fade overlay out
+  (function waitForScroll(attempts){
     requestAnimationFrame(function(){
-      restoreScrollKey('nbPageContent');
-      plo.style.transition='opacity 0.2s ease';
-      plo.style.opacity='0';
-      setTimeout(function(){plo.style.display='none';},220);
+      const el=document.getElementById('nbPageContent');
+      const key=_scrollKey();
+      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+      const textKey=s&&key?s[key]:null;
+      const match=textKey?findMatchingElement(el,textKey):null;
+      const targetOffset=(function(){if(!match)return 0;let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
+      const settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
+      if(settled||attempts>=8){
+        plo.style.transition='opacity 0.2s ease';
+        plo.style.opacity='0';
+        setTimeout(function(){plo.style.display='none';},220);
+      } else {
+        waitForScroll(attempts+1);
+      }
     });
-  });
+  })(0);
   startScrollSave();
   setupScrollToTop();
 };
