@@ -409,6 +409,7 @@
 
 </div>
 
+<div id="readerLoadOverlay" style="display:none;position:fixed;inset:0;z-index:10003;background:var(--bg);pointer-events:none;opacity:1;"></div>
 <div id="quizHistoryBlocker" style="display:none;position:fixed;inset:0;z-index:10001;" onclick="window.closeQuizHistory()"></div>
 <!-- QUIZ HISTORY OVERLAY -->
 <div id="quizHistoryOverlay" style="display:none;position:fixed;inset:0;z-index:10002;pointer-events:all;">
@@ -714,6 +715,8 @@
 const NB_KEY='sc_notebooks';
 var _pinJumpActive=false;
 var _pinScrollTarget=null;
+var _sessionNbId=null;
+var _sessionPageIdx=null;
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
@@ -889,6 +892,14 @@ window.switchTab=function(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
+  // If returning to notebook and a page was open this session, restore it
+  if(name==='notebook'&&_sessionNbId!==null&&_sessionPageIdx!==null){
+    var sNb=_sessionNbId,sIdx=_sessionPageIdx;
+    setTimeout(function(){
+      if(currentNotebookId!==sNb)window.openNotebook(sNb);
+      window.openPage(sIdx);
+    },10);
+  }
 
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
   if(name==='notebook'){setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);history.pushState({nbView:'list'},'');}
@@ -1197,6 +1208,7 @@ window.openNotebook=function(id){
 window.showPagesView=function(){
   saveScroll('nbPageContent');
   stopScrollSave();
+  _sessionNbId=null;_sessionPageIdx=null;
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
   const inp=document.getElementById('nbSearchInput');if(inp)inp.value='';const clr=document.getElementById('nbSearchClear');if(clr)clr.style.display='none';const sts=document.getElementById('nbSearchStatus');if(sts)sts.textContent='';
   renderPagesList();
@@ -1242,6 +1254,7 @@ window.openPage=function(idx){
   var pageView=document.getElementById('nbPageView');
   pageView.style.display='flex';
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
+  _sessionNbId=currentNotebookId;_sessionPageIdx=idx;
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
   // Show overlay to hide scroll restoration, then fade it out
@@ -1672,11 +1685,14 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     const overlay=document.getElementById('scReaderOverlay');
     overlay.style.display='block';
     startScrollSave('scReaderOverlay'); // track fullscreen position
-    // Scroll to matching element in fullscreen
-    setTimeout(function(){
+    // Show reader overlay, scroll to position, fade out
+    var rlo=document.getElementById('readerLoadOverlay');
+    if(rlo){rlo.style.transition='none';rlo.style.opacity='1';rlo.style.display='block';}
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
       const match=findMatchingElement(inner,topKey);
       if(match)scrollToElement(overlay,match);
-    },30);
+      if(rlo){rlo.style.transition='opacity 0.2s ease';rlo.style.opacity='0';setTimeout(function(){rlo.style.display='none';},220);}
+    });});
     history.pushState({reader:true},'');
   }
 
@@ -1688,11 +1704,17 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
     overlay.style.display='none';
     startScrollSave('nbPageContent'); // switch back to page tracking
+    // Show page overlay, scroll back, fade out
+    var plo2=document.getElementById('pageLoadOverlay');
+    if(plo2){plo2.style.transition='none';plo2.style.opacity='1';plo2.style.display='block';}
     if(_readerSourceId&&topKey){
       const src=document.getElementById(_readerSourceId);
       if(src){
-        const match=findMatchingElement(src,topKey);
-        if(match)setTimeout(function(){scrollToElement(src,match);},30);
+        requestAnimationFrame(function(){requestAnimationFrame(function(){
+          const match=findMatchingElement(src,topKey);
+          if(match)scrollToElement(src,match);
+          if(plo2){plo2.style.transition='opacity 0.2s ease';plo2.style.opacity='0';setTimeout(function(){plo2.style.display='none';},220);}
+        });});
       }
     }
     inner.innerHTML='';_readerSourceId=null;
