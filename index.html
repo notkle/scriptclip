@@ -277,16 +277,16 @@
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   .panel.active>*{animation:fadeUp 0.35s ease forwards}
   #scrollToTopBtn{
-    position:fixed;top:80px;left:50%;transform:translateX(-50%);
-    width:38px;height:38px;border-radius:50%;
-    background:rgba(128,128,128,0.25);
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,0.15);
+    position:fixed;top:100px;left:50%;transform:translateX(-50%);
+    width:42px;height:42px;border-radius:50%;
+    background:rgba(80,80,80,0.45);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.2);
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;z-index:500;
+    cursor:pointer;z-index:9001;
     opacity:0;pointer-events:none;
     transition:opacity 0.3s ease;
-    font-size:14px;color:var(--ink);
+    font-size:16px;color:#fff;
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
 </style>
