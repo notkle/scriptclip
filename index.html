@@ -487,8 +487,8 @@
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
-      <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
       <button class="nb-new-btn" onclick="window.openPinsView()">&#128204; Pins</button>
+      <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
     </div>
     <div style="margin-bottom:12px;position:relative">
       <input type="text" id="nbSearchInput" placeholder="Search pages&#8230;" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 36px 9px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;box-sizing:border-box;" oninput="if(typeof window.nbSearch==='function'){window.nbSearch(this.value)}" onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"/>
@@ -1252,9 +1252,9 @@ window.openPage=function(idx){
       const key=_scrollKey();
       const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
       const textKey=s&&key?s[key]:null;
-      const match=textKey?findMatchingElement(el,textKey):null;
+      const match=(!_pinJumpActive&&textKey)?findMatchingElement(el,textKey):null;
       const targetOffset=(function(){if(!match)return 0;let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
-      const settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
+      const settled=_pinJumpActive||!match||Math.abs(el.scrollTop-targetOffset)<5;
       if(settled||attempts>=8){
         plo.style.transition='opacity 0.2s ease';
         plo.style.opacity='0';
@@ -1491,6 +1491,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // ── SCROLL TO TOP BUTTON ──
 var _sttTimer=null;
 var _sttLastY=0;
+var _pinJumpActive=false;
 
 function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
@@ -1583,15 +1584,26 @@ function renderPinsList(){
 }
 
 window.jumpToPin=function(pin){
-  // Navigate to the notebook and page, then restore scroll
+  _pinJumpActive=true;
   if(pin.notebookId!==currentNotebookId){window.openNotebook(pin.notebookId);}
-  // Close pins view first
   document.getElementById('nbPinsView').style.display='none';
   window.openPage(pin.pageIdx);
-  setTimeout(function(){
-    const el=document.getElementById('nbPageContent');
-    if(el)el.scrollTop=pin.scrollTop;
-  },80);
+  // Overlay already shown by openPage — scroll to pin position after render
+  var plo=document.getElementById('pageLoadOverlay');
+  (function waitAndScroll(attempts){
+    requestAnimationFrame(function(){
+      const el=document.getElementById('nbPageContent');
+      if(!el){if(attempts<8)waitAndScroll(attempts+1);return;}
+      el.scrollTop=pin.scrollTop;
+      const settled=Math.abs(el.scrollTop-pin.scrollTop)<5;
+      if(settled||attempts>=8){
+        _pinJumpActive=false;
+        if(plo){plo.style.transition='opacity 0.2s ease';plo.style.opacity='0';setTimeout(function(){plo.style.display='none';},220);}
+      } else {
+        waitAndScroll(attempts+1);
+      }
+    });
+  })(0);
 };
 
 window.deletePin=async function(id){
