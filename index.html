@@ -711,16 +711,34 @@
 <script>
 const NB_KEY='sc_notebooks';
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
+
+// Element-key based save/restore for page content (layout-independent)
+function saveScrollKey(sourceId){
+  const key=_scrollKey();if(!key)return;
+  const el=document.getElementById(sourceId);if(!el)return;
+  const topEl=findTopmostElement(el);if(!topEl)return;
+  const textKey=topEl.textContent.trim().substring(0,60);
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');s[key]=textKey;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
+}
+
+function restoreScrollKey(targetId){
+  const key=_scrollKey();if(!key)return;
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const textKey=s[key];if(!textKey)return;
+  const el=document.getElementById(targetId);if(!el)return;
+  const match=findMatchingElement(el,textKey);
+  if(match)setTimeout(function(){match.scrollIntoView({block:'start'});},30);}catch(e){}
+}
+
+// Keep pixel-based for generic saves (non-page-content)
 function saveScroll(id){
   const el=document.getElementById(id);if(!el)return;
-  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-  const key=id==='nbPageContent'?(_scrollKey()||id):id;
-  s[key]=el.scrollTop;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
+  // For page content, use element key approach
+  if(id==='nbPageContent'||id==='scReaderOverlay'){saveScrollKey(id);return;}
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');s[id]=el.scrollTop;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
 }
 function restoreScroll(id){
-  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-  const key=id==='nbPageContent'?(_scrollKey()||id):id;
-  const el=document.getElementById(id);if(el&&s[key]>0)el.scrollTop=s[key];}catch(e){}
+  if(id==='nbPageContent'){restoreScrollKey(id);return;}
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const el=document.getElementById(id);if(el&&s[id]>0)el.scrollTop=s[id];}catch(e){}
 }
 
 var _scrollInterval=null;
@@ -728,15 +746,7 @@ function startScrollSave(id){
   id=id||'nbPageContent';
   clearInterval(_scrollInterval);
   _scrollInterval=setInterval(function(){
-    // Always save to the per-page key, but read from whichever element is active
-    const el=document.getElementById(id);
-    if(!el)return;
-    try{
-      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-      const key=_scrollKey()||'nbPageContent';
-      s[key]=el.scrollTop;
-      localStorage.setItem('sc_scroll',JSON.stringify(s));
-    }catch(e){}
+    saveScrollKey(id);
   },5000);
 }
 function stopScrollSave(){
@@ -748,9 +758,9 @@ document.addEventListener('visibilitychange',function(){
   if(document.hidden){
     const overlay=document.getElementById('scReaderOverlay');
     if(overlay&&overlay.style.display!=='none'){
-      saveScroll('scReaderOverlay');
+      saveScrollKey('scReaderOverlay');
     } else {
-      saveScroll('nbPageContent');
+      saveScrollKey('nbPageContent');
     }
   }
 });
@@ -1201,7 +1211,7 @@ window.openPage=function(idx){
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
-  setTimeout(function(){restoreScroll('nbPageContent');},50);
+  setTimeout(function(){restoreScrollKey('nbPageContent');},80);
   startScrollSave();
   setupScrollToTop();
 };
