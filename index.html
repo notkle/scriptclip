@@ -885,6 +885,11 @@ window.toggleTheme=function(){
 window.switchTab=function(name){
   saveScroll('nbPageContent');
   stopScrollSave();
+  // Hide notebook page view when leaving notebook tab so session restore works correctly
+  if(name!=='notebook'){
+    var pv=document.getElementById('nbPageView');
+    if(pv)pv.style.display='none';
+  }
   // Hide scroll-to-top button instantly (no transition)
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
@@ -899,18 +904,17 @@ window.switchTab=function(name){
   if(name==='notebook'){
     const alreadyOnPage=document.getElementById('nbPageView')&&document.getElementById('nbPageView').style.display!=='none';
     if(alreadyOnPage){
-      // On notebook tab viewing a page — go to list
-      setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
-      history.pushState({nbView:'list'},'');
+      window.showNotebookList();
     } else if(_sessionNbId!==null&&_sessionPageIdx!==null){
-      // Coming from another tab with session — restore last page
       var sNb=_sessionNbId,sIdx=_sessionPageIdx;
+      // Hide all views first to prevent overlap
+      document.getElementById('nbListView').style.display='none';
+      document.getElementById('nbPagesView').style.display='none';
+      document.getElementById('nbPageView').style.display='none';
       if(currentNotebookId!==sNb)window.openNotebook(sNb);
       window.openPage(sIdx);
     } else {
-      // No session — go to list
-      setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
-      history.pushState({nbView:'list'},'');
+      window.showNotebookList();
     }
   }
   sessionStorage.setItem('sc_tab',name);
@@ -1180,6 +1184,7 @@ document.addEventListener('DOMContentLoaded',function(){
 let currentNotebookId=null,reorderActive=false,dragSrcIdx=null;
 
 window.showNotebookList=function(){
+  _sessionNbId=null;_sessionPageIdx=null;
   document.getElementById('nbListView').style.display='flex';
   document.getElementById('nbPagesView').style.display='none';
   document.getElementById('nbPageView').style.display='none';
