@@ -279,7 +279,7 @@
   #scrollToTopBtn{
     position:fixed;
     width:38px;height:38px;border-radius:50%;
-    background:rgba(80,80,80,0.28);
+    background:rgba(46,44,42,0.88);
     border:none;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;z-index:9001;
@@ -1571,12 +1571,12 @@ function setupScrollToTop(){
     _sttLastY=y;
   };
   el.addEventListener('scroll',el._sttHandler,{passive:true});
-  // Position button within the page view bounds
-  var pv=document.getElementById('nbPageView');
+  // Position button within nbPageContent bounds
+  var pc=document.getElementById('nbPageContent');
   var btn=document.getElementById('scrollToTopBtn');
-  if(pv&&btn){
-    var r=pv.getBoundingClientRect();
-    btn.style.top=(r.top+16)+'px';
+  if(pc&&btn){
+    var r=pc.getBoundingClientRect();
+    btn.style.top=(r.top+12)+'px';
     btn.style.left=(r.left+r.width/2-19)+'px';
   }
 }
