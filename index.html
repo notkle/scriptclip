@@ -1283,8 +1283,41 @@ window.openPage=function(idx){
   setupScrollToTop();
 };
 
-window.deletePage=async function(idx){if(!await window.scConfirm('Delete this page? This cannot be undone.'))return;const data=nbLoad();data[currentNotebookId].pages.splice(idx,1);nbSave(data);renderPagesList();};
-window.deleteCurrentNotebook=async function(){if(!await window.scConfirm('Delete this notebook and all its pages?'))return;const data=nbLoad();delete data[currentNotebookId];nbSave(data);currentNotebookId=null;window.showNotebookList();};
+window.deletePage=async function(idx){
+  if(!await window.scConfirm('Delete this page? This cannot be undone.'))return;
+  try{
+    const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+    const nb=currentNotebookId;
+    const pageCount=nbLoad()[nb].pages.length;
+    // Remove deleted page key
+    delete s['sc_scroll_'+nb+'_'+idx];
+    // Shift all subsequent page keys down by one
+    for(var i=idx+1;i<pageCount;i++){
+      var oldKey='sc_scroll_'+nb+'_'+i;
+      var newKey='sc_scroll_'+nb+'_'+(i-1);
+      if(s[oldKey]!==undefined){s[newKey]=s[oldKey];delete s[oldKey];}
+    }
+    localStorage.setItem('sc_scroll',JSON.stringify(s));
+  }catch(e){}
+  // Shift pin pageIdx values for this notebook
+  try{
+    const pins=pinsLoad();
+    const nb=currentNotebookId;
+    const updated=pins.filter(function(p){
+      return!(p.notebookId===nb&&p.pageIdx===idx); // remove pins for deleted page
+    }).map(function(p){
+      if(p.notebookId===nb&&p.pageIdx>idx){p.pageIdx=p.pageIdx-1;} // shift down
+      return p;
+    });
+    pinsSave(updated);
+  }catch(e){}
+  const data=nbLoad();data[currentNotebookId].pages.splice(idx,1);nbSave(data);renderPagesList();
+};
+window.deleteCurrentNotebook=async function(){
+  if(!await window.scConfirm('Delete this notebook and all its pages?'))return;
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');Object.keys(s).forEach(function(k){if(k.indexOf('sc_scroll_'+currentNotebookId+'_')===0)delete s[k];});localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
+  const data=nbLoad();delete data[currentNotebookId];nbSave(data);currentNotebookId=null;window.showNotebookList();
+};
 
 window.loadPageToQuiz=function(idx){const data=nbLoad(),page=data[currentNotebookId].pages[idx];if(!page)return;const div=document.createElement('div');div.innerHTML=page.html;document.getElementById('quizPasteArea').value=div.innerText;document.getElementById('quizSourceStatus').textContent='\u2713 Loaded: '+page.name;window.switchTab('quiz');};
 window.loadCurrentPageToQuiz=function(){if(!window._currentPageHtml)return;const div=document.createElement('div');div.innerHTML=window._currentPageHtml;document.getElementById('quizPasteArea').value=div.innerText;const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[window._currentPageIdx];document.getElementById('quizSourceStatus').textContent=page?'\u2713 Loaded: '+page.name:'\u2713 Page loaded';window.switchTab('quiz');};
