@@ -1256,9 +1256,11 @@ window.openPage=function(idx){
       const targetOffset=(function(){if(!match)return 0;let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
       const settled=_pinJumpActive||!match||Math.abs(el.scrollTop-targetOffset)<5;
       if(settled||attempts>=8){
-        plo.style.transition='opacity 0.2s ease';
-        plo.style.opacity='0';
-        setTimeout(function(){plo.style.display='none';},220);
+        if(!_pinJumpActive){
+          plo.style.transition='opacity 0.2s ease';
+          plo.style.opacity='0';
+          setTimeout(function(){plo.style.display='none';},220);
+        }
       } else {
         waitForScroll(attempts+1);
       }
