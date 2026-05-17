@@ -473,7 +473,7 @@
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
-      <button class="nb-new-btn" onclick="if(typeof window.openExportModal==='function'){window.openExportModal(currentNotebookId)}" style="margin-right:6px">&#8595; Export</button>
+      <button class="nb-new-btn" onclick="window.openPinsView()" style="margin-right:6px">&#128204; Pins</button>
       <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
     </div>
     <div style="margin-bottom:12px;position:relative">
@@ -502,6 +502,16 @@
     <div class="zoomable-wrap" id="pageZoomWrap"><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div></div>
     <div class="zoom-hint" id="pageZoomHint">double-tap to zoom</div>
   </div>
+  <!-- PINS VIEW -->
+  <div class="nb-view" id="nbPinsView" style="display:none">
+    <div class="nb-header">
+      <button class="tool-btn" onclick="window.closePinsView()">&#8592; Back</button>
+      <div class="nb-title" id="nbPinsTitle" style="flex:1;margin-left:12px">Pins</div>
+    </div>
+    <div class="nb-pages-list" id="nbPinsList"></div>
+    <div class="nb-empty" id="nbPinsEmpty">No pins yet. Highlight any text on a page and tap Pin.</div>
+  </div>
+
 </div>
 
 <!-- SAVE TO NOTEBOOK MODAL -->
@@ -571,6 +581,8 @@
   <button onclick="window.aiAskOpen()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Ask</button>
   <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Cards</button>
+  <span style="color:var(--border);margin:0 2px">|</span>
+  <button onclick="window.pinCurrentLocation()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#128204; Pin</button>
 </div>
 
 <!-- FLASH CARD CONFIRM MODAL -->
@@ -685,6 +697,9 @@
 
 <script>
 const NB_KEY='sc_notebooks';
+const _scrollPos={};
+function saveScroll(id){const el=document.getElementById(id);if(el)_scrollPos[id]=el.scrollTop;}
+function restoreScroll(id){const el=document.getElementById(id);if(el&&_scrollPos[id])el.scrollTop=_scrollPos[id];}
 function nbLoad(){try{return JSON.parse(localStorage.getItem(NB_KEY)||'{}')}catch(e){return{}}}
 function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data))}
 
@@ -827,7 +842,7 @@ window.pasteFromClipboard=async function(){
   try{const text=await navigator.clipboard.readText();document.getElementById('notesTextarea').value=text;}
   catch(e){window.toast('Tap Allow when Safari asks to read clipboard, then try again.');}
 };
-window.backToEdit=function(){document.getElementById('notesRendered').classList.remove('visible');document.getElementById('notesInputArea').style.display='flex';};
+window.backToEdit=function(){saveScroll('notesContent');document.getElementById('notesRendered').classList.remove('visible');document.getElementById('notesInputArea').style.display='flex';};
 window.renderNotes=function(){
   const raw=document.getElementById('notesTextarea').value.trim();
   if(!raw){window.toast('Paste your Claude notes first.');return;}
@@ -837,6 +852,7 @@ window.renderNotes=function(){
   document.getElementById('notesInputArea').style.display='none';
   document.getElementById('notesRendered').classList.add('visible');
   document.getElementById('notesTextarea').value='';
+  setTimeout(function(){restoreScroll('notesContent');},50);
 };
 
 function parseMarkdown(md){
@@ -1078,6 +1094,7 @@ window.openNotebook=function(id){
 };
 
 window.showPagesView=function(){
+  saveScroll('nbPageContent');
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
   const inp=document.getElementById('nbSearchInput');if(inp)inp.value='';const clr=document.getElementById('nbSearchClear');if(clr)clr.style.display='none';const sts=document.getElementById('nbSearchStatus');if(sts)sts.textContent='';
   renderPagesList();
@@ -1123,6 +1140,7 @@ window.openPage=function(idx){
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
+  setTimeout(function(){restoreScroll('nbPageContent');},50);
 };
 
 window.deletePage=async function(idx){if(!await window.scConfirm('Delete this page? This cannot be undone.'))return;const data=nbLoad();data[currentNotebookId].pages.splice(idx,1);nbSave(data);renderPagesList();};
@@ -1345,7 +1363,85 @@ window.aiAskCopy=function(){const question=document.getElementById('aiAskInput')
 
 document.addEventListener('DOMContentLoaded',function(){
   setupAiHighlight('notesContent');setupAiHighlight('nbPageContent');setupAiHighlight('scReaderContent');
-  document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();});
+  // ── PINS ──
+const PINS_KEY='sc_pins';
+function pinsLoad(){try{return JSON.parse(localStorage.getItem(PINS_KEY)||'[]');}catch(e){return[];}}
+function pinsSave(pins){localStorage.setItem(PINS_KEY,JSON.stringify(pins));}
+
+window.pinCurrentLocation=function(){
+  hideAiHighlightPopup();
+  if(!currentNotebookId||window._currentPageIdx===undefined){window.toast('Open a notebook page first to pin.');return;}
+  const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[window._currentPageIdx];
+  if(!page){window.toast('Page not found.');return;}
+  // Get context around the selection
+  const sel=window.getSelection();
+  const context=_aiHighlightContext||'';
+  const scrollPos=document.getElementById('nbPageContent').scrollTop;
+  const pin={
+    id:'pin_'+Date.now(),
+    notebookId:currentNotebookId,
+    notebookName:nb.name,
+    pageIdx:window._currentPageIdx,
+    pageName:page.name,
+    context:context.trim().substring(0,120),
+    scrollTop:scrollPos,
+    saved:Date.now()
+  };
+  const pins=pinsLoad();
+  pins.unshift(pin);
+  pinsSave(pins);
+  window.getSelection().removeAllRanges();
+  window.toast('Pinned!');
+};
+
+window.openPinsView=function(){
+  document.getElementById('nbPinsTitle').textContent=document.getElementById('nbPagesTitle').textContent+' — Pins';
+  document.getElementById('nbPagesView').style.display='none';
+  document.getElementById('nbPinsView').style.display='flex';
+  renderPinsList();
+  history.pushState({nbView:'pins',nbId:currentNotebookId},'');
+};
+
+window.closePinsView=function(){
+  document.getElementById('nbPinsView').style.display='none';
+  document.getElementById('nbPagesView').style.display='flex';
+};
+
+function renderPinsList(){
+  const pins=pinsLoad().filter(function(p){return p.notebookId===currentNotebookId;});
+  const list=document.getElementById('nbPinsList'),empty=document.getElementById('nbPinsEmpty');
+  list.innerHTML='';
+  if(pins.length===0){empty.style.display='block';return;}
+  empty.style.display='none';
+  pins.forEach(function(pin,i){
+    const item=document.createElement('div');
+    item.className='nb-page-item';
+    item.innerHTML='<div class="nb-page-info" style="cursor:pointer"><div class="nb-page-name">'+pin.pageName+'</div><div class="nb-page-date" style="margin-top:4px;white-space:normal;line-height:1.4;font-size:11px;color:var(--muted)">'+pin.context+'</div></div><button class="nb-page-btn del-btn" style="flex-shrink:0">&#10005;</button>';
+    item.querySelector('.nb-page-info').addEventListener('click',function(){window.jumpToPin(pin);});
+    item.querySelector('.del-btn').addEventListener('click',function(e){e.stopPropagation();window.deletePin(pin.id);});
+    list.appendChild(item);
+  });
+}
+
+window.jumpToPin=function(pin){
+  // Navigate to the notebook and page, then restore scroll
+  if(pin.notebookId!==currentNotebookId){window.openNotebook(pin.notebookId);}
+  // Close pins view first
+  document.getElementById('nbPinsView').style.display='none';
+  window.openPage(pin.pageIdx);
+  setTimeout(function(){
+    const el=document.getElementById('nbPageContent');
+    if(el)el.scrollTop=pin.scrollTop;
+  },80);
+};
+
+window.deletePin=async function(id){
+  if(!await window.scConfirm('Delete this pin?'))return;
+  const pins=pinsLoad().filter(function(p){return p.id!==id;});
+  pinsSave(pins);renderPinsList();
+};
+
+document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();});
   document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
@@ -1355,8 +1451,16 @@ document.addEventListener('DOMContentLoaded',function(){
 
 // ── FULLSCREEN READER ──
 (function(){
-  function openReader(sourceId){const source=document.getElementById(sourceId);if(!source)return;const inner=document.getElementById('scReaderContent');let pageName='';if(sourceId==='nbPageContent'&&window._currentPageIdx!==undefined){const nb=nbLoad()[currentNotebookId];if(nb&&nb.pages[window._currentPageIdx])pageName=nb.pages[window._currentPageIdx].name;}else if(sourceId==='notesContent'){const h1=source.querySelector('h1');if(h1)pageName=h1.innerText;}inner.innerHTML=(pageName?'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">'+pageName+'</div>':'')+source.innerHTML;const overlay=document.getElementById('scReaderOverlay');overlay.style.display='block';overlay.scrollTop=0;history.pushState({reader:true},'');}
-  function closeReader(){document.getElementById('scReaderOverlay').style.display='none';document.getElementById('scReaderContent').innerHTML='';}
+  var _readerSourceId=null;
+  function openReader(sourceId){const source=document.getElementById(sourceId);if(!source)return;_readerSourceId=sourceId;const inner=document.getElementById('scReaderContent');let pageName='';if(sourceId==='nbPageContent'&&window._currentPageIdx!==undefined){const nb=nbLoad()[currentNotebookId];if(nb&&nb.pages[window._currentPageIdx])pageName=nb.pages[window._currentPageIdx].name;}else if(sourceId==='notesContent'){const h1=source.querySelector('h1');if(h1)pageName=h1.innerText;}inner.innerHTML=(pageName?'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">'+pageName+'</div>':'')+source.innerHTML;const overlay=document.getElementById('scReaderOverlay');overlay.style.display='block';
+    // Sync scroll position from source to overlay
+    overlay.scrollTop=source.scrollTop;
+    history.pushState({reader:true},'');}
+  function closeReader(){
+    const overlay=document.getElementById('scReaderOverlay');
+    // Restore scroll position back to source element
+    if(_readerSourceId){const src=document.getElementById(_readerSourceId);if(src)src.scrollTop=overlay.scrollTop;}
+    overlay.style.display='none';document.getElementById('scReaderContent').innerHTML='';_readerSourceId=null;}
   window._isReaderOpen=function(){const o=document.getElementById('scReaderOverlay');return o&&o.style.display!=='none';};
   function handleDoubleTap(el,cb){el._lastTap=0;el.addEventListener('touchend',function(e){const sel=window.getSelection();if(sel&&!sel.isCollapsed)return;const now=Date.now(),gap=now-(el._lastTap||0);el._lastTap=now;if(gap<300&&gap>30){e.preventDefault();e.stopPropagation();cb();}},{passive:false});}
   document.addEventListener('DOMContentLoaded',function(){const overlay=document.getElementById('scReaderOverlay');if(!overlay)return;handleDoubleTap(overlay,closeReader);const nc=document.getElementById('notesContent');if(nc)handleDoubleTap(nc,()=>openReader('notesContent'));const pc=document.getElementById('nbPageContent');if(pc)handleDoubleTap(pc,()=>openReader('nbPageContent'));});
@@ -1438,7 +1542,7 @@ function showResults(results,userAnswers){
 }
 
 function toggleFeedback(idx){document.getElementById('fbody-'+idx).classList.toggle('open');document.getElementById('ftoggle-'+idx).classList.toggle('open');}
-window.resetQuiz=function(){quizData=null;document.getElementById('quizPasteArea').value='';document.getElementById('quizSourceStatus').textContent='';document.getElementById('quizSetup').style.display='block';document.getElementById('quizActive').style.display='none';document.getElementById('quizResults').style.display='none';document.getElementById('quizGenStatus').textContent='';const btn=document.getElementById('quizGenerateBtn');btn.disabled=false;document.getElementById('quizGenerateBtnInner').textContent='Generate Quiz';};
+window.resetQuiz=function(){saveScroll('quizQuestions');saveScroll('quizResults');quizData=null;document.getElementById('quizPasteArea').value='';document.getElementById('quizSourceStatus').textContent='';document.getElementById('quizSetup').style.display='block';document.getElementById('quizActive').style.display='none';document.getElementById('quizResults').style.display='none';document.getElementById('quizGenStatus').textContent='';const btn=document.getElementById('quizGenerateBtn');btn.disabled=false;document.getElementById('quizGenerateBtnInner').textContent='Generate Quiz';};
 
 const QUIZ_HISTORY_KEY='sc_quiz_history';
 function saveQuizResult(results,userAnswers){const score=results.filter(r=>r.correct).length,total=results.length;const entry={date:Date.now(),score,total,pct:Math.round(score/total*100),questions:quizData.map((q,idx)=>({question:q.question,type:q.type,answer:q.answer,userAnswer:userAnswers[idx]||'(no answer)',correct:results[idx]?results[idx].correct:false,explanation:q.explanation}))};const history=JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)||'[]');history.unshift(entry);if(history.length>10)history.length=10;localStorage.setItem(QUIZ_HISTORY_KEY,JSON.stringify(history));}
@@ -1487,6 +1591,7 @@ window.addEventListener('popstate',function(){
 
   if(!onNb)return;
   const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
+  const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
   const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
   switchTab('builder');
 });
