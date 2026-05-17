@@ -1688,8 +1688,9 @@ window.jumpToPin=function(pin){
   window.setPageTheme(page.theme||currentTheme,false);
   applyNbFontSize();
 
-  // Set scroll, poll until confirmed, then fade overlay
+  // Detach scroll listener before setting position so counter doesn't increment
   var el=document.getElementById('nbPageContent');
+  if(el&&el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
   if(el)el.scrollTop=pin.scrollTop;
   (function pollPin(attempts){
     requestAnimationFrame(function(){
