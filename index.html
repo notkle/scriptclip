@@ -1066,6 +1066,12 @@ window.showNotebookList=function(){
   document.getElementById('nbPageView').style.display='none';
   const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';
   renderNotebookList();history.replaceState({nbView:'list'},'');
+
+// Save scroll positions on page exit/refresh
+window.addEventListener('beforeunload',function(){
+  saveScroll('nbPageContent');
+  saveScroll('notesContent');
+});
 };
 
 function renderNotebookList(){
