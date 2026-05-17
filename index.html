@@ -1054,26 +1054,7 @@ document.addEventListener('DOMContentLoaded',function(){
     else{if(ytVideoId&&localStorage.getItem('sc_yt_was_playing')==='1'){ytBuildIframe(ytVideoId,ytCurrentSec);fetchYtInfo(ytVideoId);}}
   });
 
-  // Restore last open notebook page on load
-  const lastNb=localStorage.getItem('sc_last_nb');
-  if(lastNb){
-    const data=nbLoad();
-    if(data[lastNb]){
-      const lastPageIdx=parseInt(localStorage.getItem('sc_last_page_'+lastNb));
-      if(!isNaN(lastPageIdx)&&data[lastNb].pages&&data[lastNb].pages[lastPageIdx]){
-        // Switch to notebook tab and open last page
-        window.switchTab('notebook');
-        setTimeout(function(){
-          window.openNotebook(lastNb);
-          setTimeout(function(){
-            window.openPage(lastPageIdx);
-            // Restore scroll position after page renders
-            setTimeout(function(){restoreScroll('nbPageContent');},80);
-          },50);
-        },50);
-      }
-    }
-  }
+  // Scroll positions are persisted to localStorage and restored automatically when pages are opened
 });
 
 // ── NOTEBOOK ──
