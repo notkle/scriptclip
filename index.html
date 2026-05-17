@@ -1783,6 +1783,9 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
     overlay.style.display='none';
     startScrollSave('nbPageContent'); // switch back to page tracking
+    // Detach scroll listener before repositioning so up arrow counter doesn't increment
+    const _srcEl=document.getElementById(_readerSourceId||'nbPageContent');
+    if(_srcEl&&_srcEl._sttHandler)_srcEl.removeEventListener('scroll',_srcEl._sttHandler);
     // Show page overlay, scroll back, fade out
     var plo2=document.getElementById('pageLoadOverlay');
     if(plo2){plo2.style.transition='none';plo2.style.opacity='1';plo2.style.display='block';}
@@ -1796,6 +1799,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
             const settled=!_cMatch||Math.abs(src.scrollTop-(function(){var o=0,n=_cMatch;while(n&&n!==src){o+=n.offsetTop;n=n.offsetParent;}return o;}()))<5;
             if(settled||attempts>=8){
               if(plo2){plo2.style.transition='opacity 0.2s ease';plo2.style.opacity='0';setTimeout(function(){plo2.style.display='none';},220);}
+              setupScrollToTop();
             } else {
               if(_cMatch)scrollToElement(src,_cMatch);
               pollClose(attempts+1);
