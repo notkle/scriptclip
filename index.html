@@ -897,14 +897,20 @@ window.switchTab=function(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
   if(name==='notebook'){
+    const currentTab=document.querySelector('.tab.active');
+    const wasOnNotebook=currentTab&&currentTab.id==='tab-notebook';
     const alreadyOnPage=document.getElementById('nbPageView')&&document.getElementById('nbPageView').style.display!=='none';
-    if(!alreadyOnPage&&_sessionNbId!==null&&_sessionPageIdx!==null){
-      // Returning from another tab — go straight to last open page
+    if(wasOnNotebook&&alreadyOnPage){
+      // Already on notebook tab viewing a page — go to list
+      setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
+      history.pushState({nbView:'list'},'');
+    } else if(!wasOnNotebook&&_sessionNbId!==null&&_sessionPageIdx!==null){
+      // Coming from another tab — restore session page
       var sNb=_sessionNbId,sIdx=_sessionPageIdx;
       if(currentNotebookId!==sNb)window.openNotebook(sNb);
       window.openPage(sIdx);
     } else {
-      // Already on notebook or coming from page view — go to list
+      // Default — go to list
       setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
       history.pushState({nbView:'list'},'');
     }
