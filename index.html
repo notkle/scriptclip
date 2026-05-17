@@ -275,6 +275,19 @@
   .contrast-inline{color:var(--n-h3);font-style:italic}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   .panel.active>*{animation:fadeUp 0.35s ease forwards}
+  #scrollToTopBtn{
+    position:fixed;top:80px;left:50%;transform:translateX(-50%);
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(128,128,128,0.25);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,0.15);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:500;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.3s ease;
+    font-size:14px;color:var(--ink);
+  }
+  #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
 </style>
 </head>
 <body>
@@ -697,8 +710,32 @@
 
 <script>
 const NB_KEY='sc_notebooks';
-function saveScroll(id){const el=document.getElementById(id);if(el){try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');s[id]=el.scrollTop;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}}}
-function restoreScroll(id){try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const el=document.getElementById(id);if(el&&s[id]>0)el.scrollTop=s[id];}catch(e){}}
+function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
+function saveScroll(id){
+  const el=document.getElementById(id);if(!el)return;
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+  const key=id==='nbPageContent'?(_scrollKey()||id):id;
+  s[key]=el.scrollTop;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
+}
+function restoreScroll(id){
+  try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+  const key=id==='nbPageContent'?(_scrollKey()||id):id;
+  const el=document.getElementById(id);if(el&&s[key]>0)el.scrollTop=s[key];}catch(e){}
+}
+
+var _scrollInterval=null;
+function startScrollSave(){
+  clearInterval(_scrollInterval);
+  _scrollInterval=setInterval(function(){saveScroll('nbPageContent');},5000);
+}
+function stopScrollSave(){
+  clearInterval(_scrollInterval);
+  _scrollInterval=null;
+}
+// Save when app is backgrounded
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden)saveScroll('nbPageContent');
+});
 function nbLoad(){try{return JSON.parse(localStorage.getItem(NB_KEY)||'{}')}catch(e){return{}}}
 function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data))}
 
@@ -788,6 +825,7 @@ window.toggleTheme=function(){
 
 window.switchTab=function(name){
   saveScroll('nbPageContent');
+  stopScrollSave();
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
@@ -1099,6 +1137,7 @@ window.openNotebook=function(id){
 
 window.showPagesView=function(){
   saveScroll('nbPageContent');
+  stopScrollSave();
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
   const inp=document.getElementById('nbSearchInput');if(inp)inp.value='';const clr=document.getElementById('nbSearchClear');if(clr)clr.style.display='none';const sts=document.getElementById('nbSearchStatus');if(sts)sts.textContent='';
   renderPagesList();
@@ -1145,6 +1184,8 @@ window.openPage=function(idx){
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
   setTimeout(function(){restoreScroll('nbPageContent');},50);
+  startScrollSave();
+  setupScrollToTop();
 };
 
 window.deletePage=async function(idx){if(!await window.scConfirm('Delete this page? This cannot be undone.'))return;const data=nbLoad();data[currentNotebookId].pages.splice(idx,1);nbSave(data);renderPagesList();};
@@ -1367,7 +1408,38 @@ window.aiAskCopy=function(){const question=document.getElementById('aiAskInput')
 
 document.addEventListener('DOMContentLoaded',function(){
   setupAiHighlight('notesContent');setupAiHighlight('nbPageContent');setupAiHighlight('scReaderContent');
-  // ── PINS ──
+  // ── SCROLL TO TOP BUTTON ──
+var _sttTimer=null;
+var _sttLastY=0;
+
+function setupScrollToTop(){
+  var el=document.getElementById('nbPageContent');
+  if(!el)return;
+  el.addEventListener('scroll',function(){
+    var y=el.scrollTop;
+    var btn=document.getElementById('scrollToTopBtn');
+    if(!btn)return;
+    if(y<_sttLastY&&y>100){
+      // Scrolling up and not near top
+      btn.classList.add('visible');
+      clearTimeout(_sttTimer);
+      _sttTimer=setTimeout(function(){btn.classList.remove('visible');},1500);
+    } else {
+      clearTimeout(_sttTimer);
+      btn.classList.remove('visible');
+    }
+    _sttLastY=y;
+  },{passive:true});
+}
+
+window.scrollPageToTop=function(){
+  var el=document.getElementById('nbPageContent');
+  if(el)el.scrollTo({top:0,behavior:'smooth'});
+  var btn=document.getElementById('scrollToTopBtn');
+  if(btn)btn.classList.remove('visible');
+};
+
+// ── PINS ──
 const PINS_KEY='sc_pins';
 function pinsLoad(){try{return JSON.parse(localStorage.getItem(PINS_KEY)||'[]');}catch(e){return[];}}
 function pinsSave(pins){localStorage.setItem(PINS_KEY,JSON.stringify(pins));}
@@ -1653,5 +1725,6 @@ history.replaceState({nbView:'list'},'');
 
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
 </script>
+  <div id="scrollToTopBtn" onclick="window.scrollPageToTop()">&#8593;</div>
 </body>
 </html>
