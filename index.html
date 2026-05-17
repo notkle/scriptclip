@@ -712,6 +712,7 @@
 
 <script>
 const NB_KEY='sc_notebooks';
+var _pinJumpActive=false;
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
@@ -1493,7 +1494,6 @@ document.addEventListener('DOMContentLoaded',function(){
   // ── SCROLL TO TOP BUTTON ──
 var _sttTimer=null;
 var _sttLastY=0;
-var _pinJumpActive=false;
 
 function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
