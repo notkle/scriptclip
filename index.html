@@ -740,12 +740,19 @@ function saveScrollKey(sourceId){
   try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');s[key]=textKey;localStorage.setItem('sc_scroll',JSON.stringify(s));}catch(e){}
 }
 
+function scrollToElement(container,el){
+  // Calculate offset of el relative to container without using scrollIntoView
+  let offset=0,node=el;
+  while(node&&node!==container){offset+=node.offsetTop;node=node.offsetParent;}
+  container.scrollTop=offset;
+}
+
 function restoreScrollKey(targetId){
   const key=_scrollKey();if(!key)return;
   try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const textKey=s[key];if(!textKey)return;
   const el=document.getElementById(targetId);if(!el)return;
   const match=findMatchingElement(el,textKey);
-  if(match)setTimeout(function(){match.scrollIntoView({block:'start'});},30);}catch(e){}
+  if(match)setTimeout(function(){scrollToElement(el,match);},80);}catch(e){}
 }
 
 // Keep pixel-based for generic saves (non-page-content)
@@ -1598,7 +1605,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     // Scroll to matching element in fullscreen
     setTimeout(function(){
       const match=findMatchingElement(inner,topKey);
-      if(match)match.scrollIntoView({block:'start'});
+      if(match)scrollToElement(overlay,match);
     },30);
     history.pushState({reader:true},'');
   }
@@ -1615,7 +1622,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       const src=document.getElementById(_readerSourceId);
       if(src){
         const match=findMatchingElement(src,topKey);
-        if(match)setTimeout(function(){match.scrollIntoView({block:'start'});},30);
+        if(match)setTimeout(function(){scrollToElement(src,match);},30);
       }
     }
     inner.innerHTML='';_readerSourceId=null;
