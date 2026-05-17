@@ -752,6 +752,7 @@ function scrollToElement(container,el){
 }
 
 function restoreScrollKey(targetId){
+  if(_pinJumpActive)return; // pin jump owns scroll
   const key=_scrollKey();if(!key)return;
   try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const textKey=s[key];if(!textKey)return;
   const el=document.getElementById(targetId);if(!el)return;
