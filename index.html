@@ -713,6 +713,25 @@ const NB_KEY='sc_notebooks';
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
+function findTopmostElement(container){
+  const top=container.getBoundingClientRect().top;
+  const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
+  for(let i=0;i<els.length;i++){
+    const r=els[i].getBoundingClientRect();
+    if(r.bottom>top+2)return els[i];
+  }
+  return null;
+}
+
+function findMatchingElement(container,textKey){
+  if(!textKey)return null;
+  const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
+  for(let i=0;i<els.length;i++){
+    if(els[i].textContent.trim().substring(0,60)===textKey)return els[i];
+  }
+  return null;
+}
+
 function saveScrollKey(sourceId){
   const key=_scrollKey();if(!key)return;
   const el=document.getElementById(sourceId);if(!el)return;
@@ -1560,26 +1579,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
 (function(){
   var _readerSourceId=null;
 
-  // Find the first block element whose top edge is at or just below the container's visible top
-  function findTopmostElement(container){
-    const top=container.getBoundingClientRect().top;
-    const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
-    for(let i=0;i<els.length;i++){
-      const r=els[i].getBoundingClientRect();
-      if(r.bottom>top+2)return els[i]; // first element still visible at top
-    }
-    return null;
-  }
-
-  // Find matching element in target container by text content key
-  function findMatchingElement(container,textKey){
-    if(!textKey)return null;
-    const els=container.querySelectorAll('h1,h2,h3,p,li,.summary-block');
-    for(let i=0;i<els.length;i++){
-      if(els[i].textContent.trim().substring(0,60)===textKey)return els[i];
-    }
-    return null;
-  }
+  // defined globally below — referenced here
 
   function openReader(sourceId){
     const source=document.getElementById(sourceId);if(!source)return;
