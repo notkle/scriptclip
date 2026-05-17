@@ -1553,6 +1553,7 @@ function setupScrollToTop(){
   if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
   _sttLastY=el.scrollTop||0;
   var _sttUpDistance=0;
+  // Always reset on fresh attach so any prior scroll movement doesn't count
   el._sttHandler=function(){
     var y=el.scrollTop;
     var btn=document.getElementById('scrollToTopBtn');
@@ -1700,6 +1701,7 @@ window.jumpToPin=function(pin){
         if(plo){plo.style.transition='opacity 0.2s ease';plo.style.opacity='0';setTimeout(function(){plo.style.display='none';},220);}
         startScrollSave();
         setupScrollToTop();
+        _sttUpDistance=0; // reset so pin jump doesn't trigger up arrow
         history.pushState({nbView:'page',nbId:pin.notebookId,pageIdx:pin.pageIdx},'');
       } else {
         pollPin(attempts+1);
