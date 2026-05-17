@@ -887,6 +887,12 @@ window.toggleTheme=function(){
 window.switchTab=function(name){
   saveScroll('nbPageContent');
   stopScrollSave();
+  // Hide scroll-to-top button instantly (no transition)
+  var sttBtn=document.getElementById('scrollToTopBtn');
+  if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
+  // Close pins view if open
+  var pinsView=document.getElementById('nbPinsView');
+  if(pinsView&&pinsView.style.display!=='none')window.closePinsView();
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
