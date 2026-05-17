@@ -713,6 +713,7 @@
 <script>
 const NB_KEY='sc_notebooks';
 var _pinJumpActive=false;
+var _pinScrollTarget=null;
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
@@ -1252,16 +1253,26 @@ window.openPage=function(idx){
       const el=document.getElementById('nbPageContent');
       const key=_scrollKey();
       const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-      const textKey=s&&key?s[key]:null;
-      const match=(!_pinJumpActive&&textKey)?findMatchingElement(el,textKey):null;
-      const targetOffset=(function(){if(!match)return 0;let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
-      const settled=_pinJumpActive||!match||Math.abs(el.scrollTop-targetOffset)<5;
-      if(settled||attempts>=8){
-        if(!_pinJumpActive){
-          plo.style.transition='opacity 0.2s ease';
-          plo.style.opacity='0';
-          setTimeout(function(){plo.style.display='none';},220);
+      var textKey=s&&key?s[key]:null;
+      var settled=false;
+      if(_pinJumpActive){
+        // Pin jump: scroll to pin target and check if settled
+        el.scrollTop=_pinScrollTarget;
+        settled=Math.abs(el.scrollTop-_pinScrollTarget)<10;
+        if(settled||attempts>=8){
+          _pinJumpActive=false;
+          _pinScrollTarget=null;
+          settled=true;
         }
+      } else {
+        var match=textKey?findMatchingElement(el,textKey):null;
+        var targetOffset=(function(){if(!match)return 0;var o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
+        settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
+      }
+      if(settled||attempts>=8){
+        plo.style.transition='opacity 0.2s ease';
+        plo.style.opacity='0';
+        setTimeout(function(){plo.style.display='none';},220);
       } else {
         waitForScroll(attempts+1);
       }
@@ -1587,25 +1598,10 @@ function renderPinsList(){
 
 window.jumpToPin=function(pin){
   _pinJumpActive=true;
+  _pinScrollTarget=pin.scrollTop;
   if(pin.notebookId!==currentNotebookId){window.openNotebook(pin.notebookId);}
   document.getElementById('nbPinsView').style.display='none';
   window.openPage(pin.pageIdx);
-  // Overlay already shown by openPage — scroll to pin position after render
-  var plo=document.getElementById('pageLoadOverlay');
-  (function waitAndScroll(attempts){
-    requestAnimationFrame(function(){
-      const el=document.getElementById('nbPageContent');
-      if(!el){if(attempts<8)waitAndScroll(attempts+1);return;}
-      el.scrollTop=pin.scrollTop;
-      const settled=Math.abs(el.scrollTop-pin.scrollTop)<5;
-      if(settled||attempts>=8){
-        _pinJumpActive=false;
-        if(plo){plo.style.transition='opacity 0.2s ease';plo.style.opacity='0';setTimeout(function(){plo.style.display='none';},220);}
-      } else {
-        waitAndScroll(attempts+1);
-      }
-    });
-  })(0);
 };
 
 window.deletePin=async function(id){
