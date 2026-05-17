@@ -712,8 +712,7 @@
 
 <script>
 const NB_KEY='sc_notebooks';
-var _pinJumpActive=false;
-var _pinScrollTarget=null;
+
 var _sessionNbId=null;
 var _sessionPageIdx=null;
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
@@ -754,7 +753,6 @@ function scrollToElement(container,el){
 }
 
 function restoreScrollKey(targetId){
-  if(_pinJumpActive)return; // pin jump owns scroll
   const key=_scrollKey();if(!key)return;
   try{const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');const textKey=s[key];if(!textKey)return;
   const el=document.getElementById(targetId);if(!el)return;
@@ -899,12 +897,14 @@ window.switchTab=function(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
   if(name==='notebook'){
-    if(_sessionNbId!==null&&_sessionPageIdx!==null){
-      // Go straight to last open page, skip list
+    const alreadyOnPage=document.getElementById('nbPageView')&&document.getElementById('nbPageView').style.display!=='none';
+    if(!alreadyOnPage&&_sessionNbId!==null&&_sessionPageIdx!==null){
+      // Returning from another tab — go straight to last open page
       var sNb=_sessionNbId,sIdx=_sessionPageIdx;
       if(currentNotebookId!==sNb)window.openNotebook(sNb);
       window.openPage(sIdx);
     } else {
+      // Already on notebook or coming from page view — go to list
       setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
       history.pushState({nbView:'list'},'');
     }
@@ -1215,6 +1215,8 @@ window.showPagesView=function(){
   saveScroll('nbPageContent');
   stopScrollSave();
   _sessionNbId=null;_sessionPageIdx=null;
+  var sttBtn=document.getElementById('scrollToTopBtn');
+  if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
   const inp=document.getElementById('nbSearchInput');if(inp)inp.value='';const clr=document.getElementById('nbSearchClear');if(clr)clr.style.display='none';const sts=document.getElementById('nbSearchStatus');if(sts)sts.textContent='';
   renderPagesList();
@@ -1274,21 +1276,9 @@ window.openPage=function(idx){
       const key=_scrollKey();
       const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
       var textKey=s&&key?s[key]:null;
-      var settled=false;
-      if(_pinJumpActive){
-        // Pin jump: scroll to pin target and check if settled
-        el.scrollTop=_pinScrollTarget;
-        settled=Math.abs(el.scrollTop-_pinScrollTarget)<10;
-        if(settled||attempts>=8){
-          _pinJumpActive=false;
-          _pinScrollTarget=null;
-          settled=true;
-        }
-      } else {
-        var match=textKey?findMatchingElement(el,textKey):null;
-        var targetOffset=(function(){if(!match)return 0;var o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
-        settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
-      }
+      var match=textKey?findMatchingElement(el,textKey):null;
+      var targetOffset=(function(){if(!match)return 0;var o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
+      var settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
       if(settled||attempts>=8){
         plo.style.transition='opacity 0.2s ease';
         plo.style.opacity='0';
@@ -1562,15 +1552,22 @@ function setupScrollToTop(){
   if(!el)return;
   if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
   _sttLastY=el.scrollTop||0;
+  var _sttUpDistance=0;
   el._sttHandler=function(){
     var y=el.scrollTop;
     var btn=document.getElementById('scrollToTopBtn');
     if(!btn){_sttLastY=y;return;}
-    if(y<_sttLastY&&y>80){
-      btn.classList.add('visible');
-      clearTimeout(_sttTimer);
-      _sttTimer=setTimeout(function(){btn.classList.remove('visible');},1500);
-    } else if(y>=_sttLastY){
+    if(y<_sttLastY){
+      // Scrolling up — accumulate distance
+      _sttUpDistance+=(_sttLastY-y);
+      if(_sttUpDistance>el.clientHeight&&y>80){
+        btn.classList.add('visible');
+        clearTimeout(_sttTimer);
+        _sttTimer=setTimeout(function(){btn.classList.remove('visible');_sttUpDistance=0;},1500);
+      }
+    } else if(y>_sttLastY){
+      // Scrolling down — reset accumulator and hide
+      _sttUpDistance=0;
       clearTimeout(_sttTimer);
       btn.classList.remove('visible');
     }
@@ -1658,11 +1655,57 @@ function renderPinsList(){
 }
 
 window.jumpToPin=function(pin){
-  _pinJumpActive=true;
-  _pinScrollTarget=pin.scrollTop;
+  // Completely independent of openPage — no shared code path
   if(pin.notebookId!==currentNotebookId){window.openNotebook(pin.notebookId);}
+  const data=nbLoad();
+  const nb=data[pin.notebookId];
+  const page=nb&&nb.pages[pin.pageIdx];
+  if(!page)return;
+
+  // Update state
+  currentNotebookId=pin.notebookId;
+  window._currentPageIdx=pin.pageIdx;
+  window._currentPageHtml=page.html;
+  localStorage.setItem('sc_last_nb',pin.notebookId);
+  localStorage.setItem('sc_last_page_'+pin.notebookId,pin.pageIdx);
+  _sessionNbId=pin.notebookId;
+  _sessionPageIdx=pin.pageIdx;
+
+  // Show page view
   document.getElementById('nbPinsView').style.display='none';
-  window.openPage(pin.pageIdx);
+  document.getElementById('nbPagesView').style.display='none';
+  document.getElementById('nbListView').style.display='none';
+
+  // Show overlay
+  var plo=document.getElementById('pageLoadOverlay');
+  if(plo){plo.style.transition='none';plo.style.opacity='1';plo.style.display='block';}
+
+  var pageView=document.getElementById('nbPageView');
+  pageView.style.display='flex';
+  document.getElementById('nbPageTitle').textContent=page.name;
+  document.getElementById('nbPageContent').innerHTML=page.html;
+  window.setPageTheme(page.theme||currentTheme,false);
+  applyNbFontSize();
+
+  // Set scroll, poll until confirmed, then fade overlay
+  var el=document.getElementById('nbPageContent');
+  if(el)el.scrollTop=pin.scrollTop;
+  (function pollPin(attempts){
+    requestAnimationFrame(function(){
+      var el2=document.getElementById('nbPageContent');
+      if(!el2){if(attempts<8)pollPin(attempts+1);return;}
+      el2.scrollTop=pin.scrollTop;
+      var settled=Math.abs(el2.scrollTop-pin.scrollTop)<5;
+      if(settled||attempts>=8){
+        if(plo){plo.style.transition='opacity 0.2s ease';plo.style.opacity='0';setTimeout(function(){plo.style.display='none';},220);}
+        startScrollSave();
+        setupScrollToTop();
+        history.pushState({nbView:'page',nbId:pin.notebookId,pageIdx:pin.pageIdx},'');
+      } else {
+        pollPin(attempts+1);
+      }
+    });
+  })(0);
 };
 
 window.deletePin=async function(id){
