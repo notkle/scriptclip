@@ -1068,10 +1068,14 @@ window.showNotebookList=function(){
   const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';
   renderNotebookList();history.replaceState({nbView:'list'},'');
 
-// Save scroll positions on page exit/refresh
-window.addEventListener('beforeunload',function(){
+// Save scroll positions when app is backgrounded, tab switched, or page unloaded
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    saveScroll('nbPageContent');
+  }
+});
+window.addEventListener('pagehide',function(){
   saveScroll('nbPageContent');
-  saveScroll('notesContent');
 });
 };
 
