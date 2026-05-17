@@ -473,8 +473,8 @@
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
-      <button class="nb-new-btn" onclick="window.openPinsView()" style="margin-right:6px">&#128204; Pins</button>
       <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
+      <button class="nb-new-btn" onclick="window.openPinsView()">&#128204; Pins</button>
     </div>
     <div style="margin-bottom:12px;position:relative">
       <input type="text" id="nbSearchInput" placeholder="Search pages&#8230;" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 36px 9px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;box-sizing:border-box;" oninput="if(typeof window.nbSearch==='function'){window.nbSearch(this.value)}" onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"/>
