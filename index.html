@@ -724,17 +724,25 @@ function restoreScroll(id){
 }
 
 var _scrollInterval=null;
-function startScrollSave(){
+function startScrollSave(id){
+  id=id||'nbPageContent';
   clearInterval(_scrollInterval);
-  _scrollInterval=setInterval(function(){saveScroll('nbPageContent');},5000);
+  _scrollInterval=setInterval(function(){saveScroll(id);},5000);
 }
 function stopScrollSave(){
   clearInterval(_scrollInterval);
   _scrollInterval=null;
 }
-// Save when app is backgrounded
+// Save when app is backgrounded — save whichever view is active
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden)saveScroll('nbPageContent');
+  if(document.hidden){
+    const overlay=document.getElementById('scReaderOverlay');
+    if(overlay&&overlay.style.display!=='none'){
+      saveScroll('scReaderOverlay');
+    } else {
+      saveScroll('nbPageContent');
+    }
+  }
 });
 function nbLoad(){try{return JSON.parse(localStorage.getItem(NB_KEY)||'{}')}catch(e){return{}}}
 function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data))}
@@ -1415,21 +1423,24 @@ var _sttLastY=0;
 function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
   if(!el)return;
-  el.addEventListener('scroll',function(){
+  // Remove old listener if any
+  if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
+  _sttLastY=el.scrollTop||0;
+  el._sttHandler=function(){
     var y=el.scrollTop;
     var btn=document.getElementById('scrollToTopBtn');
-    if(!btn)return;
-    if(y<_sttLastY&&y>100){
-      // Scrolling up and not near top
+    if(!btn){_sttLastY=y;return;}
+    if(y<_sttLastY&&y>80){
       btn.classList.add('visible');
       clearTimeout(_sttTimer);
       _sttTimer=setTimeout(function(){btn.classList.remove('visible');},1500);
-    } else {
+    } else if(y>=_sttLastY){
       clearTimeout(_sttTimer);
       btn.classList.remove('visible');
     }
     _sttLastY=y;
-  },{passive:true});
+  };
+  el.addEventListener('scroll',el._sttHandler,{passive:true});
 }
 
 window.scrollPageToTop=function(){
@@ -1563,6 +1574,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     inner.innerHTML=(pageName?'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">'+pageName+'</div>':'')+source.innerHTML;
     const overlay=document.getElementById('scReaderOverlay');
     overlay.style.display='block';
+    startScrollSave('scReaderOverlay'); // track fullscreen position
     // Scroll to matching element in fullscreen
     setTimeout(function(){
       const match=findMatchingElement(inner,topKey);
@@ -1578,6 +1590,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     const topEl=findTopmostElement(overlay);
     const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
     overlay.style.display='none';
+    startScrollSave('nbPageContent'); // switch back to page tracking
     if(_readerSourceId&&topKey){
       const src=document.getElementById(_readerSourceId);
       if(src){
