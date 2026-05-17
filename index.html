@@ -277,16 +277,15 @@
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   .panel.active>*{animation:fadeUp 0.35s ease forwards}
   #scrollToTopBtn{
-    position:fixed;top:100px;left:50%;transform:translateX(-50%);
-    width:42px;height:42px;border-radius:50%;
-    background:rgba(80,80,80,0.45);
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.2);
+    position:fixed;
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(80,80,80,0.28);
+    border:none;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;z-index:9001;
     opacity:0;pointer-events:none;
     transition:opacity 0.3s ease;
-    font-size:16px;color:#fff;
+    font-size:15px;color:rgba(255,255,255,0.85);
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
 </style>
@@ -892,17 +891,18 @@ window.switchTab=function(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
-  // If returning to notebook and a page was open this session, restore it
-  if(name==='notebook'&&_sessionNbId!==null&&_sessionPageIdx!==null){
-    var sNb=_sessionNbId,sIdx=_sessionPageIdx;
-    setTimeout(function(){
+  if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
+  if(name==='notebook'){
+    if(_sessionNbId!==null&&_sessionPageIdx!==null){
+      // Go straight to last open page, skip list
+      var sNb=_sessionNbId,sIdx=_sessionPageIdx;
       if(currentNotebookId!==sNb)window.openNotebook(sNb);
       window.openPage(sIdx);
-    },10);
+    } else {
+      setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);
+      history.pushState({nbView:'list'},'');
+    }
   }
-
-  if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
-  if(name==='notebook'){setTimeout(function(){if(typeof window.showNotebookList==='function')window.showNotebookList();},10);history.pushState({nbView:'list'},'');}
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
   sessionStorage.removeItem('sc_nb_id');sessionStorage.removeItem('sc_page_idx');
@@ -1547,16 +1547,13 @@ window.aiAskOpen=function(){document.getElementById('aiHighlightPopup').style.di
 window.aiAskClose=function(){document.getElementById('aiAskPopup').style.display='none';document.getElementById('aiAskInput').value='';};
 window.aiAskCopy=function(){const question=document.getElementById('aiAskInput').value.trim();if(!question)return;const prompt='You are helping a student studying from notes.\n\nThe student has highlighted the following:\n"'+_aiHighlightText.trim()+'"\n\n'+(_aiHighlightContext&&_aiHighlightContext.trim()!==_aiHighlightText.trim()?'The surrounding context (for reference only):\n"'+_aiHighlightContext.trim()+'"\n\n':'')+"The student's question about the highlighted text:\n"+question+'\n\nAnswer concisely and clearly, addressing the student\'s question as it relates to the highlighted text. Under 150 words.';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>window.toast('Prompt copied \u2014 paste into Claude or Gemini'));}else{const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);window.toast('Prompt copied \u2014 paste into Claude or Gemini');}window.aiAskClose();window.getSelection().removeAllRanges();};
 
-document.addEventListener('DOMContentLoaded',function(){
-  setupAiHighlight('notesContent');setupAiHighlight('nbPageContent');setupAiHighlight('scReaderContent');
-  // ── SCROLL TO TOP BUTTON ──
+// ── SCROLL TO TOP BUTTON ──
 var _sttTimer=null;
 var _sttLastY=0;
 
 function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
   if(!el)return;
-  // Remove old listener if any
   if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
   _sttLastY=el.scrollTop||0;
   el._sttHandler=function(){
@@ -1574,7 +1571,18 @@ function setupScrollToTop(){
     _sttLastY=y;
   };
   el.addEventListener('scroll',el._sttHandler,{passive:true});
+  // Position button within the page view bounds
+  var pv=document.getElementById('nbPageView');
+  var btn=document.getElementById('scrollToTopBtn');
+  if(pv&&btn){
+    var r=pv.getBoundingClientRect();
+    btn.style.top=(r.top+16)+'px';
+    btn.style.left=(r.left+r.width/2-19)+'px';
+  }
 }
+
+document.addEventListener('DOMContentLoaded',function(){
+  setupAiHighlight('notesContent');setupAiHighlight('nbPageContent');setupAiHighlight('scReaderContent');
 
 window.scrollPageToTop=function(){
   var el=document.getElementById('nbPageContent');
