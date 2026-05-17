@@ -1242,13 +1242,25 @@ window.openPage=function(idx){
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
-  setTimeout(function(){
-    restoreScrollKey('nbPageContent');
-    setTimeout(function(){
-      pageView.style.transition='opacity 0.15s ease';
-      pageView.style.opacity='1';
-    },30);
-  },30);
+  // Restore scroll then fade in only once position is confirmed set
+  (function tryRestore(attempts){
+    requestAnimationFrame(function(){
+      restoreScrollKey('nbPageContent');
+      const el=document.getElementById('nbPageContent');
+      const key=_scrollKey();
+      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+      const textKey=s&&key?s[key]:null;
+      const match=textKey?findMatchingElement(el,textKey):null;
+      // Check if the match is now at or near the top of the container
+      const ready=!match||Math.abs(el.scrollTop - (function(){let o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}()))<10;
+      if(ready||attempts>=5){
+        pageView.style.transition='opacity 0.18s ease';
+        pageView.style.opacity='1';
+      } else {
+        tryRestore(attempts+1);
+      }
+    });
+  })(0);
   startScrollSave();
   setupScrollToTop();
 };
