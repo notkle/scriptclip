@@ -1558,6 +1558,37 @@ window.aiAskCopy=function(){const question=document.getElementById('aiAskInput')
 var _sttTimer=null;
 var _sttLastY=0;
 
+function setupScrollToTopReader(){
+  var el=document.getElementById('scReaderOverlay');
+  if(!el)return;
+  if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
+  var _rLastY=el.scrollTop||0;
+  var _rUpDist=0;
+  el._sttHandler=function(){
+    var y=el.scrollTop;
+    var btn=document.getElementById('scrollToTopBtn');
+    if(!btn){_rLastY=y;return;}
+    if(y<_rLastY){
+      _rUpDist+=(_rLastY-y);
+      if(_rUpDist>el.clientHeight&&y>80){
+        btn.classList.add('visible');
+        clearTimeout(_sttTimer);
+        _sttTimer=setTimeout(function(){btn.classList.remove('visible');_rUpDist=0;},1500);
+      }
+    } else if(y>_rLastY){
+      _rUpDist=0;
+      clearTimeout(_sttTimer);
+      btn.classList.remove('visible');
+    }
+    _rLastY=y;
+  };
+  el.addEventListener('scroll',el._sttHandler,{passive:true});
+  // Position button within reader bounds
+  var r=el.getBoundingClientRect();
+  var btn=document.getElementById('scrollToTopBtn');
+  if(btn){btn.style.top=(r.top+12)+'px';btn.style.left=(r.left+r.width/2-19)+'px';}
+}
+
 function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
   if(!el)return;
@@ -1600,7 +1631,8 @@ document.addEventListener('DOMContentLoaded',function(){
   setupAiHighlight('notesContent');setupAiHighlight('nbPageContent');setupAiHighlight('scReaderContent');
 
 window.scrollPageToTop=function(){
-  var el=document.getElementById('nbPageContent');
+  var isReader=window._isReaderOpen&&window._isReaderOpen();
+  var el=document.getElementById(isReader?'scReaderOverlay':'nbPageContent');
   if(el)el.scrollTo({top:0,behavior:'smooth'});
   var btn=document.getElementById('scrollToTopBtn');
   if(btn)btn.classList.remove('visible');
@@ -1773,6 +1805,10 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       });
     })(0);
     history.pushState({reader:true},'');
+    // Detach non-fullscreen listener, set up fullscreen one
+    var _pcEl=document.getElementById('nbPageContent');
+    if(_pcEl&&_pcEl._sttHandler)_pcEl.removeEventListener('scroll',_pcEl._sttHandler);
+    setupScrollToTopReader();
   }
 
   function closeReader(){
@@ -1783,7 +1819,12 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
     const topKey=topEl?topEl.textContent.trim().substring(0,60):null;
     overlay.style.display='none';
     startScrollSave('nbPageContent'); // switch back to page tracking
-    // Detach scroll listener before repositioning so up arrow counter doesn't increment
+    // Detach reader scroll listener and hide button instantly
+    const _rdEl=document.getElementById('scReaderOverlay');
+    if(_rdEl&&_rdEl._sttHandler)_rdEl.removeEventListener('scroll',_rdEl._sttHandler);
+    const _btn=document.getElementById('scrollToTopBtn');
+    if(_btn){_btn.style.transition='none';_btn.classList.remove('visible');setTimeout(function(){_btn.style.transition='';},50);}
+    // Detach page scroll listener before repositioning
     const _srcEl=document.getElementById(_readerSourceId||'nbPageContent');
     if(_srcEl&&_srcEl._sttHandler)_srcEl.removeEventListener('scroll',_srcEl._sttHandler);
     // Show page overlay, scroll back, fade out
