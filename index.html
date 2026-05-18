@@ -256,10 +256,10 @@
     #ytPanel{width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:var(--surface);border:none;display:flex;flex-direction:column}
     #ytPlayerWrap.open #ytPanel{width:210px;pointer-events:all}
     #ytOptionsPanel{display:none;flex-direction:column;width:210px;box-sizing:border-box}
-    #ytPanelInner{padding:5px 12px 4px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
+    #ytPanelInner{padding:3px 12px 3px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
     #ytMainPanel{display:flex;flex-direction:column;width:210px}
     #ytUrlInput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:6px;transition:border-color 0.2s}
-    #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;margin-bottom:6px;width:100%}
+    #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;margin-bottom:0;width:100%}
     .ytBtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s}
     #ytPlayBtn{font-size:20px;padding:2px 12px;border-color:var(--accent);color:var(--accent);will-change:transform;line-height:1}
   }
@@ -616,14 +616,14 @@
   <div id="ytPanel">
     <div id="ytMainPanel">
       <div id="ytPanelInner">
-        <div class="yt-title-wrap" style="margin-bottom:4px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);display:inline-block;"></div></div>
+        <div class="yt-title-wrap" style="margin-bottom:2px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);display:inline-block;"></div></div>
         <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">&#8722;30</button>
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9205;</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
-        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-top:6px;margin-bottom:6px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
@@ -1167,7 +1167,7 @@ function ytStopScroll(){cancelAnimationFrame(_ytScrollRAF);_ytScrollRAF=null;}
 function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
 
 function ytUpdatePlayBtn(){
-  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u23F8':'\u23F5';
+  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u23F5';
   const wrap=document.getElementById('ytPlayerWrap'),tab=document.getElementById('ytTab');
   var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform=wrap&&wrap.classList.contains('open')?'rotate(180deg)':'';if(tab)tab.style.color=ytPlaying?'var(--accent)':'var(--muted)';
   if(wrap)wrap.style.borderColor=ytPlaying?'var(--accent)':'var(--border)';
