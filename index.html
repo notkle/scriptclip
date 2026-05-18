@@ -261,7 +261,7 @@
     #ytUrlInput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:6px;transition:border-color 0.2s}
     #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;margin-bottom:0;width:100%}
     .ytBtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s}
-    #ytPlayBtn{font-size:20px;padding:2px 12px;border-color:var(--accent);color:var(--accent);will-change:transform;line-height:1}
+    #ytPlayBtn{font-size:13px;padding:4px 12px;border-color:var(--accent);color:var(--accent)}
   }
   @media (min-width:769px){#ytPlayerWrap{display:none!important}}
   @media (max-width:768px){#nbFontControls{display:none!important}}
@@ -620,7 +620,7 @@
         <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">&#8722;30</button>
-          <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9205;</button>
+          <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9658;</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
         <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-top:6px;margin-bottom:6px;position:relative;width:100%">
@@ -1167,7 +1167,7 @@ function ytStopScroll(){cancelAnimationFrame(_ytScrollRAF);_ytScrollRAF=null;}
 function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
 
 function ytUpdatePlayBtn(){
-  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u23F5';
+  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u25B6';
   const wrap=document.getElementById('ytPlayerWrap'),tab=document.getElementById('ytTab');
   var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform=wrap&&wrap.classList.contains('open')?'rotate(180deg)':'';if(tab)tab.style.color=ytPlaying?'var(--accent)':'var(--muted)';
   if(wrap)wrap.style.borderColor=ytPlaying?'var(--accent)':'var(--border)';
@@ -1195,7 +1195,7 @@ window.ytLoad=function(){
     fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ytSearch',query:q})})
     .then(r=>r.json()).catch(()=>({}))
     .then(function(res){
-      if(btn)btn.textContent=orig||'\u23F5';if(!res.videoId){window.toast('No results for: '+input);return;}
+      if(btn)btn.textContent=orig||'\u25B6';if(!res.videoId){window.toast('No results for: '+input);return;}
       const url='https://www.youtube.com/watch?v='+res.videoId;
       localStorage.setItem('sc_yt_url',url);ytVideoId=res.videoId;ytCurrentSec=0;ytDurSec=0;_ytFromUrl=true;
       if(res.title)ytSetTitle(res.title);
