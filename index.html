@@ -282,7 +282,7 @@
   @media (max-width:768px){
     #tocWrap{
       position:fixed;
-      bottom:calc(80px + 18px + 8px); /* above player with gap */
+      bottom:calc(80px + 18px + 8px + 38px); /* above player: player height + gap */
       left:0;
       z-index:8888;
       display:flex;
@@ -298,28 +298,39 @@
     #tocWrap.toc-open{border-color:var(--accent);}
     #tocWrap.toc-hidden{display:none!important;}
     #tocTab{
-      width:18px;flex-shrink:0;background:var(--surface);border:none;
+      width:18px;flex-shrink:0;
+      background:rgba(26,25,24,0.72);
+      backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+      border:none;
       font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;
       display:flex;align-items:center;justify-content:center;
       writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;
       transition:color 0.2s;font-family:system-ui,-apple-system,sans-serif;font-weight:700;
     }
-    #tocWrap.toc-open #tocTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);}
+    #tocWrap.toc-open #tocTab{color:var(--accent);}
     #tocPanel{
       width:0;overflow:hidden;transition:width 0.25s ease;
-      pointer-events:none;background:var(--surface);
+      pointer-events:none;
+      background:rgba(26,25,24,0.78);
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     }
-    #tocWrap.toc-open #tocPanel{width:220px;pointer-events:all;}
+    #tocWrap.toc-open #tocPanel{width:110px;pointer-events:all;}
     #tocInner{
-      width:220px;box-sizing:border-box;padding:10px 0;
+      width:110px;box-sizing:border-box;padding:8px 0;
       overflow-y:auto;-webkit-overflow-scrolling:touch;
       max-height:50vh;
     }
     .toc-item{
-      padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;
+      padding:8px 10px;cursor:pointer;font-size:11px;font-weight:600;
       font-family:system-ui,-apple-system,sans-serif;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      overflow:hidden;
       transition:background 0.15s;color:var(--n-h2);
+      display:block;
+    }
+    .toc-item-inner{
+      display:inline-block;
+      white-space:nowrap;
+      will-change:transform;
     }
     .toc-item:hover{background:color-mix(in srgb,var(--n-h2) 10%,transparent);}
   }
@@ -1660,11 +1671,33 @@ function buildTocItems(container,listEl,isMobile){
     listEl.appendChild(empty);
     return;
   }
-  headings.forEach(function(h){
+  headings.forEach(function(h,i){
     const item=document.createElement('div');
     item.className=isMobile?'toc-item':'toc-popup-item';
-    item.style.color='var(--n-h2)'; // always match current theme
-    item.textContent=h.textContent.trim();
+    const text=h.textContent.trim();
+    if(isMobile){
+      // Scrolling banner for long names
+      const inner=document.createElement('span');
+      inner.className='toc-item-inner';
+      inner.textContent=text;
+      item.appendChild(inner);
+      // Start scroll animation after a moment if text overflows
+      setTimeout(function(){
+        if(inner.scrollWidth>item.clientWidth){
+          inner.innerHTML=text+'<span style="display:inline-block;width:32px"></span>'+text;
+          var x=0;
+          (function scroll(){
+            if(!inner.parentNode){return;}
+            x-=0.4;
+            if(Math.abs(x)>=inner.scrollWidth/2)x=0;
+            inner.style.transform='translateX('+x+'px)';
+            inner._raf=requestAnimationFrame(scroll);
+          })();
+        }
+      },400);
+    } else {
+      item.textContent=text;
+    }
     item.addEventListener('click',function(){
       window.tocJumpTo(h,container);
       // ToC stays open — user closes manually
