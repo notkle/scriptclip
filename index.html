@@ -1239,16 +1239,21 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!player||!toc||!overlay)return;
     var tabs=document.querySelector('.tabs');
     if(tabs){overlay.style.top=tabs.getBoundingClientRect().bottom+'px';}
-    requestAnimationFrame(function(){
-      var playerH=player.getBoundingClientRect().height||110;
-      var safeBottom=80;
-      toc.style.bottom=safeBottom+'px';
-      player.style.bottom=(safeBottom+playerH+8)+'px';
+    toc.style.bottom='80px';
+    (function pollPosition(attempts){
       requestAnimationFrame(function(){
-        overlay.style.opacity='0';
-        setTimeout(function(){overlay.style.display='none';},320);
+        var tocRect=toc.getBoundingClientRect();
+        var settled=tocRect.height>0&&tocRect.top>0;
+        if(settled||attempts>=10){
+          var tocTopFromBottom=window.innerHeight-tocRect.top;
+          player.style.bottom=(tocTopFromBottom+8)+'px';
+          overlay.style.opacity='0';
+          setTimeout(function(){overlay.style.display='none';},320);
+        } else {
+          pollPosition(attempts+1);
+        }
       });
-    });
+    })(0);
   })();
 
   const lb=document.getElementById('ytLoopBtn');if(lb){lb.style.color='var(--accent)';lb.style.borderColor='var(--accent)';}
