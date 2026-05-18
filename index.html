@@ -345,7 +345,7 @@
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
-  <button class="theme-toggle" onclick="if(typeof window.toggleTheme==='function'){window.toggleTheme()}" id="themeBtn">&#9728; Light</button>
+  <button class="theme-toggle" onclick="if(typeof window.toggleTheme==='function'){window.toggleTheme()}" id="themeBtn">&#9790; Dark</button>
 </div>
 <div class="tabs">
   <button class="tab active" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" id="tab-builder">Prompt</button>
@@ -549,8 +549,7 @@
   </div>
 
   <!-- PAGE READ VIEW -->
-  <div class="nb-view" id="nbPageView" style="display:none;position:relative">
-    <div id="pageLoadOverlay" style="display:none;position:absolute;inset:0;z-index:9000;background:var(--bg);pointer-events:none;opacity:1;border-radius:inherit;"></div>
+  <div class="nb-view" id="nbPageView" style="display:none">
     <div class="nb-header">
       <div class="nb-title" id="nbPageTitle" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       <div id="nbFontControls" style="display:flex;align-items:center;gap:4px">
@@ -564,7 +563,7 @@
       <button class="tool-btn" onclick="if(typeof window.loadCurrentPageToQuiz==='function'){window.loadCurrentPageToQuiz()}">Quiz</button>
       <button class="tool-btn" id="tocBtn" onclick="window.tocPopupOpen()" style="display:none">ToC</button>
     </div>
-    <div class="zoomable-wrap" id="pageZoomWrap"><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div></div>
+    <div class="zoomable-wrap" id="pageZoomWrap" style="position:relative"><div id="pageLoadOverlay" style="display:none;position:absolute;inset:0;z-index:9000;background:var(--bg);pointer-events:none;opacity:1;border-radius:inherit;"></div><div class="zoomable-inner notes-content nb-page-content" id="nbPageContent"></div></div>
     <div class="zoom-hint" id="pageZoomHint">double-tap to zoom</div>
   </div>
   <!-- PINS VIEW -->
@@ -2198,11 +2197,17 @@ window.addEventListener('popstate',function(){
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
   const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';if(onNb)window.showPagesView();return;}
 
+  // From colorize or quiz — go to prompt
+  const onColorize=document.getElementById('panel-notes').classList.contains('active');
+  const onQuiz=document.getElementById('panel-quiz').classList.contains('active');
+  if(onColorize||onQuiz){window.switchTab('builder');return;}
+
   if(!onNb)return;
   const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
   const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
   const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
-  switchTab('builder');
+  // On notebook list — go to prompt
+  window.switchTab('builder');
 });
 history.replaceState({nbView:'list'},'');
 
