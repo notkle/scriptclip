@@ -280,7 +280,7 @@
 
   /* ── TABLE OF CONTENTS ── */
   @media (max-width:768px){
-    #tocWrap{position:fixed;bottom:calc(80px + 130px + 8px);left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s;height:198px;}
+    #tocWrap{position:fixed;bottom:200px;left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s;height:198px;}
     #tocWrap.toc-open{border-color:var(--accent);}
 
     #tocTab{width:18px;flex-shrink:0;background:var(--surface);border:none;font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;transition:color 0.2s}
@@ -1229,6 +1229,15 @@ window.ytShowMain=function(){const op=document.getElementById('ytOptionsPanel');
 window.ytToggleLoop=function(){ytLoopPlaylist=!ytLoopPlaylist;const btn=document.getElementById('ytLoopBtn');if(btn){btn.style.color=ytLoopPlaylist?'var(--accent)':'var(--muted)';btn.style.borderColor=ytLoopPlaylist?'var(--accent)':'var(--border)';}};
 
 document.addEventListener('DOMContentLoaded',function(){
+  // Position ToC tab dynamically above player
+  setTimeout(function(){
+    var player=document.getElementById('ytPlayerWrap');
+    var toc=document.getElementById('tocWrap');
+    if(player&&toc){
+      var r=player.getBoundingClientRect();
+      toc.style.bottom=(window.innerHeight-r.top+8)+'px';
+    }
+  },100);
   const lb=document.getElementById('ytLoopBtn');if(lb){lb.style.color='var(--accent)';lb.style.borderColor='var(--accent)';}
   const saved=localStorage.getItem('sc_yt_url');if(saved){const id=extractYtId(saved);if(id){ytVideoId=id;const pos=localStorage.getItem('sc_yt_pos');if(pos)ytCurrentSec=parseInt(pos)||0;fetchYtInfo(id);}}
   document.addEventListener('visibilitychange',function(){
