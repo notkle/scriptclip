@@ -1209,7 +1209,7 @@ window.ytTogglePlay=function(){if(!ytVideoId){window.ytLoad();return;}if(ytPlayi
 window.ytSkipBack=function(){if(!ytVideoId)return;ytCurrentSec=Math.max(0,ytCurrentSec-30);ytBuildIframe(ytVideoId,ytCurrentSec);};
 window.ytSkipFwd=function(){if(!ytVideoId)return;ytCurrentSec+=30;ytBuildIframe(ytVideoId,ytCurrentSec);};
 window.ytSeek=function(e){if(!ytVideoId||!ytDurSec)return;const rect=document.getElementById('ytProgressWrap').getBoundingClientRect();ytCurrentSec=Math.floor(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*ytDurSec);ytBuildIframe(ytVideoId,ytCurrentSec);};
-window.ytTogglePanel=function(){const w=document.getElementById('ytPlayerWrap'),ov=document.getElementById('ytOverlay');w.classList.toggle('open');const isOpen=w.classList.contains('open');if(ov)ov.style.display=isOpen?'block':'none';const tab=document.getElementById('ytTab');if(tab)tab.textContent=isOpen?'\u25C0':'\u25B6';if(isOpen){if(ytPlaying)ytStartScroll();}else ytStopScroll();};
+window.ytTogglePanel=function(){const w=document.getElementById('ytPlayerWrap'),ov=document.getElementById('ytOverlay');w.classList.toggle('open');const isOpen=w.classList.contains('open');if(ov)ov.style.display=isOpen?'block':'none';const tab=document.getElementById('ytTab');if(tab)tab.textContent=isOpen?'\u25C0':'\u25B6';if(isOpen){if(ytPlaying)ytStartScroll();}else{ytStopScroll();if(tab)tab.style.width='18px';setTimeout(function(){if(tab)tab.style.width='';},250);}};
 window.ytClose=function(){const w=document.getElementById('ytPlayerWrap');if(w&&w.classList.contains('open')){w.classList.remove('open');const ov=document.getElementById('ytOverlay');if(ov)ov.style.display='none';const tab=document.getElementById('ytTab');if(tab)tab.textContent='\u25B6';}};
 
 function renderYtHistory(){
@@ -1716,7 +1716,7 @@ window.tocToggle=function(){
   } else {
     wrap.classList.remove('toc-open');
     if(overlay)overlay.style.display='none';
-    if(tab)tab.textContent='▶';
+    if(tab){tab.textContent='▶';tab.style.width='18px';setTimeout(function(){tab.style.width='';},250);}
   }
 };
 
