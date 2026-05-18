@@ -249,9 +249,9 @@
   @media (min-width:769px){.zoom-hint{display:none}}
   .zoom-hint{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;pointer-events:none;opacity:0.5;text-align:right;padding:5px 4px 0;flex-shrink:0}
   @media (max-width:768px){
-    #ytPlayerWrap{position:fixed;bottom:192px;left:0;z-index:8888;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s}
+    #ytPlayerWrap{position:fixed;bottom:326px;left:0;z-index:8888;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s}
     #ytPlayerWrap.reader-hidden{display:none!important}
-    #ytTab{width:18px;flex-shrink:0;background:var(--surface);border:none;font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;transition:color 0.2s}
+    #ytTab{width:18px;min-width:18px;max-width:18px;flex-shrink:0;flex-grow:0;flex-basis:18px;overflow:hidden;background:var(--surface);border:none;font-size:14px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;transition:color 0.2s}
     #ytPlayerWrap.open #ytTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
     #ytPanel{width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:var(--surface);border:none;display:flex;flex-direction:column}
     #ytPlayerWrap.open #ytPanel{width:210px;pointer-events:all}
@@ -261,7 +261,7 @@
     #ytUrlInput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:6px;transition:border-color 0.2s}
     #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;margin-bottom:4px;width:100%}
     .ytBtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s}
-    #ytPlayBtn{font-size:13px;padding:4px 12px;border-color:var(--accent);color:var(--accent)}
+    #ytPlayBtn{font-size:20px;padding:2px 12px;border-color:var(--accent);color:var(--accent);will-change:transform;line-height:1}
   }
   @media (min-width:769px){#ytPlayerWrap{display:none!important}}
   @media (max-width:768px){#nbFontControls{display:none!important}}
@@ -282,17 +282,17 @@
   @media (max-width:768px){
     #tocWrap{position:fixed;bottom:80px;left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s;height:238px;}
     #tocWrap.toc-open{border-color:var(--accent);}
-    #tocTab{width:18px;flex-shrink:0;background:var(--surface);border:none;font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;transition:color 0.2s}
+    #tocTab{width:18px;min-width:18px;max-width:18px;flex-shrink:0;flex-grow:0;flex-basis:18px;overflow:hidden;background:var(--surface);border:none;font-size:14px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;transition:color 0.2s}
     #tocWrap.toc-open #tocTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);}
     #tocPanel{width:0;min-width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:rgba(17,18,16,0.82);display:flex;flex-direction:column;}
     #tocWrap.toc-open #tocPanel{width:160px;pointer-events:all;}
-    #tocInner{width:160px;box-sizing:border-box;padding:4px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;height:238px;}
-    .toc-item{padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;white-space:normal;word-break:break-word;transition:background 0.15s;color:var(--n-h2);display:flex;align-items:flex-start;gap:5px;border-bottom:1px solid rgba(255,255,255,0.06);}
+    #tocInner{width:160px;min-width:160px;box-sizing:border-box;padding:4px 0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;height:238px;flex-shrink:0;}
+    .toc-item{padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.15s;color:var(--n-h2);display:flex;align-items:flex-start;gap:5px;border-bottom:1px solid rgba(255,255,255,0.06);}
     .toc-item:last-child{border-bottom:none;}
-    .toc-item::before{content:'•';flex-shrink:0;margin-top:0px;}
+    .toc-item::before{content:'•';flex-shrink:0;}
     .toc-item:active{background:color-mix(in srgb,var(--n-h2) 10%,transparent);}
   }
-  @media (min-width:769px){#tocWrap{display:none!important;visibility:hidden;}}
+  @media (min-width:769px){#tocWrap{display:none!important;}}
 
   /* PC popup */
   #tocPopupOverlay{
@@ -354,7 +354,6 @@
   <button class="tab" onclick="if(typeof window.switchTab==='function'){window.switchTab('quiz')}" id="tab-quiz">Quiz</button>
 </div>
 
-<div id="appLoadOverlay" style="position:fixed;left:0;right:0;bottom:0;top:0;z-index:20000;background:var(--bg);opacity:1;pointer-events:none;transition:opacity 0.3s ease;"></div>
 
 <!-- PANEL 1: PROMPT -->
 <div class="panel active" id="panel-builder">
@@ -605,14 +604,15 @@
 <!-- YOUTUBE PLAYER - mobile only -->
 <div id="tocOverlay" style="display:none;position:fixed;inset:0;z-index:8886;" onclick="window.tocClose()"></div>
 <div id="tocWrap">
-  <div id="tocTab" onclick="window.tocToggle()">&#9658;</div>
+  <div id="tocTab" onclick="window.tocToggle()"><span id="tocTabArrow" style="display:inline-block;transition:transform 0.25s ease;">&#10095;</span></div>
   <div id="tocPanel">
     <div id="tocInner"></div>
   </div>
 </div>
+<div id="appLoadOverlay" style="position:fixed;left:0;right:0;bottom:0;top:0;z-index:20000;background:var(--bg);opacity:1;pointer-events:none;transition:opacity 0.3s ease;"></div>
 <div id="ytOverlay" style="display:none;position:fixed;inset:0;z-index:8887;" onclick="window.ytClose()"></div>
 <div id="ytPlayerWrap">
-  <div id="ytTab" onclick="window.ytTogglePanel()">&#9658;</div>
+  <div id="ytTab" onclick="window.ytTogglePanel()"><span id="ytTabArrow" style="display:inline-block;transition:transform 0.25s ease;">&#10095;</span></div>
   <div id="ytPanel">
     <div id="ytMainPanel">
       <div id="ytPanelInner">
@@ -620,7 +620,7 @@
         <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
         <div id="ytControls">
           <button class="ytBtn" onclick="window.ytSkipBack()">&#8722;30</button>
-          <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9658;</button>
+          <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9205;</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
         <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:3px;position:relative;width:100%">
@@ -1167,9 +1167,9 @@ function ytStopScroll(){cancelAnimationFrame(_ytScrollRAF);_ytScrollRAF=null;}
 function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
 
 function ytUpdatePlayBtn(){
-  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u25B6';
+  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u23F5';
   const wrap=document.getElementById('ytPlayerWrap'),tab=document.getElementById('ytTab');
-  if(tab){tab.textContent=wrap&&wrap.classList.contains('open')?'\u25C0':'\u25B6';tab.style.color=ytPlaying?'var(--accent)':'var(--muted)';}
+  var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform=wrap&&wrap.classList.contains('open')?'rotate(180deg)':'';if(tab)tab.style.color=ytPlaying?'var(--accent)':'var(--muted)';
   if(wrap)wrap.style.borderColor=ytPlaying?'var(--accent)':'var(--border)';
   if(ytPlaying)ytStartScroll();else ytStopScroll();
 }
@@ -1195,7 +1195,7 @@ window.ytLoad=function(){
     fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ytSearch',query:q})})
     .then(r=>r.json()).catch(()=>({}))
     .then(function(res){
-      if(btn)btn.textContent=orig||'\u25B6';if(!res.videoId){window.toast('No results for: '+input);return;}
+      if(btn)btn.textContent=orig||'\u23F5';if(!res.videoId){window.toast('No results for: '+input);return;}
       const url='https://www.youtube.com/watch?v='+res.videoId;
       localStorage.setItem('sc_yt_url',url);ytVideoId=res.videoId;ytCurrentSec=0;ytDurSec=0;_ytFromUrl=true;
       if(res.title)ytSetTitle(res.title);
@@ -1209,8 +1209,8 @@ window.ytTogglePlay=function(){if(!ytVideoId){window.ytLoad();return;}if(ytPlayi
 window.ytSkipBack=function(){if(!ytVideoId)return;ytCurrentSec=Math.max(0,ytCurrentSec-30);ytBuildIframe(ytVideoId,ytCurrentSec);};
 window.ytSkipFwd=function(){if(!ytVideoId)return;ytCurrentSec+=30;ytBuildIframe(ytVideoId,ytCurrentSec);};
 window.ytSeek=function(e){if(!ytVideoId||!ytDurSec)return;const rect=document.getElementById('ytProgressWrap').getBoundingClientRect();ytCurrentSec=Math.floor(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*ytDurSec);ytBuildIframe(ytVideoId,ytCurrentSec);};
-window.ytTogglePanel=function(){const w=document.getElementById('ytPlayerWrap'),ov=document.getElementById('ytOverlay');w.classList.toggle('open');const isOpen=w.classList.contains('open');if(ov)ov.style.display=isOpen?'block':'none';const tab=document.getElementById('ytTab');if(tab)tab.style.transform=isOpen?'rotate(180deg)':'';if(isOpen){if(ytPlaying)ytStartScroll();}else ytStopScroll();};
-window.ytClose=function(){const w=document.getElementById('ytPlayerWrap');if(w&&w.classList.contains('open')){w.classList.remove('open');const ov=document.getElementById('ytOverlay');if(ov)ov.style.display='none';const tab=document.getElementById('ytTab');if(tab)tab.style.transform='';}};
+window.ytTogglePanel=function(){const w=document.getElementById('ytPlayerWrap'),ov=document.getElementById('ytOverlay');w.classList.toggle('open');const isOpen=w.classList.contains('open');if(ov)ov.style.display=isOpen?'block':'none';var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform=isOpen?'rotate(180deg)':'';if(isOpen){if(ytPlaying)ytStartScroll();}else ytStopScroll();};
+window.ytClose=function(){const w=document.getElementById('ytPlayerWrap');if(w&&w.classList.contains('open')){w.classList.remove('open');const ov=document.getElementById('ytOverlay');if(ov)ov.style.display='none';const tab=document.getElementById('ytTab');var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform='';}};
 
 function renderYtHistory(){
   const list=document.getElementById('ytHistoryList');if(!list)return;list.innerHTML='';
@@ -1231,6 +1231,8 @@ window.ytToggleLoop=function(){ytLoopPlaylist=!ytLoopPlaylist;const btn=document
 
 document.addEventListener('DOMContentLoaded',function(){
 
+
+
   // Position player and ToC dynamically, then fade in app
   (function positionAndReveal(){
     var player=document.getElementById('ytPlayerWrap');
@@ -1239,8 +1241,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!player||!toc||!overlay)return;
     var tabs=document.querySelector('.tabs');
     if(tabs){overlay.style.top=tabs.getBoundingClientRect().bottom+'px';}
-    // ToC stays at CSS bottom:80px — no inline style
-    // Inject player bottom via style tag to avoid inline style corrupting flex layout
+    toc.style.bottom='80px';
     (function pollPosition(attempts){
       requestAnimationFrame(function(){
         var tocRect=toc.getBoundingClientRect();
@@ -1661,7 +1662,8 @@ function buildTocItems(container,listEl,isMobile){
   if(headings.length===0){
     const empty=document.createElement('div');
     empty.style.cssText='padding:12px 16px;font-size:12px;color:var(--muted);font-family:system-ui,sans-serif;';
-    empty.textContent='No sections found.';
+    empty.style.cssText='text-align:center;padding:20px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);';
+    empty.textContent='Table of Contents';
     listEl.appendChild(empty);
     return;
   }
@@ -1709,14 +1711,14 @@ window.tocToggle=function(){
   const tab=document.getElementById('tocTab');
   _tocOpen=!_tocOpen;
   if(_tocOpen){
+    buildTocItems(document.getElementById('nbPageContent'),document.getElementById('tocInner'),true);
     wrap.classList.add('toc-open');
     if(overlay)overlay.style.display='block';
-    if(tab)tab.style.transform='rotate(180deg)';
-    buildTocItems(document.getElementById('nbPageContent'),document.getElementById('tocInner'),true);
+    var tarrow=document.getElementById('tocTabArrow');if(tarrow)tarrow.style.transform='rotate(180deg)';
   } else {
     wrap.classList.remove('toc-open');
     if(overlay)overlay.style.display='none';
-    if(tab)tab.style.transform='';
+    var tarrow2=document.getElementById('tocTabArrow');if(tarrow2)tarrow2.style.transform='';
 
   }
 };
