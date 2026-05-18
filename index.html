@@ -1696,7 +1696,8 @@ window.tocClose=function(){
 
 window.showToc=function(){
   const wrap=document.getElementById('tocWrap');
-  if(wrap)wrap.style.display='flex';
+  if(!wrap)return;
+  wrap.style.cssText='display:flex!important';
 };
 window.hideToc=function(){
   const wrap=document.getElementById('tocWrap');
@@ -1766,7 +1767,11 @@ function setupScrollToTopReader(){
   // Position button within reader bounds
   var r=el.getBoundingClientRect();
   var btn=document.getElementById('scrollToTopBtn');
-  if(btn){btn.style.top=(r.top+12)+'px';btn.style.left=(r.left+r.width/2-19)+'px';}
+  if(btn){
+    btn.style.top=(r.top+12)+'px';
+    btn.style.left=(r.left+r.width/2-19)+'px';
+    btn.style.zIndex='10004'; // above scReaderOverlay z-index:9999
+  }
 }
 
 function setupScrollToTop(){
@@ -1804,6 +1809,7 @@ function setupScrollToTop(){
     var r=pc.getBoundingClientRect();
     btn.style.top=(r.top+12)+'px';
     btn.style.left=(r.left+r.width/2-19)+'px';
+    btn.style.zIndex='9001'; // restore normal z-index
   }
 }
 
