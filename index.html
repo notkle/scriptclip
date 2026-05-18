@@ -261,7 +261,7 @@
     #ytUrlInput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:6px;transition:border-color 0.2s}
     #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;margin-bottom:0;width:100%}
     .ytBtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s}
-    #ytPlayBtn{font-size:13px;padding:4px 12px;border-color:var(--accent);color:var(--accent)}
+    #ytPlayBtn{font-size:13px;padding:4px 0;width:52px;text-align:center;border-color:var(--accent);color:var(--accent)}
   }
   @media (min-width:769px){#ytPlayerWrap{display:none!important}}
   @media (max-width:768px){#nbFontControls{display:none!important}}
@@ -615,15 +615,15 @@
   <div id="ytTab" onclick="window.ytTogglePanel()"><span id="ytTabArrow" style="display:inline-block;transition:transform 0.25s ease;">&#10095;</span></div>
   <div id="ytPanel">
     <div id="ytMainPanel">
-      <div id="ytPanelInner">
-        <div class="yt-title-wrap" style="margin-bottom:2px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);display:inline-block;"></div></div>
-        <input type="text" id="ytUrlInput" style="text-align:center" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
-        <div id="ytControls">
+      <div id="ytPanelInner" style="padding:3px 12px 6px">
+        <div class="yt-title-wrap" style="margin-bottom:3px;width:100%"><div id="ytTitle" style="font-size:10px;color:var(--muted);display:inline-block;"></div></div>
+        <input type="text" id="ytUrlInput" style="text-align:center;margin-bottom:6px" placeholder="search or yt link" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){window.ytLoad()}" onpaste="setTimeout(function(){window.ytLoad()},50)"/>
+        <div id="ytControls" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0;margin-bottom:6px;width:100%">
           <button class="ytBtn" onclick="window.ytSkipBack()">&#8722;30</button>
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9658;</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
-        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-top:6px;margin-bottom:6px;position:relative;width:100%">
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-top:0;margin-bottom:6px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
@@ -1261,7 +1261,7 @@ document.addEventListener('DOMContentLoaded',function(){
     })(0);
   })();
 
-  const lb=document.getElementById('ytLoopBtn');if(lb){lb.style.color='var(--accent)';lb.style.borderColor='var(--accent)';}
+  const lb=document.getElementById('ytLoopBtn');if(lb){lb.style.color='var(--accent)';lb.style.borderColor='var(--accent)';}  ytUpdatePlayBtn();
   const saved=localStorage.getItem('sc_yt_url');if(saved){const id=extractYtId(saved);if(id){ytVideoId=id;const pos=localStorage.getItem('sc_yt_pos');if(pos)ytCurrentSec=parseInt(pos)||0;fetchYtInfo(id);}}
   document.addEventListener('visibilitychange',function(){
     if(document.hidden){localStorage.setItem('sc_yt_was_playing',ytPlaying?'1':'0');if(ytPlaying){localStorage.setItem('sc_yt_pos',ytCurrentSec);document.getElementById('ytIframeWrap').innerHTML='';ytPlaying=false;ytUpdatePlayBtn();clearInterval(ytInterval);}}
