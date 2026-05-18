@@ -259,7 +259,7 @@
     #ytPanelInner{padding:5px 12px 4px;width:210px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
     #ytMainPanel{display:flex;flex-direction:column;width:210px}
     #ytUrlInput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:6px;transition:border-color 0.2s}
-    #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;margin-bottom:4px;width:100%}
+    #ytControls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;margin-bottom:6px;width:100%}
     .ytBtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s}
     #ytPlayBtn{font-size:20px;padding:2px 12px;border-color:var(--accent);color:var(--accent);will-change:transform;line-height:1}
   }
@@ -287,7 +287,7 @@
     #tocPanel{width:0;min-width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:rgba(17,18,16,0.82);display:flex;flex-direction:column;}
     #tocWrap.toc-open #tocPanel{width:160px;pointer-events:all;}
     #tocInner{width:160px;min-width:160px;box-sizing:border-box;padding:4px 0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;height:238px;flex-shrink:0;}
-    .toc-item{padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.15s;color:var(--n-h2);display:flex;align-items:flex-start;gap:5px;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .toc-item{padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;white-space:normal;word-break:break-word;transition:background 0.15s;color:var(--n-h2);display:flex;align-items:flex-start;gap:5px;border-bottom:1px solid rgba(255,255,255,0.06);}
     .toc-item:last-child{border-bottom:none;}
     .toc-item::before{content:'•';flex-shrink:0;}
     .toc-item:active{background:color-mix(in srgb,var(--n-h2) 10%,transparent);}
@@ -623,7 +623,7 @@
           <button class="ytBtn" id="ytPlayBtn" onclick="window.ytTogglePlay()">&#9205;</button>
           <button class="ytBtn" onclick="window.ytSkipFwd()">+30</button>
         </div>
-        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:3px;position:relative;width:100%">
+        <div id="ytProgressWrap" onclick="window.ytSeek(event)" style="height:4px;background:var(--border);border-radius:2px;cursor:pointer;margin-bottom:6px;position:relative;width:100%">
           <div id="ytProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 1s linear;pointer-events:none;min-width:0"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
@@ -1167,7 +1167,7 @@ function ytStopScroll(){cancelAnimationFrame(_ytScrollRAF);_ytScrollRAF=null;}
 function ytSetTitle(txt){const el=document.getElementById('ytTitle');if(!el)return;ytStopScroll();_ytScrollX=0;el.style.transform='';if(txt&&txt.length>22){el.innerHTML=txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>'+txt+'<span style="display:inline-block;width:48px"></span>';el.className='yt-title-scroll';}else{el.textContent=txt||'';el.className='';}const w=document.getElementById('ytPlayerWrap');if(ytPlaying&&w&&w.classList.contains('open'))ytStartScroll();}
 
 function ytUpdatePlayBtn(){
-  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u275A\u275A':'\u23F5';
+  const btn=document.getElementById('ytPlayBtn');if(btn)btn.textContent=ytPlaying?'\u23F8':'\u23F5';
   const wrap=document.getElementById('ytPlayerWrap'),tab=document.getElementById('ytTab');
   var arrow=document.getElementById('ytTabArrow');if(arrow)arrow.style.transform=wrap&&wrap.classList.contains('open')?'rotate(180deg)':'';if(tab)tab.style.color=ytPlaying?'var(--accent)':'var(--muted)';
   if(wrap)wrap.style.borderColor=ytPlaying?'var(--accent)':'var(--border)';
@@ -1729,6 +1729,7 @@ window.tocClose=function(){
   const overlay=document.getElementById('tocOverlay');
   wrap.classList.remove('toc-open');
   if(overlay)overlay.style.display='none';
+  var tarrow=document.getElementById('tocTabArrow');if(tarrow)tarrow.style.transform='';
 };
 
 window.showToc=function(){};
