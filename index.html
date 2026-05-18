@@ -1239,14 +1239,18 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!player||!toc||!overlay)return;
     var tabs=document.querySelector('.tabs');
     if(tabs){overlay.style.top=tabs.getBoundingClientRect().bottom+'px';}
-    toc.style.bottom='80px';
+    // ToC stays at CSS bottom:80px — no inline style
+    // Inject player bottom via style tag to avoid inline style corrupting flex layout
     (function pollPosition(attempts){
       requestAnimationFrame(function(){
         var tocRect=toc.getBoundingClientRect();
         var settled=tocRect.height>0&&tocRect.top>0;
         if(settled||attempts>=10){
           var tocTopFromBottom=window.innerHeight-tocRect.top;
-          player.style.bottom=(tocTopFromBottom+8)+'px';
+          var styleTag=document.getElementById('dynamicPositionStyle')||document.createElement('style');
+          styleTag.id='dynamicPositionStyle';
+          styleTag.textContent='@media (max-width:768px){#ytPlayerWrap{bottom:'+(tocTopFromBottom+8)+'px!important;}}';
+          if(!styleTag.parentNode)document.head.appendChild(styleTag);
           overlay.style.opacity='0';
           setTimeout(function(){overlay.style.display='none';},320);
         } else {
