@@ -249,7 +249,7 @@
   @media (min-width:769px){.zoom-hint{display:none}}
   .zoom-hint{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;pointer-events:none;opacity:0.5;text-align:right;padding:5px 4px 0;flex-shrink:0}
   @media (max-width:768px){
-    #ytPlayerWrap{position:fixed;bottom:80px;left:0;z-index:8888;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s}
+    #ytPlayerWrap{position:fixed;bottom:192px;left:0;z-index:8888;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s}
     #ytPlayerWrap.reader-hidden{display:none!important}
     #ytTab{width:18px;flex-shrink:0;background:var(--surface);border:none;font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;transition:color 0.2s}
     #ytPlayerWrap.open #ytTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
@@ -280,11 +280,11 @@
 
   /* ── TABLE OF CONTENTS ── */
   @media (max-width:768px){
-    #tocWrap{position:fixed;bottom:192px;left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s;height:238px;}
+    #tocWrap{position:fixed;bottom:80px;left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s;height:238px;}
     #tocWrap.toc-open{border-color:var(--accent);}
     #tocTab{width:18px;flex-shrink:0;background:var(--surface);border:none;font-size:8px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:1px;user-select:none;-webkit-user-select:none;transition:color 0.2s}
     #tocWrap.toc-open #tocTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);}
-    #tocPanel{width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:rgba(17,18,16,0.82);}
+    #tocPanel{width:0;overflow:hidden;transition:width 0.25s ease;pointer-events:none;background:rgba(17,18,16,0.82);display:flex;flex-direction:column;}
     #tocWrap.toc-open #tocPanel{width:160px;pointer-events:all;}
     #tocInner{width:160px;box-sizing:border-box;padding:4px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;height:238px;}
     .toc-item{padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;white-space:normal;word-break:break-word;transition:background 0.15s;color:var(--n-h2);display:flex;align-items:flex-start;gap:5px;border-bottom:1px solid rgba(255,255,255,0.06);}
@@ -353,6 +353,8 @@
   <button class="tab" onclick="if(typeof window.switchTab==='function'){window.switchTab('notebook')}" id="tab-notebook">Notebook</button>
   <button class="tab" onclick="if(typeof window.switchTab==='function'){window.switchTab('quiz')}" id="tab-quiz">Quiz</button>
 </div>
+
+<div id="appLoadOverlay" style="position:fixed;left:0;right:0;bottom:0;top:0;z-index:20000;background:var(--bg);opacity:1;pointer-events:none;transition:opacity 0.3s ease;"></div>
 
 <!-- PANEL 1: PROMPT -->
 <div class="panel active" id="panel-builder">
@@ -1228,6 +1230,26 @@ window.ytShowMain=function(){const op=document.getElementById('ytOptionsPanel');
 window.ytToggleLoop=function(){ytLoopPlaylist=!ytLoopPlaylist;const btn=document.getElementById('ytLoopBtn');if(btn){btn.style.color=ytLoopPlaylist?'var(--accent)':'var(--muted)';btn.style.borderColor=ytLoopPlaylist?'var(--accent)':'var(--border)';}};
 
 document.addEventListener('DOMContentLoaded',function(){
+
+  // Position player and ToC dynamically, then fade in app
+  (function positionAndReveal(){
+    var player=document.getElementById('ytPlayerWrap');
+    var toc=document.getElementById('tocWrap');
+    var overlay=document.getElementById('appLoadOverlay');
+    if(!player||!toc||!overlay)return;
+    var tabs=document.querySelector('.tabs');
+    if(tabs){overlay.style.top=tabs.getBoundingClientRect().bottom+'px';}
+    requestAnimationFrame(function(){
+      var playerH=player.getBoundingClientRect().height||110;
+      var safeBottom=80;
+      toc.style.bottom=safeBottom+'px';
+      player.style.bottom=(safeBottom+playerH+8)+'px';
+      requestAnimationFrame(function(){
+        overlay.style.opacity='0';
+        setTimeout(function(){overlay.style.display='none';},320);
+      });
+    });
+  })();
 
   const lb=document.getElementById('ytLoopBtn');if(lb){lb.style.color='var(--accent)';lb.style.borderColor='var(--accent)';}
   const saved=localStorage.getItem('sc_yt_url');if(saved){const id=extractYtId(saved);if(id){ytVideoId=id;const pos=localStorage.getItem('sc_yt_pos');if(pos)ytCurrentSec=parseInt(pos)||0;fetchYtInfo(id);}}
