@@ -1700,12 +1700,10 @@ function showAiHighlightPopup(x,y,selected,context){
   const popup=document.getElementById('aiHighlightPopup');
   // Show off-screen first to measure natural width
   popup.style.transform='none';popup.style.left='-9999px';popup.style.top='-9999px';popup.style.display='block';
-  const pw=popup.offsetWidth,vw=window.innerWidth,margin=8;
   const sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;
-  // Center horizontally on viewport
-  const left=Math.max(margin,Math.min((vw-pw)/2,vw-pw-margin));
   const top=rect?rect.bottom+10:y+10;
-  popup.style.left=left+'px';popup.style.top=top+'px';popup.style.transform='none';
+  // Center horizontally via CSS transform - bulletproof regardless of measured width
+  popup.style.left='50%';popup.style.top=top+'px';popup.style.transform='translateX(-50%)';
 }
 function hideAiHighlightPopup(){const p=document.getElementById('aiHighlightPopup');if(p)p.style.display='none';}
 function setupAiHighlight(elId){const el=document.getElementById(elId);if(!el)return;el.addEventListener('mouseup',function(e){const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAiHighlightPopup();return;}showAiHighlightPopup(e.clientX,e.clientY,sel.toString(),getSelectionContext(sel));});el.addEventListener('touchend',function(e){setTimeout(function(){const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAiHighlightPopup();return;}const t=e.changedTouches[0];showAiHighlightPopup(t.clientX,t.clientY,sel.toString(),getSelectionContext(sel));},100);});}
