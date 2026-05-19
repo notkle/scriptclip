@@ -1164,12 +1164,13 @@ window.doSave=function(){
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
-  let i=0;const states=['Generating.','Generating..','Generating...'];
-  el._genTimer=setInterval(function(){i=(i+1)%3;el.textContent=states[i];},400);
-  el.textContent=states[0];
+  el.innerHTML='Generating<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';
+  const dots=el.querySelector('#_genDots')||el;
+  let i=0;const states=['.','..','...'];
+  el._genTimer=setInterval(function(){i=(i+1)%3;(el.querySelector('#_genDots')||dots).textContent=states[i];},400);
 }
 function stopGeneratingAnim(el){
-  clearInterval(el._genTimer);el._genTimer=null;
+  clearInterval(el._genTimer);el._genTimer=null;el.innerHTML='';
 }
 let ytVideoId=null,ytHistory=JSON.parse(localStorage.getItem('sc_yt_history')||'[]'),ytLoopPlaylist=true,ytLoopIdx=0,ytPlaying=false,ytCurrentSec=0,ytDurSec=0,ytInterval=null,_ytFromUrl=false;
 
@@ -1701,11 +1702,8 @@ function showAiHighlightPopup(x,y,selected,context){
   popup.style.transform='none';popup.style.left='-9999px';popup.style.top='-9999px';popup.style.display='block';
   const pw=popup.offsetWidth,vw=window.innerWidth,margin=8;
   const sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;
-  // Ideal center: mid-point of selection
-  const idealCenter=rect?rect.left+rect.width/2:x;
-  // Start centered, then clamp so popup never clips either edge
-  let left=idealCenter-pw/2;
-  left=Math.max(margin,Math.min(left,vw-pw-margin));
+  // Center horizontally on viewport
+  const left=Math.max(margin,Math.min((vw-pw)/2,vw-pw-margin));
   const top=rect?rect.bottom+10:y+10;
   popup.style.left=left+'px';popup.style.top=top+'px';popup.style.transform='none';
 }
