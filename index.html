@@ -1307,6 +1307,7 @@ window.showNotebookList=function(){
   document.getElementById('nbPagesView').style.display='none';
   document.getElementById('nbPageView').style.display='none';
   const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';
+  const mv=document.getElementById('nbMemView');if(mv)mv.style.display='none';_memDeleteMode=false;
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   renderNotebookList();history.replaceState({nbView:'list'},'');
