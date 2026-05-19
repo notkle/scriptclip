@@ -1963,7 +1963,7 @@ return{};})
   .then(function(res){
     if(!res.text){status.textContent='Failed - try again.';genBtn.style.display='block';return;}
     const mnemonic=res.text.trim();
-    result.textContent=mnemonic;
+    result.innerHTML=mnemonic.replace(/(\d+\.)/g,'<span style="color:var(--n-term);font-weight:700">$1</span>');
     status.textContent='';
     copyBtn.style.display='block';
     if(currentNotebookId&&window._currentPageIdx!==undefined){
