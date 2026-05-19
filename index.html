@@ -1344,7 +1344,7 @@ function renderPagesList(){
   nb.pages.forEach((page,idx)=>{
     const item=document.createElement('div'),lastIdx=parseInt(localStorage.getItem('sc_last_page_'+currentNotebookId));
     item.className='nb-page-item'+(lastIdx===idx?' nb-page-recent':'');item.dataset.idx=idx;
-    item.innerHTML='<span class="nb-drag-handle" title="Drag to reorder">\u2807</span><div class="nb-page-info"><div class="nb-page-name">'+page.name+'</div><div class="nb-page-date">'+new Date(page.saved).toLocaleDateString()+'</div></div><div class="nb-page-actions">'(page.flashCards&&page.flashCards.length>0?'<button class="nb-page-btn fc-btn">FC</button>':'')+'<button class="nb-page-btn quiz-btn">Quiz</button><button class="nb-page-btn rename-btn" style="font-size:11px">\u270E</button><button class="nb-page-btn del-btn">\u2715</button></div>';
+    item.innerHTML='<span class="nb-drag-handle" title="Drag to reorder">\u2807</span><div class="nb-page-info"><div class="nb-page-name">'+page.name+'</div><div class="nb-page-date">'+new Date(page.saved).toLocaleDateString()+'</div></div><div class="nb-page-actions">'+( page.flashCards&&page.flashCards.length>0?'<button class="nb-page-btn fc-btn">FC</button>':'')+'<button class="nb-page-btn quiz-btn">Quiz</button><button class="nb-page-btn rename-btn" style="font-size:11px">\u270E</button><button class="nb-page-btn del-btn">\u2715</button></div>';
     if(item.querySelector('.fc-btn'))item.querySelector('.fc-btn').addEventListener('click',e=>{e.stopPropagation();window.showFlashCards(idx);});
     item.querySelector('.quiz-btn').addEventListener('click',e=>{e.stopPropagation();window.loadPageToQuiz(idx);});
     item.querySelector('.rename-btn').addEventListener('click',e=>{e.stopPropagation();window.renamePage(idx);});
