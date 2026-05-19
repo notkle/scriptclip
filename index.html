@@ -512,7 +512,7 @@
       <div class="nb-title" id="nbFcTitle" style="flex:1"></div>
       <div style="font-size:11px;color:var(--muted);margin-right:10px" id="nbFcCounter"></div>
       <button class="tool-btn" onclick="if(typeof window.fcReset==='function'){window.fcReset()}" style="margin-right:6px">&#8635; Reset</button>
-      <button class="tool-btn" id="nbFcDeleteBtn" onclick="if(typeof window.fcToggleDeleteMode==='function'){window.fcToggleDeleteMode()}">Delete</button>
+      <button class="tool-btn" id="nbFcDeleteBtn" onclick="if(typeof window.fcToggleDeleteMode==='function'){window.fcToggleDeleteMode()}">DEL</button>
     </div>
     <div id="nbFcArea" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px 0">
       <div id="nbFcCard" onclick="window.fcFlip()" style="width:100%;max-width:420px;min-height:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:28px;box-sizing:border-box;text-align:center;position:relative;transition:all 0.2s;user-select:none;-webkit-user-select:none;">
@@ -536,8 +536,7 @@
   <div class="nb-view" id="nbMemView" style="display:none">
     <div class="nb-header">
       <div class="nb-title" id="nbMemTitle" style="flex:1"></div>
-      <button id="nbMemDelBtn" class="tool-btn" onclick="window.toggleMemDelete()" style="margin-right:6px;">DEL</button>
-      <button class="tool-btn" onclick="window.closeMemView()">&#8592; Back</button>
+      <button id="nbMemDelBtn" class="tool-btn" onclick="window.toggleMemDelete()">DEL</button>
     </div>
     <div class="nb-pages-list" id="nbMemList"></div>
     <div class="nb-empty" id="nbMemEmpty">No memory hooks saved yet.</div>
@@ -548,7 +547,7 @@
     <div class="nb-header">
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
       <button class="nb-new-btn" onclick="window.openPinsView()">&#128204; Pins</button>
-      <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">Delete</button>
+      <button class="nb-new-btn" onclick="if(typeof window.deleteCurrentNotebook==='function'){window.deleteCurrentNotebook()}">DEL</button>
     </div>
     <div style="margin-bottom:12px;position:relative">
       <input type="text" id="nbSearchInput" placeholder="Search pages&#8230;" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 36px 9px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;box-sizing:border-box;" oninput="if(typeof window.nbSearch==='function'){window.nbSearch(this.value)}" onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"/>
@@ -1630,8 +1629,8 @@ function renderMemList(idx){
   page.mnemonics.forEach(function(m,mi){
     const item=document.createElement('div');
     item.style.cssText='padding:10px 0;border-bottom:1px solid var(--border);overflow:hidden;';
-    const hookHtml=m.hook.replace(/`([^`]+)`/g,'<span style="color:#4ecdc4">$1</span>').replace(/(\d+\.)/g,function(mm,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#e07070;font-weight:700">'+p1+'</span>';});
-    item.innerHTML='<button class="nb-page-btn del-mem-btn" style="display:none;float:right;margin-left:8px;">✕</button><div style="font-size:12px;font-weight:700;color:var(--n-h2);margin-bottom:4px;">'+m.term+'</div><div style="font-size:12px;color:var(--ink);line-height:1.6;font-style:italic;">'+hookHtml+'</div>';
+    const hookHtml=m.hook.replace(/`([^`]+)`/g,'<span style="color:#8fbc8f">$1</span>').replace(/(\d+\.)/g,function(mm,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#c8956c;font-weight:700">'+p1+'</span>';});
+    item.innerHTML='<button class="nb-page-btn del-mem-btn" style="display:none;float:right;margin-left:8px;">✕</button><div style="font-size:'+_nbFontSize+'px;font-weight:700;color:var(--n-h2);margin-bottom:4px;" class="mem-term-text">'+m.term+'</div><div style="font-size:'+_nbFontSize+'px;color:var(--ink);line-height:1.6;font-style:italic;" class="mem-hook-text">'+hookHtml+'</div>';
     item.querySelector('.del-mem-btn').addEventListener('click',function(e){e.stopPropagation();window.deleteMnemonic(idx,mi);});
     list.appendChild(item);
   });
@@ -1972,7 +1971,7 @@ return{};})
   .then(function(res){
     if(!res.text){status.textContent='Failed - try again.';genBtn.style.display='block';return;}
     const mnemonic=res.text.trim();
-    result.innerHTML=mnemonic.replace(/`([^`]+)`/g,'<span style="color:#4ecdc4">$1</span>').replace(/(\d+\.)/g,function(m,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#e07070;font-weight:700">'+p1+'</span>';});
+    result.innerHTML=mnemonic.replace(/`([^`]+)`/g,'<span style="color:#8fbc8f">$1</span>').replace(/(\d+\.)/g,function(m,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#c8956c;font-weight:700">'+p1+'</span>';});
     status.textContent='';
     copyBtn.style.display='block';
     if(currentNotebookId&&window._currentPageIdx!==undefined){
