@@ -685,7 +685,7 @@
   <button onclick="window.aiAskClose()" style="position:absolute;top:8px;left:10px;background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0;line-height:1;">&#10005;</button>
   <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center;">Ask about highlight</div>
   <input id="aiAskInput" type="text" placeholder="Your question&#8230;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:8px;" onkeydown="if(event.key==='Enter'){window.aiAskCopy()}"/>
-  <button onclick="window.aiAskCopy()" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Ask in Gemini</button>
+  <button onclick="window.aiAskCopy()" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Ask</button>
 </div>
 
 <!-- PASTE JSON MODAL -->
@@ -1654,9 +1654,9 @@ window.aiAskOpen=function(){document.getElementById('aiHighlightPopup').style.di
 window.aiAskClose=function(){document.getElementById('aiAskPopup').style.display='none';document.getElementById('aiAskInput').value='';};
 window.aiAskCopy=function(){
   const question=document.getElementById('aiAskInput').value.trim();if(!question)return;
-  const prompt='You are helping a student studying from notes. The student has highlighted: "'+_aiHighlightText.trim().replace(/\s+/g,' ')+'"'+(_aiHighlightContext&&_aiHighlightContext.trim()!==_aiHighlightText.trim()?'. Context: "'+_aiHighlightContext.trim().replace(/\s+/g,' ').substring(0,300)+'"':'')+'. Question: '+question+'. Answer concisely under 150 words.';
-  const url='https://gemini.google.com/app?q='+encodeURIComponent(prompt);
-  window.open(url,'_blank');
+  const prompt='You are helping a student studying from notes.\n\nThe student has highlighted the following:\n"'+_aiHighlightText.trim()+'"\n\n'+(_aiHighlightContext&&_aiHighlightContext.trim()!==_aiHighlightText.trim()?'The surrounding context (for reference only):\n"'+_aiHighlightContext.trim()+'"\n\n':'')+"The student's question about the highlighted text:\n"+question+'\n\nAnswer concisely and clearly, addressing the student\'s question as it relates to the highlighted text. Under 150 words.';
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>window.toast('Prompt copied — paste into Claude or Gemini'));}
+  else{const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);window.toast('Prompt copied — paste into Claude or Gemini');}
   window.aiAskClose();window.getSelection().removeAllRanges();
 };
 
