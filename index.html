@@ -1993,8 +1993,8 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
-document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();});
-  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();},{passive:true});
+document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();});
+  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
 
