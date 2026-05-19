@@ -1630,7 +1630,7 @@ function renderMemList(idx){
     item.style.flexDirection='column';
     item.style.alignItems='flex-start';
     item.style.gap='6px';
-    item.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div style="font-size:13px;font-weight:700;color:var(--n-h2)">'+m.term+'</div><button class="nb-page-btn del-mem-btn" data-mi="'+mi+'">\u2715</button></div><div style="font-size:12px;color:var(--ink);line-height:1.6;font-style:italic">'+m.hook+'</div>';
+    item.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div style="font-size:13px;font-weight:700;color:var(--n-h2)">'+m.term+'</div><button class="nb-page-btn del-mem-btn" data-mi="'+mi+'">\u2715</button></div><div style="font-size:12px;color:var(--ink);line-height:1.6;font-style:italic">'+m.hook.replace(/(\d+\.)/g,'<span style="color:var(--n-term);font-weight:700">$1</span>')+'</div>';
     item.querySelector('.del-mem-btn').addEventListener('click',function(e){e.stopPropagation();window.deleteMnemonic(idx,mi);});
     list.appendChild(item);
   });
