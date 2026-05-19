@@ -1956,7 +1956,7 @@ window.aiMemGenerate=function(){
   status.textContent='Generating...';
   const highlight=_aiHighlightText.trim().replace(/\s+/g,' ');
   const context=_aiHighlightContext.trim().replace(/\s+/g,' ').substring(0,400);
-  const prompt='You are a memory expert. Create one vivid mnemonic (8 sentences max) to help remember: "'+highlight+'"'+(context&&context!==highlight?'. Context: "'+context+'"':'')+'. Be specific, creative and accurate. Return only the mnemonic.';
+  const prompt='You are a memory expert specializing in compressed sound-association mnemonics. The student has highlighted this text to memorize: "'+highlight+'"'+(context&&context!==highlight?'. Supporting context (for understanding only, do not make mnemonics for this): "'+context+'"':'')+'. Identify the key terms or sound groups within the highlighted text. For each one, create ONE tight phrase where words phonetically echo the input sounds and point to the target output sound. Rules: Number each section (1. 2. 3. etc.). Each section format: [sound-alike words for inputs] -> [sound-alike word for output]. Example: memorizing "mu, nu, bu -> nde" becomes "MUd NUt BUnny nods deeply -> nde". Words must phonetically echo the key terms - prioritize sound over meaning. Only add filler words if essential for coherence. No stories, no narratives. Return only the numbered list, nothing else.';
   fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate',prompt})})
   .then(r=>r.json()).catch(function(e){
 return{};})
