@@ -533,16 +533,6 @@
     </div>
   </div>
 
-  <!-- MNEMONICS VIEW -->
-  <div class="nb-view" id="nbMemView" style="display:none">
-    <div class="nb-header">
-      <div class="nb-title" id="nbMemTitle" style="flex:1"></div>
-      <button id="nbMemDelBtn" class="tool-btn" onclick="window.toggleMemDelete()">DEL</button>
-    </div>
-    <div class="nb-pages-list" id="nbMemList"></div>
-    <div class="nb-empty" id="nbMemEmpty">No memory hooks saved yet.</div>
-  </div>
-
   <!-- PAGES VIEW -->
   <div class="nb-view" id="nbPagesView" style="display:none">
     <div class="nb-header">
@@ -665,8 +655,6 @@
   <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Cards</button>
   <span style="color:var(--border);margin:0 2px">|</span>
-  <button onclick="window.aiMemOpen()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Mem</button>
-  <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.pinCurrentLocation()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#128204; Pin</button>
 </div>
 
@@ -700,22 +688,6 @@
   <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center;">Ask about highlight</div>
   <input id="aiAskInput" type="text" placeholder="Your question&#8230;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:8px;" onkeydown="if(event.key==='Enter'){window.aiAskCopy()}"/>
   <button onclick="window.aiAskCopy()" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Ask</button>
-</div>
-
-<!-- AI MEM POPUP -->
-<div id="aiMemPopup" style="display:none;position:fixed;z-index:10001;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,0.35);pointer-events:all;width:280px;max-height:60vh;display:none;flex-direction:column;">
-  <div id="aiMemDragHandle" style="cursor:grab;padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">AI Memory Hook</div>
-    <button onclick="window.aiMemClose()" style="background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0;line-height:1;">&#10005;</button>
-  </div>
-  <div style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;min-height:0;">
-    <div id="aiMemResult" style="font-size:13px;color:var(--ink);line-height:1.6;padding:4px 0;font-style:italic;"></div>
-    <div id="aiMemStatus" style="font-size:11px;color:var(--muted);text-align:center;min-height:16px;margin-top:6px;"></div>
-  </div>
-  <div style="flex-shrink:0;margin-top:8px;">
-    <button onclick="window.aiMemGenerate()" id="aiMemGenerateBtn" style="width:100%;background:var(--n-h2);border:none;border-radius:5px;padding:7px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;">Generate</button>
-    <button onclick="window.aiMemCopy()" id="aiMemCopyBtn" style="display:none;margin-top:6px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);cursor:pointer;">Copy</button>
-  </div>
 </div>
 
 <!-- PASTE JSON MODAL -->
@@ -1317,7 +1289,6 @@ window.showNotebookList=function(){
   document.getElementById('nbPagesView').style.display='none';
   document.getElementById('nbPageView').style.display='none';
   const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';
-  const mv=document.getElementById('nbMemView');if(mv)mv.style.display='none';_memDeleteMode=false;
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   renderNotebookList();history.replaceState({nbView:'list'},'');
@@ -1359,7 +1330,7 @@ window.showPagesView=function(){
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
-  document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';const mv=document.getElementById('nbMemView');if(mv)mv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
+  document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
   const inp=document.getElementById('nbSearchInput');if(inp)inp.value='';const clr=document.getElementById('nbSearchClear');if(clr)clr.style.display='none';const sts=document.getElementById('nbSearchStatus');if(sts)sts.textContent='';
   renderPagesList();
 };
@@ -1373,8 +1344,7 @@ function renderPagesList(){
   nb.pages.forEach((page,idx)=>{
     const item=document.createElement('div'),lastIdx=parseInt(localStorage.getItem('sc_last_page_'+currentNotebookId));
     item.className='nb-page-item'+(lastIdx===idx?' nb-page-recent':'');item.dataset.idx=idx;
-    item.innerHTML='<span class="nb-drag-handle" title="Drag to reorder">\u2807</span><div class="nb-page-info"><div class="nb-page-name">'+page.name+'</div><div class="nb-page-date">'+new Date(page.saved).toLocaleDateString()+'</div></div><div class="nb-page-actions">'+(page.mnemonics&&page.mnemonics.length>0?'<button class="nb-page-btn mem-btn">MEM</button>':'')+'\n'+(page.flashCards&&page.flashCards.length>0?'<button class="nb-page-btn fc-btn">FC</button>':'')+'<button class="nb-page-btn quiz-btn">Quiz</button><button class="nb-page-btn rename-btn" style="font-size:11px">\u270E</button><button class="nb-page-btn del-btn">\u2715</button></div>';
-    if(item.querySelector('.mem-btn'))item.querySelector('.mem-btn').addEventListener('click',e=>{e.stopPropagation();window.showMnemonics(idx);});
+    item.innerHTML='<span class="nb-drag-handle" title="Drag to reorder">\u2807</span><div class="nb-page-info"><div class="nb-page-name">'+page.name+'</div><div class="nb-page-date">'+new Date(page.saved).toLocaleDateString()+'</div></div><div class="nb-page-actions">'(page.flashCards&&page.flashCards.length>0?'<button class="nb-page-btn fc-btn">FC</button>':'')+'<button class="nb-page-btn quiz-btn">Quiz</button><button class="nb-page-btn rename-btn" style="font-size:11px">\u270E</button><button class="nb-page-btn del-btn">\u2715</button></div>';
     if(item.querySelector('.fc-btn'))item.querySelector('.fc-btn').addEventListener('click',e=>{e.stopPropagation();window.showFlashCards(idx);});
     item.querySelector('.quiz-btn').addEventListener('click',e=>{e.stopPropagation();window.loadPageToQuiz(idx);});
     item.querySelector('.rename-btn').addEventListener('click',e=>{e.stopPropagation();window.renamePage(idx);});
@@ -1613,57 +1583,9 @@ window.loadNotebookPageToQuiz=function(nbId,pi){const data=nbLoad(),page=data[nb
 // ── FLASH CARDS ──
 let _fcCards=[],_fcIdx=0,_fcFlipped=false;
 
-window.showMnemonics=function(idx){
-  const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[idx];
-  if(!page)return;
-  window._currentPageIdx=idx;
-  document.getElementById('nbMemTitle').textContent=page.name+' - Memory Hooks';
-  document.getElementById('nbPagesView').style.display='none';
-  document.getElementById('nbMemView').style.display='flex';
-  renderMemList(idx);
-  history.pushState({nbView:'mnemonics'},'');
-};
 
-window.closeMemView=function(){
-  _memDeleteMode=false;
-  const btn=document.getElementById('nbMemDelBtn');if(btn){btn.style.color='';btn.style.borderColor='';}
-  document.getElementById('nbMemView').style.display='none';
-  document.getElementById('nbPagesView').style.display='flex';
-};
 
-function renderMemList(idx){
-  const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[idx];
-  const list=document.getElementById('nbMemList'),empty=document.getElementById('nbMemEmpty');
-  list.innerHTML='';
-  if(!page||!page.mnemonics||page.mnemonics.length===0){empty.style.display='block';return;}
-  empty.style.display='none';
-  page.mnemonics.forEach(function(m,mi){
-    const item=document.createElement('div');
-    item.style.cssText='padding:10px 0;border-bottom:1px solid var(--border);overflow:hidden;';
-    const hookHtml=m.hook.replace(/`([^`]+)`/g,'<span style="color:#8fbc8f">$1</span>').replace(/(\d+\.)/g,function(mm,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#c8956c;font-weight:700">'+p1+'</span>';});
-    item.innerHTML='<button class="nb-page-btn del-mem-btn" style="display:none;float:right;margin-left:8px;">✕</button><div style="font-size:'+_nbFontSize+'px;font-weight:700;color:var(--n-h2);margin-bottom:4px;" class="mem-term-text">'+m.term+'</div><div style="font-size:'+_nbFontSize+'px;color:var(--ink);line-height:1.6;font-style:italic;" class="mem-hook-text">'+hookHtml+'</div>';
-    item.querySelector('.del-mem-btn').addEventListener('click',function(e){e.stopPropagation();window.deleteMnemonic(idx,mi);});
-    list.appendChild(item);
-  });
-}
-var _memDeleteMode=false;
-window.toggleMemDelete=function(){
-  _memDeleteMode=!_memDeleteMode;
-  const btn=document.getElementById('nbMemDelBtn');
-  btn.style.color=_memDeleteMode?'var(--accent)':'';
-  btn.style.borderColor=_memDeleteMode?'var(--accent)':'';
-  document.querySelectorAll('#nbMemList .del-mem-btn').forEach(function(b){b.style.display=_memDeleteMode?'inline-block':'none';});
-};
 
-window.deleteMnemonic=async function(pageIdx,mi){
-  if(!await window.scConfirm('Delete this memory hook?'))return;
-  const data=nbLoad(),nb=data[currentNotebookId];
-  if(!nb||!nb.pages[pageIdx]||!nb.pages[pageIdx].mnemonics)return;
-  nb.pages[pageIdx].mnemonics.splice(mi,1);
-  nbSave(data);
-  renderMemList(pageIdx);
-  renderPagesList();
-};
 
 window.showFlashCards=function(idx){
   const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[idx];if(!page||!page.flashCards||page.flashCards.length===0)return;
@@ -1946,82 +1868,10 @@ const PINS_KEY='sc_pins';
 function pinsLoad(){try{return JSON.parse(localStorage.getItem(PINS_KEY)||'[]');}catch(e){return[];}}
 function pinsSave(pins){localStorage.setItem(PINS_KEY,JSON.stringify(pins));}
 
-window.aiMemOpen=function(){
-  // Position near the highlight popup before hiding it
-  const hlPopup=document.getElementById('aiHighlightPopup');
-  const hlRect=hlPopup?hlPopup.getBoundingClientRect():null;
-  hideAiHighlightPopup();
-  const ask=document.getElementById('aiMemPopup');
-  const vw=window.innerWidth,vh=window.innerHeight;
-  if(hlRect){let top=hlRect.bottom+8,left=Math.min(Math.max(hlRect.left+hlRect.width/2-130,10),vw-270);if(top+180>vh)top=hlRect.top-185;ask.style.position='fixed';ask.style.top=top+'px';ask.style.left=left+'px';ask.style.transform='';}
-  else{ask.style.position='fixed';ask.style.top='50%';ask.style.left='50%';ask.style.transform='translate(-50%,-50%)';}
-  ask.style.display='flex';
-  document.getElementById('aiMemResult').textContent='';
-  document.getElementById('aiMemStatus').textContent='';
-  document.getElementById('aiMemCopyBtn').style.display='none';
-  document.getElementById('aiMemGenerateBtn').style.display='block';
-};
-window.aiMemGenerate=function(){
-  const result=document.getElementById('aiMemResult');
-  const status=document.getElementById('aiMemStatus');
-  const copyBtn=document.getElementById('aiMemCopyBtn');
-  const genBtn=document.getElementById('aiMemGenerateBtn');
-  genBtn.style.display='none';
-  startGeneratingAnim(status);
-  const highlight=_aiHighlightText.trim().replace(/\s+/g,' ');
-  const context=_aiHighlightContext.trim().replace(/\s+/g,' ').substring(0,400);
-  const prompt='You are a memory expert specializing in compressed sound-association mnemonics. The student has highlighted this text to memorize: "'+highlight+'"'+(context&&context!==highlight?'. Supporting context (for understanding only, do not make mnemonics for this): "'+context+'"':'')+'. Identify the key terms or sound groups within the highlighted text. For each one, create ONE tight phrase where words phonetically echo the input sounds and point to the target output sound. Rules: Number each section (1. 2. 3. etc.). Each section format: [sound-alike words for inputs] -> [sound-alike word for output]. Example: memorizing "mu, nu, bu -> nde" becomes "`MU`d `NU`t `BU`nny `n`ods `de`eply -> `nde`". Wrap ONLY the exact source sound characters in backticks wherever they appear - inside mnemonic words AND in the output. Do not wrap the whole word. Only add filler words if essential for coherence. No stories, no narratives. Return only the numbered list, nothing else.';
-  fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate',prompt})})
-  .then(r=>r.json()).catch(function(e){
-return{};})
-  .then(function(res){
-    stopGeneratingAnim(status);if(!res.text){status.textContent='Failed - try again.';genBtn.style.display='block';return;}
-    const mnemonic=res.text.trim();
-    result.innerHTML=mnemonic.replace(/`([^`]+)`/g,'<span style="color:#8fbc8f">$1</span>').replace(/(\d+\.)/g,function(m,p1,offset){return (offset>0?'<br>':'')+'<span style="color:#c8956c;font-weight:700">'+p1+'</span>';});
-    stopGeneratingAnim(status);status.textContent='';
-    copyBtn.style.display='block';
-    if(currentNotebookId&&window._currentPageIdx!==undefined){
-      const d=nbLoad(),nb=d[currentNotebookId];
-      if(nb&&nb.pages[window._currentPageIdx]){
-        if(!nb.pages[window._currentPageIdx].mnemonics)nb.pages[window._currentPageIdx].mnemonics=[];
-        nb.pages[window._currentPageIdx].mnemonics.push({term:highlight.substring(0,80),hook:mnemonic,saved:Date.now()});
-        nbSave(d);
-        renderPagesList();
-      }
-    }
-  });
-};
-window.aiMemClose=function(){document.getElementById('aiMemPopup').style.display='none';};
-// Drag logic for aiMemPopup
-(function(){
-  var dragging=null,startX,startY,origX,origY;
-  document.addEventListener('mousedown',function(e){
-    var handle=document.getElementById('aiMemDragHandle');
-    if(!handle||!handle.contains(e.target))return;
-    var popup=document.getElementById('aiMemPopup');
-    var r=popup.getBoundingClientRect();
-    dragging=popup;startX=e.clientX;startY=e.clientY;origX=r.left;origY=r.top;
-    handle.style.cursor='grabbing';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove',function(e){
-    if(!dragging)return;
-    dragging.style.left=(origX+(e.clientX-startX))+'px';
-    dragging.style.top=(origY+(e.clientY-startY))+'px';
-    dragging.style.transform='none';
-  });
-  document.addEventListener('mouseup',function(){
-    if(dragging){document.getElementById('aiMemDragHandle').style.cursor='grab';dragging=null;}
-  });
-})();
-window.aiMemCopy=function(){
-  const text=document.getElementById('aiMemResult').textContent;
-  if(!text)return;
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>window.toast('Memory hook copied'));}
-  else{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);window.toast('Memory hook copied');}
-  window.aiMemClose();
-};
-window._aiMemText='';
+
+
+
+
 
 window.pinCurrentLocation=function(){
   hideAiHighlightPopup();
@@ -2140,8 +1990,8 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
-document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();const mem=document.getElementById('aiMemPopup');if(mem&&mem.style.display!=='none'&&!mem.contains(e.target))window.aiMemClose();});
-  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();const mem=document.getElementById('aiMemPopup');if(mem&&mem.style.display!=='none'&&!mem.contains(e.target))window.aiMemClose();},{passive:true});
+document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();});
+  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();const ask=document.getElementById('aiAskPopup');if(ask&&ask.style.display!=='none'&&!ask.contains(e.target))window.aiAskClose();},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
 
@@ -2359,7 +2209,7 @@ function setupNbDropZone(){const zone=document.getElementById('nbDropZone');if(!
 window.addEventListener('popstate',function(){
   if(window._isReaderOpen&&window._isReaderOpen()){document.getElementById('scReaderOverlay').style.display='none';document.getElementById('scReaderContent').innerHTML='';const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none')window.showPagesView();return;}
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
-  const mv=document.getElementById('nbMemView');if(mv&&mv.style.display!=='none'){window.closeMemView();return;}
+  
   const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';if(onNb)window.showPagesView();return;}
 
   // From colorize or quiz — go to prompt
