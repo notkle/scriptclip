@@ -1956,7 +1956,7 @@ window.aiMemGenerate=function(){
   status.textContent='Generating...';
   const highlight=_aiHighlightText.trim().replace(/\s+/g,' ');
   const context=_aiHighlightContext.trim().replace(/\s+/g,' ').substring(0,400);
-  const prompt='You are a memory expert. Create one vivid mnemonic (4 sentences max) to help remember: "'+highlight+'"'+(context&&context!==highlight?'. Context: "'+context+'"':'')+'. Be specific and punchy. Return only the mnemonic.';
+  const prompt='You are a memory expert. Create one vivid mnemonic (8 sentences max) to help remember: "'+highlight+'"'+(context&&context!==highlight?'. Context: "'+context+'"':'')+'. Be specific, creative and accurate. Return only the mnemonic.';
   fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate',prompt})})
   .then(r=>r.json()).catch(function(e){
 return{};})
@@ -1980,25 +1980,24 @@ return{};})
 window.aiMemClose=function(){document.getElementById('aiMemPopup').style.display='none';};
 // Drag logic for aiMemPopup
 (function(){
-  var el=null,startX,startY,origX,origY;
-  document.addEventListener('DOMContentLoaded',function(){
+  var dragging=null,startX,startY,origX,origY;
+  document.addEventListener('mousedown',function(e){
     var handle=document.getElementById('aiMemDragHandle');
-    if(!handle)return;
-    handle.addEventListener('mousedown',function(e){
-      el=document.getElementById('aiMemPopup');
-      var r=el.getBoundingClientRect();
-      startX=e.clientX;startY=e.clientY;origX=r.left;origY=r.top;
-      handle.style.cursor='grabbing';
-      e.preventDefault();
-    });
-    document.addEventListener('mousemove',function(e){
-      if(!el)return;
-      var dx=e.clientX-startX,dy=e.clientY-startY;
-      el.style.left=(origX+dx)+'px';el.style.top=(origY+dy)+'px';el.style.transform='none';
-    });
-    document.addEventListener('mouseup',function(){
-      if(el){handle.style.cursor='grab';el=null;}
-    });
+    if(!handle||!handle.contains(e.target))return;
+    var popup=document.getElementById('aiMemPopup');
+    var r=popup.getBoundingClientRect();
+    dragging=popup;startX=e.clientX;startY=e.clientY;origX=r.left;origY=r.top;
+    handle.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!dragging)return;
+    dragging.style.left=(origX+(e.clientX-startX))+'px';
+    dragging.style.top=(origY+(e.clientY-startY))+'px';
+    dragging.style.transform='none';
+  });
+  document.addEventListener('mouseup',function(){
+    if(dragging){document.getElementById('aiMemDragHandle').style.cursor='grab';dragging=null;}
   });
 })();
 window.aiMemCopy=function(){
