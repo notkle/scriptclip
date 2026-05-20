@@ -1677,7 +1677,7 @@ window.aiAskCopy=function(){
       window.toast(isMobile?'Prompt copied — paste into Claude or Gemini':'Gemini opened — prompt copied, just paste');
       if(!isMobile){
         const pw=500,ph=750,winLeft=window.screenX||window.screenLeft||0,winWidth=window.outerWidth||window.innerWidth;
-        const left=winLeft+winWidth-pw-96,top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
+        const left=winLeft+Math.round((winWidth-pw)/2),top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
         window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
       }
     });
@@ -1686,7 +1686,7 @@ window.aiAskCopy=function(){
     window.toast('Prompt copied');
     if(!isMobile){
       const pw=500,ph=750,winLeft=window.screenX||window.screenLeft||0,winWidth=window.outerWidth||window.innerWidth;
-      const left=winLeft+winWidth-pw-96,top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
+      const left=winLeft+Math.round((winWidth-pw)/2),top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
       window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
     }
   }
