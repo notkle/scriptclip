@@ -359,8 +359,8 @@
 
 <!-- PANEL 0: SEARCH -->
 <div class="panel" id="panel-search" style="padding-top:28px;align-items:flex-start;padding-left:28px;padding-right:28px;">
-  <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;gap:12px;padding-top:8px;">
-    <div style="display:flex;gap:8px;max-width:640px;">
+  <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:8px;">
+    <div style="display:flex;gap:8px;width:100%;max-width:640px;">
       <input id="ytSearchInput" type="text" placeholder="Search YouTube..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
         style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;"
         onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"
@@ -789,6 +789,7 @@ const NB_KEY='sc_notebooks';
 var _sessionNbId=null;
 var _sessionPageIdx=null;
 var _tabHistory=[];
+var _tabHistorySkip=false;
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
@@ -960,7 +961,8 @@ window.switchTab=function(name){
   // Track tab history
   const currentTab=document.querySelector('.tab.active');
   const currentName=currentTab?currentTab.id.replace('tab-',''):null;
-  if(currentName&&currentName!==name)_tabHistory.push(currentName);
+  if(currentName&&currentName!==name&&!_tabHistorySkip)_tabHistory.push(currentName);
+  _tabHistorySkip=false;
   saveScroll('nbPageContent');
   stopScrollSave();
   // Hide notebook page view when leaving notebook tab so session restore works correctly
@@ -1285,11 +1287,13 @@ window.ytSearchRun=async function(){
       card.addEventListener('click',function(){
         const url='https://www.youtube.com/watch?v='+v.videoId;
         // Pulse feedback
-        card.style.transition='opacity 0.08s ease,border-color 0.08s ease';
-        card.style.borderColor='var(--accent)';card.style.opacity='0.5';
-        setTimeout(function(){card.style.opacity='1';card.style.borderColor='var(--accent)';
-          setTimeout(function(){card.style.borderColor='var(--border)';card.style.transition='border-color 0.3s ease';},300);
-        },120);
+        card.style.transition='opacity 0.15s ease,border-color 0.15s ease';
+        card.style.borderColor='var(--accent)';card.style.opacity='0.7';
+        setTimeout(function(){
+          card.style.transition='opacity 0.25s ease,border-color 0.4s ease';
+          card.style.opacity='1';
+          setTimeout(function(){card.style.borderColor='var(--border)';},400);
+        },180);
         if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){window.toast('Link copied — go to Prompt');});}
         else{const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);window.toast('Link copied — go to Prompt');}
       });
@@ -2315,7 +2319,7 @@ window.addEventListener('popstate',function(){
     const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
   }
   // Tab history navigation
-  if(_tabHistory.length>0){const prev=_tabHistory.pop();window.switchTab(prev);return;}
+  if(_tabHistory.length>0){const prev=_tabHistory.pop();_tabHistorySkip=true;window.switchTab(prev);return;}
   // Nothing left — exit app
   history.back();
 });
