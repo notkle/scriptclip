@@ -1672,20 +1672,25 @@ window.aiAskCopy=function(){
   const question=document.getElementById('aiAskInput').value.trim();if(!question)return;
   const prompt='You are helping a student studying from notes.\n\nThe student has highlighted the following:\n"'+_aiHighlightText.trim()+'"\n\n'+(_aiHighlightContext&&_aiHighlightContext.trim()!==_aiHighlightText.trim()?'The surrounding context (for reference only):\n"'+_aiHighlightContext.trim()+'"\n\n':'')+"The student's question about the highlighted text:\n"+question+'\n\nAnswer concisely and clearly, addressing the student\'s question as it relates to the highlighted text. Under 150 words.';
   const isMobile=window.innerWidth<=768;
-  if(!isMobile){
-    const pw=500,ph=750;
-    const winLeft=window.screenX||window.screenLeft||0;
-    const winWidth=window.outerWidth||window.innerWidth;
-    const left=winLeft+winWidth-pw-10;
-    const top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
-    window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(prompt).then(function(){
+      window.toast(isMobile?'Prompt copied — paste into Claude or Gemini':'Gemini opened — prompt copied, just paste');
+      if(!isMobile){
+        const pw=500,ph=750,winLeft=window.screenX||window.screenLeft||0,winWidth=window.outerWidth||window.innerWidth;
+        const left=winLeft+winWidth-pw-10,top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
+        window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
+      }
+    });
+  } else {
+    const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);
+    window.toast('Prompt copied');
+    if(!isMobile){
+      const pw=500,ph=750,winLeft=window.screenX||window.screenLeft||0,winWidth=window.outerWidth||window.innerWidth;
+      const left=winLeft+winWidth-pw-10,top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
+      window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
+    }
   }
-  const copyAndClose=function(){
-    window.aiAskClose();window.getSelection().removeAllRanges();
-    window.toast(isMobile?'Prompt copied — paste into Claude or Gemini':'Gemini opened — prompt copied, just paste');
-  };
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(copyAndClose).catch(copyAndClose);}
-  else{const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);copyAndClose();}
+  window.aiAskClose();window.getSelection().removeAllRanges();
 };
 
 // ── TABLE OF CONTENTS ──
