@@ -358,7 +358,7 @@
 
 
 <!-- PANEL 0: SEARCH -->
-<div class="panel" id="panel-search" style="padding-top:28px;align-items:flex-start;padding-left:28px;padding-right:28px;">
+<div class="panel" id="panel-search" style="padding-top:28px;padding-left:28px;padding-right:28px;">
   <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:8px;">
     <div style="display:flex;gap:8px;width:100%;max-width:640px;">
       <input id="ytSearchInput" type="text" placeholder="Search YouTube..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
@@ -1266,11 +1266,11 @@ window.ytSearchRun=async function(){
   if(!q)return;
   const btn=document.getElementById('ytSearchBtn'),status=document.getElementById('ytSearchStatus'),results=document.getElementById('ytSearchResults');
   btn.disabled=true;btn.style.opacity='0.5';
-  startGeneratingAnim(status);
+  status.innerHTML='Retrieving videos<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';status._genTimer=setInterval(function(){const d=status.querySelector('#_genDots');if(d){const s=['.','..','...'];d.textContent=s[(s.indexOf(d.textContent)+1)%3];}},400);
   results.innerHTML='';
   try{
-    const data=await fetch(YT_SEARCH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})}).then(r=>r.json());
-    stopGeneratingAnim(status);
+    const data=await fetch(YT_SEARCH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,maxResults:50})}).then(r=>r.json());
+    clearInterval(status._genTimer);status._genTimer=null;status.innerHTML='';
     if(!data.results||data.results.length===0){status.textContent='No results found.';btn.disabled=false;btn.style.opacity='1';return;}
     status.textContent='';
     data.results.forEach(function(v){
@@ -1299,7 +1299,7 @@ window.ytSearchRun=async function(){
       });
       results.appendChild(card);
     });
-  }catch(e){stopGeneratingAnim(status);status.textContent='Search failed — try again.';};
+  }catch(e){clearInterval(status._genTimer);status._genTimer=null;status.textContent='Search failed — try again.';};
   btn.disabled=false;btn.style.opacity='1';
 };
 
