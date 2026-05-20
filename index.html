@@ -339,6 +339,7 @@
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
   .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
   @media(hover:hover) and (pointer:fine){.yt-search-card:hover{border-color:var(--accent);}}
+  @media(max-width:768px){.yt-search-card{border-color:var(--accent);}}
   #ytDescPopup{display:none;position:fixed;z-index:9999;background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:10px 14px;max-width:280px;max-height:180px;overflow-y:auto;pointer-events:none;font-size:13px;color:var(--accent);line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
 </style>
 </head>
