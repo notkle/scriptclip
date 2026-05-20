@@ -996,7 +996,7 @@ window.handleGetTranscript=async function(){
   try{text=await navigator.clipboard.readText();}catch(e){window.toast('Tap Allow when asked to read clipboard, then try again.');return;}
   const m=text.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
   if(!m){window.toast('No YouTube link found in clipboard. Copy a YouTube URL first.');return;}
-  window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');
+  if(window.innerWidth>768){const _pwt=720,_pht=800,_wlt=window.screenX||window.screenLeft||0,_wwt=window.outerWidth||window.innerWidth,_lt=_wlt+Math.round((_wwt-_pwt)/2),_tt=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_pht)/2);window.open('https://youtubetotranscript.com/transcript?v='+m[1],'transcript_popup','width='+_pwt+',height='+_pht+',left='+_lt+',top='+_tt+',resizable=yes');}else{window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');}
 };
 
 window.handleBuild=async function(){
@@ -1009,7 +1009,7 @@ window.handleBuild=async function(){
   const full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+transcript.trim();
   try{
     await navigator.clipboard.writeText(full);
-    setBtn('success');setStatus('Prompt ready. Paste into Claude, then bring notes to tab \u2461.','ok');
+    setBtn('success');setStatus('Prompt ready. Paste into Claude, then bring notes to tab \u2461.','ok');if(window.innerWidth>768){const _pwc=600,_phc=800,_wlc=window.screenX||window.screenLeft||0,_wwc=window.outerWidth||window.innerWidth,_lc=_wlc+Math.round((_wwc-_pwc)/2),_tc=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_phc)/2);window.open('https://claude.ai','claude_popup','width='+_pwc+',height='+_phc+',left='+_lc+',top='+_tc+',resizable=yes');}
   }catch(e){
     const ta=document.createElement('textarea');ta.value=full;ta.style.cssText='position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
     document.body.appendChild(ta);ta.focus();ta.select();
