@@ -358,9 +358,9 @@
 
 
 <!-- PANEL 0: SEARCH -->
-<div class="panel" id="panel-search">
-  <div style="width:100%;max-width:640px;display:flex;flex-direction:column;gap:12px;">
-    <div style="display:flex;gap:8px;">
+<div class="panel" id="panel-search" style="padding-top:28px;align-items:flex-start;padding-left:28px;padding-right:28px;">
+  <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;gap:12px;padding-top:8px;">
+    <div style="display:flex;gap:8px;max-width:640px;">
       <input id="ytSearchInput" type="text" placeholder="Search YouTube..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
         style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;"
         onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"
@@ -368,7 +368,7 @@
       <button onclick="window.ytSearchRun()" style="background:var(--n-h2);border:none;border-radius:6px;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;cursor:pointer;flex-shrink:0;transition:opacity 0.2s;" id="ytSearchBtn">Search</button>
     </div>
     <div id="ytSearchStatus" style="font-size:11px;color:var(--muted);min-height:16px;font-style:italic;text-align:center;"></div>
-    <div id="ytSearchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;width:100%;"></div>
+    <div id="ytSearchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;width:100%;"></div>
   </div>
 </div>
 
@@ -788,6 +788,7 @@ const NB_KEY='sc_notebooks';
 
 var _sessionNbId=null;
 var _sessionPageIdx=null;
+var _tabHistory=[];
 function _scrollKey(){return currentNotebookId&&window._currentPageIdx!==undefined?'sc_scroll_'+currentNotebookId+'_'+window._currentPageIdx:null;}
 
 // Element-key based save/restore for page content (layout-independent)
@@ -956,6 +957,10 @@ window.toggleTheme=function(){
 };
 
 window.switchTab=function(name){
+  // Track tab history
+  const currentTab=document.querySelector('.tab.active');
+  const currentName=currentTab?currentTab.id.replace('tab-',''):null;
+  if(currentName&&currentName!==name)_tabHistory.push(currentName);
   saveScroll('nbPageContent');
   stopScrollSave();
   // Hide notebook page view when leaving notebook tab so session restore works correctly
@@ -1279,6 +1284,12 @@ window.ytSearchRun=async function(){
       card.addEventListener('mouseleave',function(){card.style.borderColor='var(--border)';});
       card.addEventListener('click',function(){
         const url='https://www.youtube.com/watch?v='+v.videoId;
+        // Pulse feedback
+        card.style.transition='opacity 0.08s ease,border-color 0.08s ease';
+        card.style.borderColor='var(--accent)';card.style.opacity='0.5';
+        setTimeout(function(){card.style.opacity='1';card.style.borderColor='var(--accent)';
+          setTimeout(function(){card.style.borderColor='var(--border)';card.style.transition='border-color 0.3s ease';},300);
+        },120);
         if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){window.toast('Link copied — go to Prompt');});}
         else{const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);window.toast('Link copied — go to Prompt');}
       });
@@ -2297,20 +2308,16 @@ function setupNbDropZone(){const zone=document.getElementById('nbDropZone');if(!
 window.addEventListener('popstate',function(){
   if(window._isReaderOpen&&window._isReaderOpen()){document.getElementById('scReaderOverlay').style.display='none';document.getElementById('scReaderContent').innerHTML='';const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none')window.showPagesView();return;}
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
-  
   const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';if(onNb)window.showPagesView();return;}
-
-  // From colorize or quiz — go to prompt
-  const onColorize=document.getElementById('panel-notes').classList.contains('active');
-  const onQuiz=document.getElementById('panel-quiz').classList.contains('active');
-  if(onColorize||onQuiz){window.switchTab('builder');return;}
-
-  if(!onNb)return;
-  const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
-  const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
-  const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
-  // On notebook list — go to prompt
-  window.switchTab('builder');
+  if(onNb){
+    const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
+    const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
+    const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
+  }
+  // Tab history navigation
+  if(_tabHistory.length>0){const prev=_tabHistory.pop();window.switchTab(prev);return;}
+  // Nothing left — exit app
+  history.back();
 });
 history.replaceState({nbView:'list'},'');
 
