@@ -1385,7 +1385,7 @@ window.openNotebook=function(id){
   currentNotebookId=id;const data=nbLoad(),nb=data[id];if(!nb)return;
   document.getElementById('nbPagesTitle').textContent=nb.name;
   document.getElementById('nbListView').style.display='none';document.getElementById('nbPagesView').style.display='flex';document.getElementById('nbPageView').style.display='none';
-  reorderActive=false;renderPagesList();localStorage.setItem('sc_last_nb',id);history.pushState({nbView:'pages',nbId:id},'');
+  reorderActive=false;renderPagesList();localStorage.setItem('sc_last_nb',id);history.replaceState({nbView:'pages',nbId:id},'');
 };
 
 window.showPagesView=function(){
@@ -1442,7 +1442,7 @@ window.openPage=function(idx){
   pageView.style.display='flex';
   localStorage.setItem('sc_last_nb',currentNotebookId);localStorage.setItem('sc_last_page_'+currentNotebookId,idx);
   _sessionNbId=currentNotebookId;_sessionPageIdx=idx;
-  history.pushState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
+  history.replaceState({nbView:'page',nbId:currentNotebookId,pageIdx:idx},'');
   applyNbFontSize();
   // Show overlay to hide scroll restoration, then fade it out
   var plo=document.getElementById('pageLoadOverlay');
@@ -1657,7 +1657,7 @@ window.showFlashCards=function(idx){
   const data=nbLoad(),nb=data[currentNotebookId],page=nb&&nb.pages[idx];if(!page||!page.flashCards||page.flashCards.length===0)return;
   window._currentPageIdx=idx;_fcCards=page.flashCards.map(c=>({front:c.front,back:c.back,units:0}));_fcIdx=0;_fcFlipped=false;
   document.getElementById('nbFcTitle').textContent=page.name;document.getElementById('nbPagesView').style.display='none';document.getElementById('nbFlashCardView').style.display='flex';
-  renderFcCard();history.pushState({nbView:'flashcards'},'');
+  renderFcCard();history.replaceState({nbView:'flashcards'},'');
 };
 
 function renderFcCard(){
@@ -2008,7 +2008,7 @@ window.openPinsView=function(){
   document.getElementById('nbPagesView').style.display='none';
   document.getElementById('nbPinsView').style.display='flex';
   renderPinsList();
-  history.pushState({nbView:'pins',nbId:currentNotebookId},'');
+  history.replaceState({nbView:'pins',nbId:currentNotebookId},'');
 };
 
 window.closePinsView=function(){
@@ -2080,7 +2080,7 @@ window.jumpToPin=function(pin){
         startScrollSave();
         setupScrollToTop();
         _sttUpDistance=0; // reset so pin jump doesn't trigger up arrow
-        history.pushState({nbView:'page',nbId:pin.notebookId,pageIdx:pin.pageIdx},'');
+        history.replaceState({nbView:'page',nbId:pin.notebookId,pageIdx:pin.pageIdx},'');
       } else {
         pollPin(attempts+1);
       }
@@ -2139,7 +2139,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
         }
       });
     })(0);
-    history.pushState({reader:true},'');
+    history.replaceState({reader:true},'');
     // Detach non-fullscreen listener, set up fullscreen one
     var _pcEl=document.getElementById('nbPageContent');
     if(_pcEl&&_pcEl._sttHandler)_pcEl.removeEventListener('scroll',_pcEl._sttHandler);
