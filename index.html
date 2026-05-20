@@ -339,10 +339,12 @@
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
   .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
   .yt-search-card:hover{border-color:var(--accent);}
+  #ytDescPopup{display:none;position:fixed;z-index:9999;background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:10px 14px;max-width:280px;max-height:180px;overflow-y:auto;pointer-events:none;font-size:13px;color:var(--accent);line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
 </style>
 </head>
 <body>
 <div class="frame"></div>
+<div id="ytDescPopup"></div>
 <div class="topbar">
   <div class="logo" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" style="cursor:pointer">
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
@@ -1287,6 +1289,21 @@ window.ytSearchRun=async function(){
         +'<div style="font-size:10px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+v.description+'</div>'
         +'</div>';
 
+      const popup=document.getElementById('ytDescPopup');
+      card.addEventListener('mouseenter',function(){
+        if(!v.description)return;
+        popup.textContent=v.description;
+        popup.style.display='block';
+      });
+      card.addEventListener('mousemove',function(e){
+        const vw=window.innerWidth,vh=window.innerHeight;
+        const pw=290,ph=popup.offsetHeight;
+        let left=e.clientX+16,top=e.clientY+16;
+        if(left+pw>vw-10)left=e.clientX-pw-16;
+        if(top+ph>vh-10)top=e.clientY-ph-16;
+        popup.style.left=left+'px';popup.style.top=top+'px';
+      });
+      card.addEventListener('mouseleave',function(){popup.style.display='none';});
       card.addEventListener('click',function(){
         const url='https://www.youtube.com/watch?v='+v.videoId;
         // Pulse feedback
