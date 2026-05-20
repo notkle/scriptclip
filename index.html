@@ -999,6 +999,7 @@ window.switchTab=function(name){
       window.showNotebookList();
     }
   }
+  if(!_tabHistorySkip)history.pushState({tab:name},'');
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
   sessionStorage.removeItem('sc_nb_id');sessionStorage.removeItem('sc_page_idx');
@@ -2320,8 +2321,6 @@ window.addEventListener('popstate',function(){
   }
   // Tab history navigation
   if(_tabHistory.length>0){const prev=_tabHistory.pop();_tabHistorySkip=true;window.switchTab(prev);return;}
-  // Nothing left — exit app
-  history.back();
 });
 history.replaceState({nbView:'list'},'');
 
