@@ -337,6 +337,8 @@
     font-size:15px;color:rgba(255,255,255,0.85);
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
+  .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
+  .yt-search-card:hover{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -365,7 +367,7 @@
         style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;"
         onfocus="this.style.borderColor='var(--n-h2)'" onblur="this.style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter')window.ytSearchRun()"/>
-      <button onclick="window.ytSearchRun()" style="background:var(--n-h2);border:none;border-radius:6px;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;cursor:pointer;flex-shrink:0;transition:opacity 0.2s;" id="ytSearchBtn">Search</button>
+      <button onclick="window.ytSearchRun()" style="background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:6px;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--ink)';" onmouseout="this.style.borderColor='#3e3c38';this.style.color='#c8c4bc';" id="ytSearchBtn">Search</button>
     </div>
     <div id="ytSearchStatus" style="font-size:11px;color:var(--muted);min-height:16px;font-style:italic;text-align:center;"></div>
     <div id="ytSearchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;width:100%;"></div>
@@ -1000,6 +1002,7 @@ window.switchTab=function(name){
     }
   }
   if(!_tabHistorySkip)history.pushState({tab:name},'');
+  if(name==='search'){requestAnimationFrame(function(){const si=document.getElementById('ytSearchInput');if(si)si.focus();});}
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
   sessionStorage.removeItem('sc_nb_id');sessionStorage.removeItem('sc_page_idx');
@@ -1276,15 +1279,14 @@ window.ytSearchRun=async function(){
     status.textContent='';
     data.results.forEach(function(v){
       const card=document.createElement('div');
-      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.2s;display:flex;flex-direction:column;';
+      card.className='yt-search-card';
       card.innerHTML='<img src="'+v.thumbnail+'" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block;" loading="lazy"/>'
         +'<div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:4px;">'
         +'<div style="font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+v.title+'</div>'
         +'<div style="font-size:10px;color:var(--n-h2);font-weight:600;">'+v.channel+'</div>'
         +'<div style="font-size:10px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+v.description+'</div>'
         +'</div>';
-      card.addEventListener('mouseenter',function(){card.style.borderColor='var(--accent)';});
-      card.addEventListener('mouseleave',function(){card.style.borderColor='var(--border)';});
+
       card.addEventListener('click',function(){
         const url='https://www.youtube.com/watch?v='+v.videoId;
         // Pulse feedback
