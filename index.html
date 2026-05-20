@@ -1651,20 +1651,41 @@ window.fcConfirmGenerate=function(){
   });
 };
 
-window.aiAskOpen=function(){document.getElementById('aiHighlightPopup').style.display='none';const ask=document.getElementById('aiAskPopup');const sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;const vw=window.innerWidth,vh=window.innerHeight;if(rect){let top=rect.bottom+10,left=Math.min(Math.max(rect.left+rect.width/2-130,10),vw-270);if(top+140>vh)top=Math.max(rect.top-145,10);ask.style.position='fixed';ask.style.top=top+'px';ask.style.left=left+'px';ask.style.transform='';}else{ask.style.position='fixed';ask.style.top='50%';ask.style.left='50%';ask.style.transform='translate(-50%,-50%)';}lockScroll();document.getElementById('aiAskDim').style.display='block';ask.style.display='block';const ht=document.getElementById('aiAskHighlightText');ht.textContent=_aiHighlightText.trim();ht.scrollTop=0;document.getElementById('aiAskInput').focus();};
+window.aiAskOpen=function(){
+  document.getElementById('aiHighlightPopup').style.display='none';
+  const ask=document.getElementById('aiAskPopup');
+  const isMobile=window.innerWidth<=768;
+  if(isMobile){
+    const sel=window.getSelection(),rect=sel&&sel.rangeCount>0?sel.getRangeAt(0).getBoundingClientRect():null;
+    const vw=window.innerWidth,vh=window.innerHeight;
+    if(rect){let top=rect.bottom+10,left=Math.min(Math.max(rect.left+rect.width/2-130,10),vw-270);if(top+140>vh)top=Math.max(rect.top-145,10);ask.style.top=top+'px';ask.style.left=left+'px';ask.style.transform='';}
+    else{ask.style.top='50%';ask.style.left='50%';ask.style.transform='translate(-50%,-50%)';}
+  } else {
+    ask.style.top='50%';ask.style.left='50%';ask.style.transform='translate(-50%,-50%)';
+  }
+  lockScroll();document.getElementById('aiAskDim').style.display='block';ask.style.display='block';
+  const ht=document.getElementById('aiAskHighlightText');ht.textContent=_aiHighlightText.trim();ht.scrollTop=0;
+  document.getElementById('aiAskInput').focus();
+};
 window.aiAskClose=function(){document.getElementById('aiAskPopup').style.display='none';document.getElementById('aiAskDim').style.display='none';document.getElementById('aiAskInput').value='';unlockScroll();};
 window.aiAskCopy=function(){
   const question=document.getElementById('aiAskInput').value.trim();if(!question)return;
   const prompt='You are helping a student studying from notes.\n\nThe student has highlighted the following:\n"'+_aiHighlightText.trim()+'"\n\n'+(_aiHighlightContext&&_aiHighlightContext.trim()!==_aiHighlightText.trim()?'The surrounding context (for reference only):\n"'+_aiHighlightContext.trim()+'"\n\n':'')+"The student's question about the highlighted text:\n"+question+'\n\nAnswer concisely and clearly, addressing the student\'s question as it relates to the highlighted text. Under 150 words.';
   const isMobile=window.innerWidth<=768;
   if(!isMobile){
-    const sw=screen.width,sh=screen.height,pw=500,ph=750;
-    const left=Math.round(sw-pw-20),top=Math.round((sh-ph)/2);
+    const pw=500,ph=750;
+    const winLeft=window.screenX||window.screenLeft||0;
+    const winWidth=window.outerWidth||window.innerWidth;
+    const left=winLeft+winWidth-pw-10;
+    const top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
     window.open('https://gemini.google.com/app','gemini_popup','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
   }
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>window.toast(isMobile?'Prompt copied — paste into Claude or Gemini':'Gemini opened — prompt copied, just paste'));}
-  else{const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);window.toast('Prompt copied');}
-  window.aiAskClose();window.getSelection().removeAllRanges();
+  const copyAndClose=function(){
+    window.aiAskClose();window.getSelection().removeAllRanges();
+    window.toast(isMobile?'Prompt copied — paste into Claude or Gemini':'Gemini opened — prompt copied, just paste');
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(copyAndClose).catch(copyAndClose);}
+  else{const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,99999);document.execCommand('copy');document.body.removeChild(ta);copyAndClose();}
 };
 
 // ── TABLE OF CONTENTS ──
