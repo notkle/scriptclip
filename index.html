@@ -1005,7 +1005,7 @@ window.switchTab=function(name){
     }
   }
   if(!_tabHistorySkip)history.pushState({tab:name},'');
-  if(name==='search'&&window.innerWidth>768){const si=document.getElementById('ytSearchInput');if(si)si.focus();}
+  if(name==='search'){const si=document.getElementById('ytSearchInput');if(si)si.focus();}
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
   sessionStorage.removeItem('sc_nb_id');sessionStorage.removeItem('sc_page_idx');
