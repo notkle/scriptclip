@@ -1311,11 +1311,11 @@ window.ytSearchRun=async function(){
         const url='https://www.youtube.com/watch?v='+v.videoId;
         // Pulse feedback
         card.style.transition='opacity 0.18s ease,border-color 0.18s ease';
-        card.style.borderColor='var(--accent)';card.style.opacity='0.15';
+        card.style.opacity='0.15';
         setTimeout(function(){
           card.style.transition='opacity 0.35s ease,border-color 0.5s ease';
           card.style.opacity='1';
-          setTimeout(function(){card.style.borderColor='var(--border)';},500);
+          if(window.innerWidth<=768)card.style.borderColor='var(--border)';
         },200);
         if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){window.toast('Link copied — go to Prompt');});}
         else{const ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);window.toast('Link copied — go to Prompt');}
