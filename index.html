@@ -338,6 +338,8 @@
     font-size:15px;color:rgba(255,255,255,0.85);
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
+  @keyframes btnPulse{0%,100%{border-color:var(--accent);color:var(--ink);}50%{border-color:var(--border);color:var(--muted);}}
+  .btn-pulse{animation:btnPulse 1.2s ease-in-out infinite;}
   #transcriptPasteField::placeholder,#promptPasteField::placeholder{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#555;}
   .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
   @media(hover:hover) and (pointer:fine){.yt-search-card:hover{border-color:var(--accent);}}
@@ -1032,9 +1034,10 @@ window.setBtn=function(state){
 // PATCH 5: Get Transcript
 window.handleGetTranscript=async function(){
   if(window.innerWidth<=768){
+    var btn=document.getElementById('transcriptBtn');
+
     var slide=document.getElementById('transcriptSlide'),field=document.getElementById('transcriptPasteField');
     if(!slide||!field)return;
-    var btn=document.getElementById('transcriptBtn');
     var isOpen=btn&&btn.dataset.slideOpen==='1';
     if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
     else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
@@ -1049,9 +1052,22 @@ window.handleGetTranscript=async function(){
 
 window.handleBuild=async function(){
   if(window.innerWidth<=768){
+    var btn=document.getElementById('mainBtn');
+    // If pulsing (locked and loaded) - fire the build
+    if(btn&&btn.classList.contains('btn-pulse')&&_storedTranscript){
+      var _goTranscript=_storedTranscript;
+      _storedTranscript=null;
+      _stopBtnPulse('mainBtn','<div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>');
+      var _goLang=detectLanguageLearning(_goTranscript);
+      var _goFull=(_goLang?PROMPT_LANGUAGE:PROMPT_GENERAL)+_goTranscript;
+      navigator.clipboard.writeText(_goFull).then(function(){
+        window.toast('Prompt copied — paste into Claude');
+        window.open('https://claude.ai','_blank');
+      }).catch(function(err){window.toast('Copy failed: '+err.message);});
+      return;
+    }
     var slide=document.getElementById('promptSlide'),field=document.getElementById('promptPasteField');
     if(!slide||!field)return;
-    var btn=document.getElementById('mainBtn');
     var isOpen=btn&&btn.dataset.slideOpen==='1';
     if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
     else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
@@ -1192,6 +1208,21 @@ window.doSave=function(){
 
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
+var _storedTranscript=null;
+var _storedYtLink=null;
+function _startBtnPulse(btnId,origHTML){
+  var btn=document.getElementById(btnId);
+  if(!btn)return;
+  btn.classList.add('btn-pulse');
+  btn.innerHTML='<div class="btn-inner"><span style="font-weight:900;letter-spacing:3px;">PRESS FOR CLAUDE</span></div>';
+}
+function _stopBtnPulse(btnId,origHTML){
+  var btn=document.getElementById(btnId);
+  if(!btn)return;
+  btn.classList.remove('btn-pulse');
+  btn.style.borderColor='';
+  btn.innerHTML=origHTML;
+}
 const YT_SEARCH_URL='https://scriptclipyt.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
   el.innerHTML='Generating<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';
@@ -2215,7 +2246,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       if(!m){window.toast('No YouTube link found — paste a YouTube URL');return;}
       slide.style.maxHeight='0';var btn=document.getElementById('transcriptBtn');if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
       window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');
-      window.toast('Opening transcript...');
+      window.toast('Transcript opening...');
     });
   }
 
@@ -2228,18 +2259,11 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       var slide=document.getElementById('promptSlide');
       if(!text||text.trim().length<50){window.toast('Too short — paste your full transcript');return;}
       slide.style.maxHeight='0';var pbtn=document.getElementById('mainBtn');if(pbtn){pbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
-      try {
-        var isLanguage=detectLanguageLearning(text.trim());
-        var full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+text.trim();
-        navigator.clipboard.writeText(full).then(function(){
-          window.toast('Prompt copied — paste into Claude');
-          window.open('https://claude.ai','_blank');
-        }).catch(function(err){
-          window.toast('Write failed: '+err.message);
-        });
-      } catch(err) {
-        window.toast('Error: '+err.message);
-      }
+      _storedTranscript=text.trim();
+      var slide=document.getElementById('promptSlide');
+      var pbtn=document.getElementById('mainBtn');
+      _startBtnPulse('mainBtn','<div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>');
+      window.toast('Transcript ready — tap GO to build prompt');
     });
   }
 
