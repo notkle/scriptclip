@@ -347,6 +347,7 @@
 <body>
 <div class="frame"></div>
 <div id="ytDescPopup"></div>
+<div id="kbBlocker" style="display:none;position:fixed;inset:0;z-index:9998;pointer-events:all;touch-action:none;background:transparent;" onclick="document.activeElement&&document.activeElement.blur()"></div>
 <div class="topbar">
   <div class="logo" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" style="cursor:pointer">
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
@@ -1339,8 +1340,10 @@ document.addEventListener('DOMContentLoaded',function(){
       var toc=document.getElementById('tocWrap');
       if(player){player.style.transition='none';player.style.opacity='0';player.style.pointerEvents='none';}
       if(toc){toc.style.transition='none';toc.style.opacity='0';toc.style.pointerEvents='none';}
+      var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='block';
     }
     function _kbShow(){
+      var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='none';
       var onSearch=document.getElementById('panel-search').classList.contains('active');
       if(onSearch)return;
       var player=document.getElementById('ytPlayerWrap');
