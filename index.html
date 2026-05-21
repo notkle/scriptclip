@@ -1477,7 +1477,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(toc){toc.style.transition='opacity 0.3s ease';toc.style.opacity='1';toc.style.pointerEvents='';}
     }
     document.addEventListener('focusin',function(e){
-      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const blockerExcluded=['quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
       const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}}
@@ -1485,7 +1485,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     });
     document.addEventListener('focusout',function(e){
-      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const blockerExcluded=['quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
       const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){setTimeout(_kbShow,100);}
