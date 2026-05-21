@@ -1337,16 +1337,16 @@ document.addEventListener('DOMContentLoaded',function(){
     function _kbHide(){
       var player=document.getElementById('ytPlayerWrap');
       var toc=document.getElementById('tocWrap');
-      if(player)player.classList.add('reader-hidden');
-      if(toc)toc.classList.add('toc-hidden');
+      if(player){player.style.transition='opacity 0.25s ease';player.style.opacity='0';player.style.pointerEvents='none';}
+      if(toc){toc.style.transition='opacity 0.25s ease';toc.style.opacity='0';toc.style.pointerEvents='none';}
     }
     function _kbShow(){
       var onSearch=document.getElementById('panel-search').classList.contains('active');
       if(onSearch)return;
       var player=document.getElementById('ytPlayerWrap');
       var toc=document.getElementById('tocWrap');
-      if(player)player.classList.remove('reader-hidden');
-      if(toc)toc.classList.remove('toc-hidden');
+      if(player){player.style.transition='opacity 0.3s ease';player.style.opacity='1';player.style.pointerEvents='';}
+      if(toc){toc.style.transition='opacity 0.3s ease';toc.style.opacity='1';toc.style.pointerEvents='';}
     }
     document.addEventListener('focusin',function(e){
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')_kbHide();
