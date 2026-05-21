@@ -1006,7 +1006,6 @@ window.switchTab=function(name){
       window.showNotebookList();
     }
   }
-  if(!_tabHistorySkip)history.pushState({tab:name},'');
   if(name==='search'){const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim())si.focus();}
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
@@ -2343,16 +2342,23 @@ function setupNbDropZone(){const zone=document.getElementById('nbDropZone');if(!
 
 // ── BACK BUTTON ──
 window.addEventListener('popstate',function(){
-  if(window._isReaderOpen&&window._isReaderOpen()){document.getElementById('scReaderOverlay').style.display='none';document.getElementById('scReaderContent').innerHTML='';const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none')window.showPagesView();return;}
+  if(window._isReaderOpen&&window._isReaderOpen()){
+    document.getElementById('scReaderOverlay').style.display='none';
+    document.getElementById('scReaderContent').innerHTML='';
+    return;
+  }
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
-  const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';if(onNb)window.showPagesView();return;}
   if(onNb){
+    const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';window.showPagesView();return;}
     const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
     const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
     const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
+    // On notebook list — pop tab history
+    if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());return;}
+    return;
   }
-  // Tab history navigation
-  if(_tabHistory.length>0){const prev=_tabHistory.pop();_tabHistorySkip=true;window.switchTab(prev);return;}
+  // Not on notebook — pop tab history
+  if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());return;}
 });
 history.replaceState({nbView:'list'},'');
 
