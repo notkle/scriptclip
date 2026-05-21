@@ -1278,10 +1278,12 @@ window.ytSearchRun=async function(){
   status.innerHTML='Retrieving videos<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';status._genTimer=setInterval(function(){const d=status.querySelector('#_genDots');if(d){const s=['.','..','...'];d.textContent=s[(s.indexOf(d.textContent)+1)%3];}},400);
   results.innerHTML='';
   try{
-    const data=await fetch(YT_SEARCH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,maxResults:50,order:'rating'})}).then(r=>r.json());
+    const data=await fetch(YT_SEARCH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,maxResults:50,order:'relevance'})}).then(r=>r.json());
     clearInterval(status._genTimer);status._genTimer=null;status.innerHTML='';
     if(!data.results||data.results.length===0){status.textContent='No results found.';btn.disabled=false;btn.style.opacity='1';return;}
     status.textContent='';
+    // Sort by raw view count descending
+    data.results.sort(function(a,b){return (b.viewCountRaw||0)-(a.viewCountRaw||0);});
     data.results.forEach(function(v){
       const card=document.createElement('div');
       card.className='yt-search-card';
@@ -1290,7 +1292,7 @@ window.ytSearchRun=async function(){
         +'<div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:4px;">'
         +'<div style="font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+v.title+'</div>'
         +'<div style="font-size:10px;color:#d4a84b;font-weight:600;">'+v.channel+'</div>'
-        +(v.viewCount||v.likeCount?'<div style="font-size:10px;color:var(--muted);">'+(v.viewCount?v.viewCount+' views':'')+(v.viewCount&&v.likeCount?' · ':''+(v.likeCount?v.likeCount+' likes':''))+'</div>':'')
+        +(v.viewCount||v.likeCount?'<div style="font-size:10px;color:var(--muted);">'+(v.viewCount?v.viewCount+' views':'')+(v.viewCount&&v.likeCount?' · ':'')+(v.likeCount?v.likeCount+' likes':'')+'</div>':'')
         +'</div>';
 
       const popup=document.getElementById('ytDescPopup');
