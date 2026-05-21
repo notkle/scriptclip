@@ -1050,6 +1050,7 @@ window.switchTab=function(name){
     }
   }
   if(name==='search'){const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim())si.focus();}
+  if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
   // Always reset prompt button state on any tab switch
   _storedTranscript=null;
   var _mb=document.getElementById('mainBtn');
