@@ -55,8 +55,8 @@
   .main-btn { width:100%; background:#2e2c2a; color:#c8c4bc; border:1px solid #3e3c38; border-radius:4px; padding:20px 24px; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:transform 0.12s ease,background 0.25s ease,color 0.25s,border-color 0.25s; -webkit-appearance:none; }
   [data-theme="dark"] .main-btn { background:#2e2c2a; color:#c8c4bc; border-color:#3e3c38; }
   :root:not([data-theme="dark"]) .main-btn { background:var(--ink); color:var(--bg); border-color:transparent; }
-  .main-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--ink); }
-  [data-theme="dark"] .main-btn:hover:not(:disabled) { border-color:var(--accent); color:#e8e4dc; }
+  @media(hover:hover) and (pointer:fine){.main-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--ink); }
+  [data-theme="dark"] .main-btn:hover:not(:disabled) { border-color:var(--accent); color:#e8e4dc; }}
   .main-btn:active:not(:disabled) { transform:scale(0.97); }
   .main-btn:disabled { cursor:default; opacity:0.6; }
   .main-btn.success { background:var(--accent); color:#fff; border-color:transparent; }
@@ -338,6 +338,7 @@
     font-size:15px;color:rgba(255,255,255,0.85);
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
+  #transcriptPasteField::placeholder,#promptPasteField::placeholder{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#555;}
   .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
   @media(hover:hover) and (pointer:fine){.yt-search-card:hover{border-color:var(--accent);}}
   @media(max-width:768px){.yt-search-card{border-color:var(--accent);}}
@@ -381,14 +382,28 @@
 
 <!-- PANEL 1: PROMPT -->
 <div class="panel active" id="panel-builder">
-  <div class="builder-inner">
+  <div class="builder-inner" id="builderInner">
     <!-- PATCH 5: Get Transcript button -->
-    <button class="main-btn" id="transcriptBtn" onclick="if(typeof window.handleGetTranscript==='function'){window.handleGetTranscript()}" style="margin-bottom:10px">
-      <div class="btn-inner"><span>&#9711;</span><span>Get Transcript</span></div>
-    </button>
-    <button class="main-btn" id="mainBtn" onclick="if(typeof window.handleBuild==='function'){window.handleBuild()}">
-      <div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>
-    </button>
+    <div style="position:relative;width:100%;margin-bottom:10px;">
+      <div id="transcriptSlide" style="position:absolute;bottom:100%;left:4%;right:4%;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+        <input id="transcriptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          style="width:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:4px 4px 0 0;padding:12px 20px;font-size:8px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
+          placeholder="PASTE YT LINK"/>
+      </div>
+      <button class="main-btn" id="transcriptBtn" onclick="if(typeof window.handleGetTranscript==='function'){window.handleGetTranscript()}">
+        <div class="btn-inner"><span>&#9711;</span><span>Get Transcript</span></div>
+      </button>
+    </div>
+    <div style="position:relative;width:100%;">
+      <button class="main-btn" id="mainBtn" onclick="if(typeof window.handleBuild==='function'){window.handleBuild()}">
+        <div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>
+      </button>
+      <div id="promptSlide" style="position:absolute;top:100%;left:4%;right:4%;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+        <input id="promptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          style="width:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:0 0 4px 4px;padding:12px 20px;font-size:8px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
+          placeholder="PASTE TRANSCRIPT"/>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -396,7 +411,6 @@
 <div class="panel notes-panel" id="panel-notes">
   <div class="notes-input-area" id="notesInputArea">
     <div class="notes-toolbar" style="align-items:center">
-      <button class="tool-btn primary" onclick="if(typeof window.pasteFromClipboard==='function'){window.pasteFromClipboard()}">&#8984; Paste from Clipboard</button>
       <select id="themeSelectInput" onchange="if(typeof window.setTheme==='function'){window.setTheme(this.value)}" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;outline:none;">
         <option value="dusk">Dusk</option><option value="ember">Ember</option><option value="syntax">Syntax</option>
       </select>
@@ -1017,14 +1031,32 @@ window.setBtn=function(state){
 
 // PATCH 5: Get Transcript
 window.handleGetTranscript=async function(){
+  if(window.innerWidth<=768){
+    var slide=document.getElementById('transcriptSlide'),field=document.getElementById('transcriptPasteField');
+    if(!slide||!field)return;
+    var btn=document.getElementById('transcriptBtn');
+    var isOpen=btn&&btn.dataset.slideOpen==='1';
+    if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
+    else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
+    return;
+  }
   let text='';
   try{text=await navigator.clipboard.readText();}catch(e){window.toast('Tap Allow when asked to read clipboard, then try again.');return;}
   const m=text.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
   if(!m){window.toast('No YouTube link found in clipboard. Copy a YouTube URL first.');return;}
-  if(window.innerWidth>768){const _pwt=720,_pht=800,_wlt=window.screenX||window.screenLeft||0,_wwt=window.outerWidth||window.innerWidth,_lt=_wlt+Math.round((_wwt-_pwt)/2),_tt=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_pht)/2);window.open('https://youtubetotranscript.com/transcript?v='+m[1],'transcript_popup','width='+_pwt+',height='+_pht+',left='+_lt+',top='+_tt+',resizable=yes');}else{window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');}
+  const _pwt=720,_pht=800,_wlt=window.screenX||window.screenLeft||0,_wwt=window.outerWidth||window.innerWidth,_lt=_wlt+Math.round((_wwt-_pwt)/2),_tt=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_pht)/2);window.open('https://youtubetotranscript.com/transcript?v='+m[1],'transcript_popup','width='+_pwt+',height='+_pht+',left='+_lt+',top='+_tt+',resizable=yes');
 };
 
 window.handleBuild=async function(){
+  if(window.innerWidth<=768){
+    var slide=document.getElementById('promptSlide'),field=document.getElementById('promptPasteField');
+    if(!slide||!field)return;
+    var btn=document.getElementById('mainBtn');
+    var isOpen=btn&&btn.dataset.slideOpen==='1';
+    if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
+    else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
+    return;
+  }
   setBtn('loading');
   let transcript='';
   try{transcript=await navigator.clipboard.readText();}
@@ -1346,13 +1378,21 @@ document.addEventListener('DOMContentLoaded',function(){
       if(toc){toc.style.transition='opacity 0.3s ease';toc.style.opacity='1';toc.style.pointerEvents='';}
     }
     document.addEventListener('focusin',function(e){
-      const excluded=['notesTextarea','quizPasteArea','nbPasteJsonArea'];
-      if((e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')&&!excluded.includes(e.target.id))_kbHide();
+      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const hideExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+        // Always hide player/ToC except for pure textarea inputs
+        if(!hideExcluded.includes(e.target.id)){var _doHide=function(){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}};_doHide();}
+        // Only show blocker for non-excluded fields
+        if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='block';}
+      }
     });
     document.addEventListener('focusout',function(e){
-      const excluded=['notesTextarea','quizPasteArea','nbPasteJsonArea'];
-      if((e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')&&!excluded.includes(e.target.id)){
-        setTimeout(_kbShow,100);
+      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const hideExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+        if(!hideExcluded.includes(e.target.id)){setTimeout(_kbShow,100);}
+        if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='none';}
       }
     });
   }
@@ -1395,12 +1435,7 @@ document.addEventListener('DOMContentLoaded',function(){
   const saved=localStorage.getItem('sc_yt_url');if(saved){const id=extractYtId(saved);if(id){ytVideoId=id;const pos=localStorage.getItem('sc_yt_pos');if(pos)ytCurrentSec=parseInt(pos)||0;fetchYtInfo(id);}}
   document.addEventListener('visibilitychange',function(){
     if(document.hidden){localStorage.setItem('sc_yt_was_playing',ytPlaying?'1':'0');if(ytPlaying){localStorage.setItem('sc_yt_pos',ytCurrentSec);document.getElementById('ytIframeWrap').innerHTML='';ytPlaying=false;ytUpdatePlayBtn();clearInterval(ytInterval);}}
-    else{
-      if(ytVideoId&&localStorage.getItem('sc_yt_was_playing')==='1'){ytBuildIframe(ytVideoId,ytCurrentSec);fetchYtInfo(ytVideoId);}
-      // Reset prompt button so clipboard re-requests permission on next tap
-      var onPrompt=document.getElementById('panel-builder').classList.contains('active');
-      if(onPrompt)window.setBtn('default');
-    }
+    else{if(ytVideoId&&localStorage.getItem('sc_yt_was_playing')==='1'){ytBuildIframe(ytVideoId,ytCurrentSec);fetchYtInfo(ytVideoId);}}
   });
 
   // Scroll positions are persisted to localStorage and restored automatically when pages are opened
@@ -1671,7 +1706,7 @@ window.importNotebook=function(file){
     renderNotebookList();}catch(e){window.toast('Failed to read file: '+e.message);}
   };reader.readAsText(file);
 };
-window.openPasteJson=function(){document.getElementById('nbPasteJsonArea').value='';document.getElementById('nbPasteJsonOverlay').classList.add('open');setTimeout(()=>document.getElementById('nbPasteJsonArea').focus(),50);};
+window.openPasteJson=function(){document.getElementById('nbPasteJsonArea').value='';document.getElementById('nbPasteJsonOverlay').classList.add('open');};
 window.importFromPastedJson=function(){
   const raw=document.getElementById('nbPasteJsonArea').value.trim();if(!raw){window.toast('Please paste JSON text first.');return;}
   try{const obj=JSON.parse(raw);if(!obj._scriptclip||!obj.notebook){window.toast('Not valid ScriptClip JSON.');return;}
@@ -2156,10 +2191,55 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
-document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();});
-  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();},{passive:true});
+document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();['transcriptSlide','promptSlide'].forEach(function(id){var s=document.getElementById(id);var btn=document.getElementById(id==='transcriptSlide'?'transcriptBtn':'mainBtn');if(s&&s.offsetHeight>0&&!s.contains(e.target)&&e.target.id!==(id==='transcriptSlide'?'transcriptBtn':'mainBtn')&&!document.getElementById(id==='transcriptSlide'?'transcriptBtn':'mainBtn').contains(e.target)){s.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}});});
+  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptSlide','promptSlide'].forEach(function(id){var s=document.getElementById(id);var btnId=id==='transcriptSlide'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(s&&s.offsetHeight>0&&!s.contains(e.target)&&!btn.contains(e.target)){s.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}});},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
+
+  // Center builder buttons on full viewport
+  (function(){
+    var topbar=document.querySelector('.topbar');
+    var tabs=document.querySelector('.tabs');
+    var inner=document.getElementById('builderInner');
+    if(!topbar||!tabs||!inner)return;
+    var offset=topbar.offsetHeight+tabs.offsetHeight;
+    inner.style.marginTop=(-offset/2)+'px';
+  })();
+
+  // Transcript slide field paste handler
+  var transcriptField=document.getElementById('transcriptPasteField');
+  if(transcriptField){
+    transcriptField.addEventListener('paste',function(e){
+      e.preventDefault();
+      var text=(e.clipboardData||window.clipboardData).getData('text');
+      var m=text&&text.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+      var slide=document.getElementById('transcriptSlide');
+      if(!m){window.toast('No YouTube link found — paste a YouTube URL');return;}
+      slide.style.maxHeight='0';var btn=document.getElementById('transcriptBtn');if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
+      window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');
+      window.toast('Opening transcript...');
+    });
+  }
+
+  // Prompt slide field paste handler
+  var promptField=document.getElementById('promptPasteField');
+  if(promptField){
+    promptField.addEventListener('paste',function(e){
+      e.preventDefault();
+      var text=(e.clipboardData||window.clipboardData).getData('text');
+      var slide=document.getElementById('promptSlide');
+      if(!text||text.trim().length<50){window.toast('Too short — paste your full transcript');return;}
+      slide.style.maxHeight='0';var pbtn=document.getElementById('mainBtn');if(pbtn){ppbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
+      var isLanguage=detectLanguageLearning(text.trim());
+      var full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+text.trim();
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(full).then(function(){
+          window.toast('Prompt copied — paste into Claude');
+          window.open('https://claude.ai','_blank');
+        });
+      }
+    });
+  }
 
   // Scroll containment handled by global touchmove handler (skips when any modal is open)
 });
