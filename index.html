@@ -1328,7 +1328,16 @@ window.ytSearchRun=async function(){
 
 document.addEventListener('DOMContentLoaded',function(){
 
-
+  // Keep player and ToC static when mobile keyboard opens
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',function(){
+      var player=document.getElementById('ytPlayerWrap');
+      var toc=document.getElementById('tocWrap');
+      var offset=window.innerHeight-window.visualViewport.height;
+      if(player)player.style.transform='translateY(-'+offset+'px)';
+      if(toc)toc.style.transform='translateY(-'+offset+'px)';
+    });
+  }
 
   // Position player and ToC dynamically, then fade in app
   (function positionAndReveal(){
