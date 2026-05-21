@@ -928,12 +928,13 @@ const PROMPT_GENERAL=`Here is a YouTube transcript. Transform it into structured
 
 **Detailed Notes** — organized by topic/section as it flows through the video. Use ## for each main section heading and ### for sub-topics within a section. Include sub-bullets with supporting details, examples, and explanations.
 
-**Summary** — 2-3 sentence plain-english recap of the whole video
+**Summary** — 2-3 sentence plain-english recap of the whole video. This section must always appear LAST.
 
-CRITICAL FORMATTING RULES — these are non-negotiable and fundamental to how this output is processed:
+CRITICAL FORMATTING RULES — these are non-negotiable and fundamental to how this output is processed. Failure to follow any of these will cause the entire output to be unformatted and unusable:
 - You MUST bold every single key term, concept, name, or important word using **double asterisks** throughout the ENTIRE document — not just in Key Terms, but inline throughout Detailed Notes as well. Every time a key term appears anywhere in the document, it must be bolded. No exceptions.
 - You MUST wrap ALL pronunciations, translations, romanizations, or parenthetical clarifications in parentheses immediately after the term they refer to.
-- Failure to bold key terms will cause the entire output to be unformatted and unusable. Treat bolding as the single most important formatting requirement of this prompt.
+- You MUST use ## for every major section heading and ### for every sub-topic within sections. These headers are critical for rendering — a response without ## headers will have no visual structure whatsoever.
+- You MUST always include all four sections in this exact order: Key Terms, Core Ideas, Detailed Notes, Summary. No sections may be omitted or merged.
 
 Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time.
 
@@ -949,7 +950,7 @@ const PROMPT_LANGUAGE=`Here is a YouTube transcript about language learning. Tra
 
 **Detailed Notes** — organized by topic/section. Use ## for each main section heading and ### for sub-topics. Every non-English word or phrase must have its romanized pronunciation in parentheses. Distinguish clearly between vocabulary, grammar patterns, and nuance.
 
-**Summary** — 2-3 sentence plain-english recap of the whole video
+**Summary** — 2-3 sentence plain-english recap of the whole video. This section must always appear LAST.
 
 Never show a non-English character without its pronunciation beside it.
 
