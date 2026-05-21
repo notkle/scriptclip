@@ -340,6 +340,12 @@
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
   @keyframes btnPulse{0%,100%{border-color:var(--accent);color:var(--ink);}50%{border-color:var(--border);color:var(--muted);}}
   .btn-pulse{animation:btnPulse 1.2s ease-in-out infinite;}
+  @keyframes btnFadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes btnTextFadeIn{0%{opacity:0;}100%{opacity:1;}}
+  @keyframes btnFadeOut{from{opacity:1;}to{opacity:0;}}
+  .btn-fadeout{animation:btnFadeOut 0.25s ease forwards;}
+  .btn-fadein{animation:btnFadeIn 0.25s ease forwards;}
+  .btn-fadein-slow{animation:btnTextFadeIn 0.4s ease forwards;}
   #transcriptPasteField::placeholder,#promptPasteField::placeholder{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#555;}
   .yt-search-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color 0.25s ease;}
   @media(hover:hover) and (pointer:fine){.yt-search-card:hover{border-color:var(--accent);}}
@@ -385,26 +391,21 @@
 <!-- PANEL 1: PROMPT -->
 <div class="panel active" id="panel-builder">
   <div class="builder-inner" id="builderInner">
-    <!-- PATCH 5: Get Transcript button -->
     <div style="position:relative;width:100%;margin-bottom:10px;">
-      <div id="transcriptSlide" style="position:absolute;bottom:100%;left:4%;right:4%;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
-        <input id="transcriptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-          style="width:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:4px 4px 0 0;padding:12px 20px;font-size:8px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
-          placeholder="PASTE YT LINK"/>
-      </div>
       <button class="main-btn" id="transcriptBtn" onclick="if(typeof window.handleGetTranscript==='function'){window.handleGetTranscript()}">
         <div class="btn-inner"><span>&#9711;</span><span>Get Transcript</span></div>
       </button>
+      <input id="transcriptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="display:none;position:absolute;inset:0;width:100%;height:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:4px;padding:0 20px;font-size:10px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
+        placeholder="PASTE YT LINK"/>
     </div>
     <div style="position:relative;width:100%;">
       <button class="main-btn" id="mainBtn" onclick="if(typeof window.handleBuild==='function'){window.handleBuild()}">
         <div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>
       </button>
-      <div id="promptSlide" style="position:absolute;top:100%;left:4%;right:4%;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
-        <input id="promptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-          style="width:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:0 0 4px 4px;padding:12px 20px;font-size:8px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
-          placeholder="PASTE TRANSCRIPT"/>
-      </div>
+      <input id="promptPasteField" type="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="display:none;position:absolute;inset:0;width:100%;height:100%;background:#1a1918;border:1px solid #3e3c38;border-radius:4px;padding:0 20px;font-size:10px;color:#1a1918;caret-color:transparent;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;"
+        placeholder="PASTE TRANSCRIPT"/>
     </div>
   </div>
 </div>
@@ -973,6 +974,38 @@ window.toggleTheme=function(){
   document.getElementById('themeBtn').textContent=isDark?'\u263E Dark':'\u2600 Light';
 };
 
+var _storedTranscript=null;
+var _storedYtLink=null;
+var _btnPulsing=false;
+function _startBtnPulse(btnId,origHTML){
+  var btn=document.getElementById(btnId);
+  if(!btn)return;
+  _btnPulsing=true;
+  btn.style.background='#1a1918';
+  btn.innerHTML='<div class="btn-inner"><span style="font-weight:900;letter-spacing:3px;">CLICK FOR CLAUDE</span></div>';
+  btn.style.color='var(--ink)';
+  btn.style.opacity='0';
+  btn.classList.remove('btn-fadein-slow');
+  void btn.offsetWidth;
+  btn.classList.add('btn-fadein-slow');
+  setTimeout(function(){btn.classList.remove('btn-fadein-slow');btn.style.opacity='';btn.classList.add('btn-pulse');btn.style.color='';},450);
+}
+function _stopBtnPulse(btnId,origHTML){
+  var btn=document.getElementById(btnId);
+  if(!btn)return;
+  _btnPulsing=false;
+  btn.classList.remove('btn-pulse');
+  btn.style.borderColor='';
+  btn.style.background='';
+  btn.style.opacity='';
+  btn.style.transition='';
+  btn.dataset.slideOpen='0';
+  btn.innerHTML=origHTML;
+  // Also hide the overlay field
+  var fieldId=btnId==='transcriptBtn'?'transcriptPasteField':'promptPasteField';
+  var field=document.getElementById(fieldId);
+  if(field){field.style.display='none';field.style.borderColor='#3e3c38';}
+}
 window.switchTab=function(name){
   // Track tab history
   const currentTab=document.querySelector('.tab.active');
@@ -989,7 +1022,7 @@ window.switchTab=function(name){
   // Hide scroll-to-top button instantly (no transition)
   window.hideToc();
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
-  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
+  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name!=='search'){if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   // Close pins view if open
@@ -1017,6 +1050,13 @@ window.switchTab=function(name){
     }
   }
   if(name==='search'){const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim())si.focus();}
+  // Always reset prompt button state on any tab switch
+  _storedTranscript=null;
+  var _mb=document.getElementById('mainBtn');
+  var _pf=document.getElementById('promptPasteField');
+  _btnPulsing=false;
+  if(_mb){_mb.classList.remove('btn-pulse');_mb.style.borderColor='';_mb.style.background='';_mb.style.opacity='';_mb.dataset.slideOpen='0';_mb.innerHTML='<div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>';}
+  if(_pf){_pf.style.display='none';_pf.style.borderColor='#3e3c38';}
   sessionStorage.setItem('sc_tab',name);
   sessionStorage.setItem('sc_nb_view','list');
   sessionStorage.removeItem('sc_nb_id');sessionStorage.removeItem('sc_page_idx');
@@ -1036,11 +1076,21 @@ window.handleGetTranscript=async function(){
   if(window.innerWidth<=768){
     var btn=document.getElementById('transcriptBtn');
 
-    var slide=document.getElementById('transcriptSlide'),field=document.getElementById('transcriptPasteField');
-    if(!slide||!field)return;
+    var field=document.getElementById('transcriptPasteField');
+    if(!field)return;
     var isOpen=btn&&btn.dataset.slideOpen==='1';
-    if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
-    else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
+    if(!isOpen){
+      field.style.opacity='0';
+      field.style.display='block';
+      field.style.borderColor='var(--accent)';
+      if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}
+      field.classList.add('btn-fadein');
+      setTimeout(function(){field.classList.remove('btn-fadein');field.style.opacity='';},270);
+      field.focus();
+    } else{
+      field.style.display='none';field.style.borderColor='#3e3c38';
+      if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
+    }
     return;
   }
   let text='';
@@ -1066,11 +1116,21 @@ window.handleBuild=async function(){
       }).catch(function(err){window.toast('Copy failed: '+err.message);});
       return;
     }
-    var slide=document.getElementById('promptSlide'),field=document.getElementById('promptPasteField');
-    if(!slide||!field)return;
+    var field=document.getElementById('promptPasteField');
+    if(!field)return;
     var isOpen=btn&&btn.dataset.slideOpen==='1';
-    if(!isOpen){slide.style.maxHeight='60px';if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}field.focus();}
-    else{slide.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}
+    if(!isOpen){
+      field.style.opacity='0';
+      field.style.display='block';
+      field.style.borderColor='var(--accent)';
+      if(btn){btn.style.borderColor='var(--accent)';btn.dataset.slideOpen='1';}
+      field.classList.add('btn-fadein');
+      setTimeout(function(){field.classList.remove('btn-fadein');field.style.opacity='';},270);
+      field.focus();
+    } else{
+      field.style.display='none';field.style.borderColor='#3e3c38';
+      if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
+    }
     return;
   }
   setBtn('loading');
@@ -1208,21 +1268,7 @@ window.doSave=function(){
 
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
-var _storedTranscript=null;
-var _storedYtLink=null;
-function _startBtnPulse(btnId,origHTML){
-  var btn=document.getElementById(btnId);
-  if(!btn)return;
-  btn.classList.add('btn-pulse');
-  btn.innerHTML='<div class="btn-inner"><span style="font-weight:900;letter-spacing:3px;">PRESS FOR CLAUDE</span></div>';
-}
-function _stopBtnPulse(btnId,origHTML){
-  var btn=document.getElementById(btnId);
-  if(!btn)return;
-  btn.classList.remove('btn-pulse');
-  btn.style.borderColor='';
-  btn.innerHTML=origHTML;
-}
+
 const YT_SEARCH_URL='https://scriptclipyt.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
   el.innerHTML='Generating<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';
@@ -1401,8 +1447,6 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     function _kbShow(){
       var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='none';
-      var onSearch=document.getElementById('panel-search').classList.contains('active');
-      if(onSearch)return;
       var player=document.getElementById('ytPlayerWrap');
       var toc=document.getElementById('tocWrap');
       if(player){player.style.transition='opacity 0.3s ease';player.style.opacity='1';player.style.pointerEvents='';}
@@ -1519,7 +1563,7 @@ window.showPagesView=function(){
   _sessionNbId=null;_sessionPageIdx=null;
   window.hideToc();
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
-  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
+  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name!=='search'){if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
@@ -2220,8 +2264,8 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
-document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();['transcriptSlide','promptSlide'].forEach(function(id){var s=document.getElementById(id);var btn=document.getElementById(id==='transcriptSlide'?'transcriptBtn':'mainBtn');if(s&&s.offsetHeight>0&&!s.contains(e.target)&&e.target.id!==(id==='transcriptSlide'?'transcriptBtn':'mainBtn')&&!document.getElementById(id==='transcriptSlide'?'transcriptBtn':'mainBtn').contains(e.target)){s.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}});});
-  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptSlide','promptSlide'].forEach(function(id){var s=document.getElementById(id);var btnId=id==='transcriptSlide'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(s&&s.offsetHeight>0&&!s.contains(e.target)&&!btn.contains(e.target)){s.style.maxHeight='0';if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}}});},{passive:true});
+document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});});
+  document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
 
@@ -2244,7 +2288,7 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       var m=text&&text.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
       var slide=document.getElementById('transcriptSlide');
       if(!m){window.toast('No YouTube link found — paste a YouTube URL');return;}
-      slide.style.maxHeight='0';var btn=document.getElementById('transcriptBtn');if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
+      var field=document.getElementById('transcriptPasteField');if(field){field.style.display='none';field.style.borderColor='#3e3c38';}var btn=document.getElementById('transcriptBtn');if(btn){btn.style.borderColor='';btn.dataset.slideOpen='0';}
       window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');
       window.toast('Transcript opening...');
     });
@@ -2258,12 +2302,12 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       var text=(e.clipboardData||window.clipboardData).getData('text');
       var slide=document.getElementById('promptSlide');
       if(!text||text.trim().length<50){window.toast('Too short — paste your full transcript');return;}
-      slide.style.maxHeight='0';var pbtn=document.getElementById('mainBtn');if(pbtn){pbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
       _storedTranscript=text.trim();
-      var slide=document.getElementById('promptSlide');
+      var pf=document.getElementById('promptPasteField');
       var pbtn=document.getElementById('mainBtn');
+      if(pbtn){pbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
+      if(pf){pf.style.display='none';pf.style.borderColor='#3e3c38';}
       _startBtnPulse('mainBtn','<div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>');
-      window.toast('Transcript ready — tap GO to build prompt');
     });
   }
 
