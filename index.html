@@ -149,6 +149,7 @@
 
   .nb-panel{justify-content:flex-start;align-items:stretch;padding:0}
   .nb-view{display:none;flex-direction:column;flex:1;overflow-x:hidden;overflow-y:hidden;padding:24px 28px 28px}
+  #nbPagesView{overflow-y:auto !important;-webkit-overflow-scrolling:touch;}
   #nbListView{display:flex}
   .nb-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-shrink:0}
   .nb-title{font-size:17px;font-weight:700;color:var(--ink);flex:1;transition:color 0.3s}
@@ -585,7 +586,7 @@
   </div>
 
   <!-- PAGES VIEW -->
-  <div class="nb-view" id="nbPagesView" style="display:none">
+  <div class="nb-view" id="nbPagesView" style="display:none;">
     <div class="nb-header">
       <div class="nb-title" id="nbPagesTitle" style="flex:1"></div>
       <button class="nb-new-btn" onclick="window.openPinsView()">&#128204; Pins</button>
@@ -1077,6 +1078,7 @@ window.switchTab=function(name){
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
   // Always reset prompt button state on any tab switch
   _storedTranscript=null;
+  var _nbs=document.getElementById('nbSearchInput');if(_nbs){_nbs.value='';if(typeof window.nbSearch==='function')window.nbSearch('');}
   var _mb=document.getElementById('mainBtn');
   var _pf=document.getElementById('promptPasteField');
   _btnPulsing=false;
@@ -1478,7 +1480,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(toc){toc.style.transition='opacity 0.3s ease';toc.style.opacity='1';toc.style.pointerEvents='';}
     }
     document.addEventListener('focusin',function(e){
-      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const blockerExcluded=['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
       const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}}
@@ -1487,7 +1489,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     });
     document.addEventListener('focusout',function(e){
-      const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const blockerExcluded=['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
       const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){setTimeout(_kbShow,100);}
@@ -1588,6 +1590,7 @@ window.showPagesView=function(){
   saveScroll('nbPageContent');
   stopScrollSave();
   _sessionNbId=null;_sessionPageIdx=null;
+  var _nbs=document.getElementById('nbSearchInput');if(_nbs){_nbs.value='';if(typeof window.nbSearch==='function')window.nbSearch('');}
   window.hideToc();
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
   var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name!=='search'){if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
@@ -1767,7 +1770,7 @@ window.nbSearch=function(query){
   sts.textContent=matches.length===0?'No results':matches.length+' page'+(matches.length!==1?'s':'')+', '+total+' match'+(total!==1?'es':'');
   const list=document.getElementById('nbPagesList'),empty=document.getElementById('nbPagesEmpty');list.innerHTML='';empty.style.display=matches.length===0?'block':'none';
   matches.forEach(function(m){
-    const wrap=document.createElement('div');wrap.style.cssText='margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;';
+    const wrap=document.createElement('div');wrap.style.cssText='margin-bottom:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden;';
     const allRows=[];if(m.nameMatch)allRows.push({label:highlightMatch(m.page.name,q),si:0});
     m.snippets.forEach((s,si)=>{allRows.push({label:'<span style="color:var(--muted)">'+escapeHtml(s.before)+'</span><mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:var(--ink);border-radius:2px;padding:0 1px">'+escapeHtml(s.match)+'</mark><span style="color:var(--muted)">'+escapeHtml(s.after)+'</span>',si});});
     allRows.forEach((row,ri)=>{
