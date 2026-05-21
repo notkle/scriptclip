@@ -2227,15 +2227,16 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
       var text=(e.clipboardData||window.clipboardData).getData('text');
       var slide=document.getElementById('promptSlide');
       if(!text||text.trim().length<50){window.toast('Too short — paste your full transcript');return;}
-      slide.style.maxHeight='0';var pbtn=document.getElementById('mainBtn');if(pbtn){ppbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
+      slide.style.maxHeight='0';var pbtn=document.getElementById('mainBtn');if(pbtn){pbtn.style.borderColor='';pbtn.dataset.slideOpen='0';}
       var isLanguage=detectLanguageLearning(text.trim());
       var full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+text.trim();
-      if(navigator.clipboard&&navigator.clipboard.writeText){
-        navigator.clipboard.writeText(full).then(function(){
-          window.toast('Prompt copied — paste into Claude');
-          window.open('https://claude.ai','_blank');
-        });
-      }
+      // clipboard.writeText inside paste event = trusted gesture, works on iOS
+      navigator.clipboard.writeText(full).then(function(){
+        window.toast('Prompt copied — paste into Claude');
+        window.open('https://claude.ai','_blank');
+      }).catch(function(){
+        window.toast('Copy failed — try again');
+      });
     });
   }
 
