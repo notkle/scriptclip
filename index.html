@@ -1332,6 +1332,27 @@ window.ytSearchRun=async function(){
 
 document.addEventListener('DOMContentLoaded',function(){
 
+  // Hide player and ToC when keyboard opens on mobile
+  if(window.visualViewport&&window.innerWidth<=768){
+    var _kbThreshold=100;
+    window.visualViewport.addEventListener('resize',function(){
+      var kbOpen=window.innerHeight-window.visualViewport.height>_kbThreshold;
+      var player=document.getElementById('ytPlayerWrap');
+      var toc=document.getElementById('tocWrap');
+      if(kbOpen){
+        if(player)player.classList.add('reader-hidden');
+        if(toc)toc.classList.add('toc-hidden');
+      } else {
+        // Only restore if not on search tab (search tab hides them permanently)
+        var onSearch=document.getElementById('panel-search').classList.contains('active');
+        if(!onSearch){
+          if(player)player.classList.remove('reader-hidden');
+          if(toc)toc.classList.remove('toc-hidden');
+        }
+      }
+    });
+  }
+
   // Position player and ToC dynamically, then fade in app
   (function positionAndReveal(){
     var player=document.getElementById('ytPlayerWrap');
