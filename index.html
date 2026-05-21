@@ -1047,7 +1047,7 @@ window.handleBuild=async function(){
   const full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+transcript.trim();
   try{
     await navigator.clipboard.writeText(full);
-    setBtn('success');setStatus('Prompt ready. Paste into Claude, then bring notes to tab \u2461.','ok');if(window.innerWidth>768){window.toast('Prompt copied — paste into Claude');const _pwc=600,_phc=800,_wlc=window.screenX||window.screenLeft||0,_wwc=window.outerWidth||window.innerWidth,_lc=_wlc+Math.round((_wwc-_pwc)/2),_tc=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_phc)/2);window.open('https://claude.ai','claude_popup','width='+_pwc+',height='+_phc+',left='+_lc+',top='+_tc+',resizable=yes');}
+    setBtn('success');setStatus('Prompt ready. Paste into Claude, then bring notes to tab \u2461.','ok');if(window.innerWidth>768){window.toast('Prompt copied — paste into Claude');const _pwc=600,_phc=800,_wlc=window.screenX||window.screenLeft||0,_wwc=window.outerWidth||window.innerWidth,_lc=_wlc+Math.round((_wwc-_pwc)/2),_tc=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_phc)/2);window.open('https://claude.ai','claude_popup','width='+_pwc+',height='+_phc+',left='+_lc+',top='+_tc+',resizable=yes');}else{window.toast('Prompt copied — paste into Claude');window.open('https://claude.ai','_blank');}
   }catch(e){
     const ta=document.createElement('textarea');ta.value=full;ta.style.cssText='position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
     document.body.appendChild(ta);ta.focus();ta.select();
@@ -1359,10 +1359,12 @@ document.addEventListener('DOMContentLoaded',function(){
       if(toc){toc.style.transition='opacity 0.3s ease';toc.style.opacity='1';toc.style.pointerEvents='';}
     }
     document.addEventListener('focusin',function(e){
-      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')_kbHide();
+      const excluded=['notesTextarea','quizPasteArea','nbPasteJsonArea'];
+      if((e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')&&!excluded.includes(e.target.id))_kbHide();
     });
     document.addEventListener('focusout',function(e){
-      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+      const excluded=['notesTextarea','quizPasteArea','nbPasteJsonArea'];
+      if((e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')&&!excluded.includes(e.target.id)){
         setTimeout(_kbShow,100);
       }
     });
