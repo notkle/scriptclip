@@ -1332,23 +1332,28 @@ window.ytSearchRun=async function(){
 
 document.addEventListener('DOMContentLoaded',function(){
 
-  // Hide player and ToC when keyboard opens on mobile
-  if(window.visualViewport&&window.innerWidth<=768){
-    var _kbThreshold=100;
-    window.visualViewport.addEventListener('resize',function(){
-      var kbOpen=window.innerHeight-window.visualViewport.height>_kbThreshold;
+  // Hide player and ToC on mobile when any input/textarea is focused (keyboard open)
+  if(window.innerWidth<=768){
+    function _kbHide(){
       var player=document.getElementById('ytPlayerWrap');
       var toc=document.getElementById('tocWrap');
-      if(kbOpen){
-        if(player)player.classList.add('reader-hidden');
-        if(toc)toc.classList.add('toc-hidden');
-      } else {
-        // Only restore if not on search tab (search tab hides them permanently)
-        var onSearch=document.getElementById('panel-search').classList.contains('active');
-        if(!onSearch){
-          if(player)player.classList.remove('reader-hidden');
-          if(toc)toc.classList.remove('toc-hidden');
-        }
+      if(player)player.classList.add('reader-hidden');
+      if(toc)toc.classList.add('toc-hidden');
+    }
+    function _kbShow(){
+      var onSearch=document.getElementById('panel-search').classList.contains('active');
+      if(onSearch)return;
+      var player=document.getElementById('ytPlayerWrap');
+      var toc=document.getElementById('tocWrap');
+      if(player)player.classList.remove('reader-hidden');
+      if(toc)toc.classList.remove('toc-hidden');
+    }
+    document.addEventListener('focusin',function(e){
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')_kbHide();
+    });
+    document.addEventListener('focusout',function(e){
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+        setTimeout(_kbShow,100);
       }
     });
   }
