@@ -979,7 +979,7 @@ window.switchTab=function(name){
   // Hide scroll-to-top button instantly (no transition)
   window.hideToc();
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
-  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw)ytw.classList.remove('reader-hidden');if(tocw)tocw.classList.remove('toc-hidden');}
+  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   // Close pins view if open
@@ -1451,7 +1451,7 @@ window.showPagesView=function(){
   _sessionNbId=null;_sessionPageIdx=null;
   window.hideToc();
   var tocBtn=document.getElementById('tocBtn');if(tocBtn)tocBtn.style.display='none';
-  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw)ytw.classList.remove('reader-hidden');if(tocw)tocw.classList.remove('toc-hidden');}
+  var ytw=document.getElementById('ytPlayerWrap'),tocw=document.getElementById('tocWrap');if(name==='search'){if(ytw)ytw.classList.add('reader-hidden');if(tocw)tocw.classList.add('toc-hidden');}else{if(ytw){ytw.classList.remove('reader-hidden');ytw.style.transition='opacity 0.3s ease';ytw.style.opacity='1';ytw.style.pointerEvents='';}if(tocw){tocw.classList.remove('toc-hidden');tocw.style.transition='opacity 0.3s ease';tocw.style.opacity='1';tocw.style.pointerEvents='';}}
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   document.getElementById('nbPageView').style.display='none';const fv=document.getElementById('nbFlashCardView');if(fv)fv.style.display='none';document.getElementById('nbPagesView').style.display='flex';
