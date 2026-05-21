@@ -149,7 +149,8 @@
 
   .nb-panel{justify-content:flex-start;align-items:stretch;padding:0}
   .nb-view{display:none;flex-direction:column;flex:1;overflow-x:hidden;overflow-y:hidden;padding:24px 28px 28px}
-  #nbPagesView{overflow-y:auto !important;-webkit-overflow-scrolling:touch;}
+  #nbPagesView{flex:none !important;height:auto !important;overflow:visible !important;}
+  #nbPagesList{flex-shrink:0;}
   #nbListView{display:flex}
   .nb-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-shrink:0}
   .nb-title{font-size:17px;font-weight:700;color:var(--ink);flex:1;transition:color 0.3s}
@@ -596,7 +597,10 @@
       <input type="text" id="nbSearchInput" placeholder="Search pages&#8230;" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 36px 9px 14px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.2s;box-sizing:border-box;" oninput="if(typeof window.nbSearch==='function'){window.nbSearch(this.value)}" onfocus="this.style.borderColor='#d4a84b'" onblur="this.style.borderColor='var(--border)'"/>
       <span id="nbSearchClear" onclick="window.nbClearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;line-height:1">&#10005;</span>
     </div>
-    <div id="nbSearchStatus" style="font-size:11px;color:var(--muted);margin-bottom:8px;min-height:16px"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:16px;padding-left:14px;">
+      <div id="nbSearchStatus" style="font-size:11px;color:var(--muted);flex:1;"></div>
+      <select id="nbSearchPageFilter" style="display:none;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--muted);outline:none;cursor:pointer;max-width:140px;text-align:center;text-align-last:center;text-overflow:ellipsis;overflow:hidden;" onchange="window.nbFilterByPage(this.value)"><option value="" style="text-align:center;">all</option></select>
+    </div>
     <div class="nb-pages-list" id="nbPagesList"></div>
     <div class="nb-empty" id="nbPagesEmpty">No pages saved to this notebook yet.</div>
   </div>
@@ -1633,7 +1637,7 @@ function renderPagesList(){
 
 function activateReorder(){reorderActive=true;renderPagesList();}
 
-window.openPage=function(idx){
+window.openPage=function(idx, snippet){
   const data=nbLoad(),page=data[currentNotebookId].pages[idx];if(!page)return;
   window._currentPageIdx=idx;document.getElementById('nbPageTitle').textContent=page.name;window._currentPageHtml=page.html;document.getElementById('nbPageContent').innerHTML=page.html;
   window.setPageTheme(page.theme||currentTheme,false);
@@ -1647,26 +1651,65 @@ window.openPage=function(idx){
   // Show overlay to hide scroll restoration, then fade it out
   var plo=document.getElementById('pageLoadOverlay');
   plo.style.transition='none';plo.style.opacity='1';plo.style.display='block';
-  restoreScrollKey('nbPageContent');
-  // Poll until scroll position matches target, then fade overlay out
-  (function waitForScroll(attempts){
-    requestAnimationFrame(function(){
-      const el=document.getElementById('nbPageContent');
-      const key=_scrollKey();
-      const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
-      var textKey=s&&key?s[key]:null;
-      var match=textKey?findMatchingElement(el,textKey):null;
-      var targetOffset=(function(){if(!match)return 0;var o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
-      var settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
-      if(settled||attempts>=8){
-        plo.style.transition='opacity 0.2s ease';
-        plo.style.opacity='0';
-        setTimeout(function(){plo.style.display='none';},220);
-      } else {
-        waitForScroll(attempts+1);
-      }
-    });
-  })(0);
+  // If snippet provided, scroll to matched text; otherwise restore saved scroll
+  if(snippet&&snippet.match){
+    var el=document.getElementById('nbPageContent');
+    (function pollSnippet(attempts){
+      requestAnimationFrame(function(){
+        var el2=document.getElementById('nbPageContent');
+        if(!el2){if(attempts<8)pollSnippet(attempts+1);return;}
+        // Find text node using 5-char context for unique match
+        var found=false;
+        var contextBefore=(snippet.before||'').slice(-10);
+        var contextAfter=(snippet.after||'').slice(0,10);
+        var searchStr=(contextBefore+snippet.match+contextAfter).toLowerCase();
+        var fullText=el2.innerText.toLowerCase();
+        var charIdx=fullText.indexOf(searchStr);
+        if(charIdx>=0)charIdx+=contextBefore.length; // point to start of match
+        var walker=document.createTreeWalker(el2,NodeFilter.SHOW_TEXT);
+        var node,accumulated=0;
+        while((node=walker.nextNode())){
+          var len=node.textContent.length;
+          if(charIdx>=0&&accumulated+len>charIdx){
+            var range=document.createRange();
+            var offset=charIdx-accumulated;
+            range.setStart(node,Math.min(offset,len));
+            var rect=range.getBoundingClientRect();
+            var elRect=el2.getBoundingClientRect();
+            el2.scrollTop=el2.scrollTop+(rect.top-elRect.top)-(el2.clientHeight/2);
+            found=true;break;
+          }
+          accumulated+=len;
+        }
+        var settled=found||attempts>=8;
+        if(settled){
+          plo.style.transition='opacity 0.2s ease';plo.style.opacity='0';
+          setTimeout(function(){plo.style.display='none';},220);
+        } else {pollSnippet(attempts+1);}
+      });
+    })(0);
+  } else {
+    restoreScrollKey('nbPageContent');
+    // Poll until scroll position matches target, then fade overlay out
+    (function waitForScroll(attempts){
+      requestAnimationFrame(function(){
+        const el=document.getElementById('nbPageContent');
+        const key=_scrollKey();
+        const s=JSON.parse(localStorage.getItem('sc_scroll')||'{}');
+        var textKey=s&&key?s[key]:null;
+        var match=textKey?findMatchingElement(el,textKey):null;
+        var targetOffset=(function(){if(!match)return 0;var o=0,n=match;while(n&&n!==el){o+=n.offsetTop;n=n.offsetParent;}return o;}());
+        var settled=!match||Math.abs(el.scrollTop-targetOffset)<5;
+        if(settled||attempts>=8){
+          plo.style.transition='opacity 0.2s ease';
+          plo.style.opacity='0';
+          setTimeout(function(){plo.style.display='none';},220);
+        } else {
+          waitForScroll(attempts+1);
+        }
+      });
+    })(0);
+  }
   startScrollSave();
   setupScrollToTop();
   window.showToc();
@@ -1765,23 +1808,54 @@ window.nbSearch=function(query){
   const q=query.trim().toLowerCase(),clr=document.getElementById('nbSearchClear'),sts=document.getElementById('nbSearchStatus');
   if(clr)clr.style.display=q?'block':'none';if(!q){sts.textContent='';renderPagesList();return;}
   const data=nbLoad(),nb=data[currentNotebookId];if(!nb||!nb.pages)return;
-  const matches=[];nb.pages.forEach(function(page,idx){const nameMatch=page.name.toLowerCase().includes(q);const div=document.createElement('div');div.innerHTML=page.html||'';const text=div.innerText;const snippets=getContextSnippets(text,q,4);if(nameMatch||snippets.length>0)matches.push({page,idx,nameMatch,snippets});});
+  const matches=[];nb.pages.forEach(function(page,idx){const nameMatch=page.name.toLowerCase().includes(q);const div=document.createElement('div');div.innerHTML=page.html||'';const text=div.innerText;const snippets=getContextSnippets(text,q,20);if(nameMatch||snippets.length>0)matches.push({page,idx,nameMatch,snippets});});
   const total=matches.reduce((n,m)=>n+m.snippets.length+(m.nameMatch?1:0),0);
   sts.textContent=matches.length===0?'No results':matches.length+' page'+(matches.length!==1?'s':'')+', '+total+' match'+(total!==1?'es':'');
+  // Populate page filter dropdown
+  var pf=document.getElementById('nbSearchPageFilter');
+  if(pf){
+    pf.innerHTML='<option value="" style="text-align:center;">all</option>';
+    matches.forEach(function(m){var opt=document.createElement('option');opt.value=m.idx;var name=m.page.name;opt.textContent=name.length>20?name.slice(0,19)+'…':name;pf.appendChild(opt);});
+    pf.style.display=matches.length>1?'block':'none';
+    pf.value='';
+  }
+  window._nbLastMatches=matches;
+  if(typeof window._nbRenderMatches==='function')window._nbRenderMatches(matches);
+};
+window._nbRenderMatches=function(matches){
   const list=document.getElementById('nbPagesList'),empty=document.getElementById('nbPagesEmpty');list.innerHTML='';empty.style.display=matches.length===0?'block':'none';
   matches.forEach(function(m){
     const wrap=document.createElement('div');wrap.style.cssText='margin-bottom:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden;';
-    const allRows=[];if(m.nameMatch)allRows.push({label:highlightMatch(m.page.name,q),si:0});
+    const allRows=[];if(m.nameMatch)allRows.push({label:highlightMatch(m.page.name,q),si:-1});
     m.snippets.forEach((s,si)=>{allRows.push({label:'<span style="color:var(--muted)">'+escapeHtml(s.before)+'</span><mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:var(--ink);border-radius:2px;padding:0 1px">'+escapeHtml(s.match)+'</mark><span style="color:var(--muted)">'+escapeHtml(s.after)+'</span>',si});});
     allRows.forEach((row,ri)=>{
       const el=document.createElement('div');el.style.cssText='display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;line-height:1.5;border-top:'+(ri>0?'1px solid var(--border)':'none')+';background:var(--surface);';
-      el.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:700;">'+m.page.name+' &middot; '+new Date(m.page.saved).toLocaleDateString()+'</div><div>'+row.label+'</div></div>'+(ri===0?'<button class="nb-page-btn quiz-btn" style="flex-shrink:0">Quiz</button>':'');
-      el.addEventListener('click',function(e){if(e.target.closest('.quiz-btn'))return;window.openPage(m.idx);});
-      if(ri===0&&el.querySelector('.quiz-btn'))el.querySelector('.quiz-btn').addEventListener('click',function(e){e.stopPropagation();window.loadPageToQuiz(m.idx);});
+      el.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:700;">'+m.page.name+' &middot; '+new Date(m.page.saved).toLocaleDateString()+'</div><div>'+row.label+'</div></div>';
+      (function(idx, rowSi, allSnippets){
+        el.addEventListener('click',function(e){
+          var snip=rowSi>=0&&allSnippets&&allSnippets[rowSi]?allSnippets[rowSi]:allSnippets&&allSnippets[0]?allSnippets[0]:null;
+          window.openPage(idx, snip);
+        });
+      })(m.idx, row.si, m.snippets);
+
       wrap.appendChild(el);
     });
     list.appendChild(wrap);
   });
+};
+window.nbFilterByPage=function(pageIdx){
+  var matches=window._nbLastMatches||[];
+  var sts=document.getElementById('nbSearchStatus');
+  if(pageIdx===''){
+    var total=matches.reduce(function(n,m){return n+m.snippets.length+(m.nameMatch?1:0);},0);
+    if(sts)sts.textContent=matches.length+' page'+(matches.length!==1?'s':'')+', '+total+' match'+(total!==1?'es':'');
+    window._nbRenderMatches(matches);return;
+  }
+  var filtered=matches.filter(function(m){return String(m.idx)===String(pageIdx);});
+  var pageName=filtered.length>0?filtered[0].page.name:'';
+  var pageTotal=filtered.reduce(function(n,m){return n+m.snippets.length+(m.nameMatch?1:0);},0);
+  if(sts)sts.textContent=pageTotal+' match'+(pageTotal!==1?'es':'');
+  window._nbRenderMatches(filtered);
 };
 window.nbClearSearch=function(){const inp=document.getElementById('nbSearchInput');if(inp){inp.value='';inp.focus();}document.getElementById('nbSearchClear').style.display='none';document.getElementById('nbSearchStatus').textContent='';renderPagesList();};
 
@@ -2298,6 +2372,16 @@ document.addEventListener('mousedown',function(e){const p=document.getElementByI
   document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   setupDropZone();setupNbDropZone();
+
+  // Set nbPagesView height to fill viewport minus topbar+tabs
+  (function(){
+    var topbar=document.querySelector('.topbar');
+    var tabs=document.querySelector('.tabs');
+    if(topbar&&tabs){
+      var h=window.innerHeight-topbar.offsetHeight-tabs.offsetHeight;
+      document.documentElement.style.setProperty('--nb-pages-h',h+'px');
+    }
+  })();
 
   // Center builder buttons on full viewport
   (function(){
