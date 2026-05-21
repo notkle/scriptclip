@@ -1328,17 +1328,6 @@ window.ytSearchRun=async function(){
 
 document.addEventListener('DOMContentLoaded',function(){
 
-  // Keep player and ToC static when mobile keyboard opens
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',function(){
-      var player=document.getElementById('ytPlayerWrap');
-      var toc=document.getElementById('tocWrap');
-      var offset=window.innerHeight-window.visualViewport.height;
-      if(player)player.style.transform='translateY(-'+offset+'px)';
-      if(toc)toc.style.transform='translateY(-'+offset+'px)';
-    });
-  }
-
   // Position player and ToC dynamically, then fade in app
   (function positionAndReveal(){
     var player=document.getElementById('ytPlayerWrap');
@@ -1354,10 +1343,16 @@ document.addEventListener('DOMContentLoaded',function(){
         var settled=tocRect.height>0&&tocRect.top>0;
         if(settled||attempts>=10){
           var tocTopFromBottom=window.innerHeight-tocRect.top;
-          var styleTag=document.getElementById('dynamicPositionStyle')||document.createElement('style');
-          styleTag.id='dynamicPositionStyle';
-          styleTag.textContent='@media (max-width:768px){#ytPlayerWrap{bottom:'+(tocTopFromBottom+8)+'px!important;}}';
-          if(!styleTag.parentNode)document.head.appendChild(styleTag);
+          var playerBottom=tocTopFromBottom+8;
+          // Lock positions as hardcoded inline styles with !important - immune to keyboard/viewport changes
+          toc.setAttribute('style',toc.getAttribute('style')||'');
+          player.setAttribute('style',(player.getAttribute('style')||'')+';bottom:'+playerBottom+'px!important;transform:none!important;');
+          toc.setAttribute('style',(toc.getAttribute('style')||'')+';bottom:80px!important;transform:none!important;');
+          // Continuously reassert positions on any resize
+          window.addEventListener('resize',function(){
+            player.setAttribute('style',(player.getAttribute('style')||'').replace(/bottom:[^;]+!important/,'bottom:'+playerBottom+'px!important'));
+            toc.setAttribute('style',(toc.getAttribute('style')||'').replace(/bottom:[^;]+!important/,'bottom:80px!important'));
+          });
           overlay.style.opacity='0';
           setTimeout(function(){overlay.style.display='none';},320);
         } else {
