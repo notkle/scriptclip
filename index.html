@@ -389,6 +389,9 @@
     <button class="main-btn" id="mainBtn" onclick="if(typeof window.handleBuild==='function'){window.handleBuild()}">
       <div class="btn-inner" id="btnInner"><span>&#8984;</span><span>Build Study Prompt</span></div>
     </button>
+    <div id="mobilePasteWrap" style="display:none;position:relative;width:100%;margin-top:-52px;">
+      <textarea id="mobilePasteField" rows="1" inputmode="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;resize:none;border:none;background:transparent;font-size:16px;z-index:2;cursor:pointer;caret-color:transparent;"></textarea>
+    </div>
     <div class="status-line" id="statusLine"></div>
     <div class="steps-wrap">
       <div class="steps-label">How it works</div>
@@ -1029,6 +1032,29 @@ window.setBtn=function(state){
 };
 
 // PATCH 5: Get Transcript
+// Mobile paste field setup
+(function(){
+  if(window.innerWidth>768)return;
+  document.addEventListener('DOMContentLoaded',function(){
+    var wrap=document.getElementById('mobilePasteWrap');
+    var field=document.getElementById('mobilePasteField');
+    var mainBtn=document.getElementById('mainBtn');
+    if(!wrap||!field||!mainBtn)return;
+    wrap.style.display='block';
+    wrap.style.height=mainBtn.offsetHeight+'px';
+    // On paste - process transcript
+    field.addEventListener('paste',function(e){
+      e.preventDefault();
+      var text=(e.clipboardData||window.clipboardData).getData('text');
+      if(!text||text.trim().length<50){window.setStatus('Clipboard too short. Copy your transcript first.','bad');return;}
+      field.value='';
+      // Process same as handleBuild
+      window._mobileTranscript=text.trim();
+      window.handleBuildFromText(text.trim());
+    });
+  });
+})();
+
 window.handleGetTranscript=async function(){
   let text='';
   try{text=await navigator.clipboard.readText();}catch(e){window.toast('Tap Allow when asked to read clipboard, then try again.');return;}
@@ -1037,6 +1063,17 @@ window.handleGetTranscript=async function(){
   if(window.innerWidth>768){const _pwt=720,_pht=800,_wlt=window.screenX||window.screenLeft||0,_wwt=window.outerWidth||window.innerWidth,_lt=_wlt+Math.round((_wwt-_pwt)/2),_tt=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_pht)/2);window.open('https://youtubetotranscript.com/transcript?v='+m[1],'transcript_popup','width='+_pwt+',height='+_pht+',left='+_lt+',top='+_tt+',resizable=yes');}else{window.open('https://youtubetotranscript.com/transcript?v='+m[1],'_blank');}
 };
 
+window.handleBuildFromText=function(transcript){
+  setBtn('loading');
+  const isLanguage=detectLanguageLearning(transcript);
+  const full=(isLanguage?PROMPT_LANGUAGE:PROMPT_GENERAL)+transcript.trim();
+  try{
+    navigator.clipboard.writeText(full).then(function(){
+      setBtn('success');setStatus('Prompt ready. Paste into Claude, then bring notes to tab \u2461.','ok');
+      if(window.innerWidth>768){window.toast('Prompt copied \u2014 paste into Claude');const _pwc=600,_phc=800,_wlc=window.screenX||window.screenLeft||0,_wwc=window.outerWidth||window.innerWidth,_lc=_wlc+Math.round((_wwc-_pwc)/2),_tc=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-_phc)/2);window.open('https://claude.ai','claude_popup','width='+_pwc+',height='+_phc+',left='+_lc+',top='+_tc+',resizable=yes');}else{window.toast('Prompt copied \u2014 paste into Claude');window.open('https://claude.ai','_blank');}
+    }).catch(function(){setBtn('default');setStatus('Clipboard write failed. Try again.','bad');});
+  }catch(e){setBtn('default');setStatus('Clipboard write failed. Try again.','bad');}
+};
 window.handleBuild=async function(){
   setBtn('loading');
   let transcript='';
