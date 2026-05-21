@@ -1379,17 +1379,15 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     document.addEventListener('focusin',function(e){
       const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
-      const hideExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
-        // Always hide player/ToC except for pure textarea inputs
-        if(!hideExcluded.includes(e.target.id)){var _doHide=function(){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}};_doHide();}
-        // Only show blocker for non-excluded fields
+        if(!hideExcluded.includes(e.target.id)){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}}
         if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='block';}
       }
     });
     document.addEventListener('focusout',function(e){
       const blockerExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
-      const hideExcluded=['notesTextarea','quizPasteArea','nbPasteJsonArea','transcriptPasteField','promptPasteField'];
+      const hideExcluded=['transcriptPasteField','promptPasteField'];
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){setTimeout(_kbShow,100);}
         if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='none';}
