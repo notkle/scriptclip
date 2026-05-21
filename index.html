@@ -1388,6 +1388,7 @@ window.showNotebookList=function(){
   var sttBtn=document.getElementById('scrollToTopBtn');
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   renderNotebookList();history.replaceState({nbView:'list'},'');
+history.pushState({sc:true},''); // sentinel so popstate fires on back
 
 
 };
@@ -2345,20 +2346,18 @@ window.addEventListener('popstate',function(){
   if(window._isReaderOpen&&window._isReaderOpen()){
     document.getElementById('scReaderOverlay').style.display='none';
     document.getElementById('scReaderContent').innerHTML='';
-    return;
+    history.pushState({sc:true},'');return;
   }
   const onNb=document.getElementById('panel-notebook').classList.contains('active');
   if(onNb){
-    const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';window.showPagesView();return;}
-    const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();return;}
-    const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();return;}
-    const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();return;}
-    // On notebook list — pop tab history
-    if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());return;}
+    const fv=document.getElementById('nbFlashCardView');if(fv&&fv.style.display!=='none'){fv.style.display='none';window.showPagesView();history.pushState({sc:true},'');return;}
+    const pv=document.getElementById('nbPageView');if(pv&&pv.style.display!=='none'){window.showPagesView();history.pushState({sc:true},'');return;}
+    const pinsView=document.getElementById('nbPinsView');if(pinsView&&pinsView.style.display!=='none'){window.closePinsView();history.pushState({sc:true},'');return;}
+    const pvs=document.getElementById('nbPagesView');if(pvs&&pvs.style.display!=='none'){window.showNotebookList();history.pushState({sc:true},'');return;}
+    if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());history.pushState({sc:true},'');return;}
     return;
   }
-  // Not on notebook — pop tab history
-  if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());return;}
+  if(_tabHistory.length>0){_tabHistorySkip=true;window.switchTab(_tabHistory.pop());history.pushState({sc:true},'');return;}
 });
 history.replaceState({nbView:'list'},'');
 
