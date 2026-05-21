@@ -1337,8 +1337,8 @@ document.addEventListener('DOMContentLoaded',function(){
     function _kbHide(){
       var player=document.getElementById('ytPlayerWrap');
       var toc=document.getElementById('tocWrap');
-      if(player){player.style.transition='opacity 0.25s ease';player.style.opacity='0';player.style.pointerEvents='none';}
-      if(toc){toc.style.transition='opacity 0.25s ease';toc.style.opacity='0';toc.style.pointerEvents='none';}
+      if(player){player.style.transition='none';player.style.opacity='0';player.style.pointerEvents='none';}
+      if(toc){toc.style.transition='none';toc.style.opacity='0';toc.style.pointerEvents='none';}
     }
     function _kbShow(){
       var onSearch=document.getElementById('panel-search').classList.contains('active');
