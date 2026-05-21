@@ -930,7 +930,12 @@ const PROMPT_GENERAL=`Here is a YouTube transcript. Transform it into structured
 
 **Summary** — 2-3 sentence plain-english recap of the whole video
 
-Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time. Be consistent with bolding.
+CRITICAL FORMATTING RULES — these are non-negotiable and fundamental to how this output is processed:
+- You MUST bold every single key term, concept, name, or important word using **double asterisks** throughout the ENTIRE document — not just in Key Terms, but inline throughout Detailed Notes as well. Every time a key term appears anywhere in the document, it must be bolded. No exceptions.
+- You MUST wrap ALL pronunciations, translations, romanizations, or parenthetical clarifications in parentheses immediately after the term they refer to.
+- Failure to bold key terms will cause the entire output to be unformatted and unusable. Treat bolding as the single most important formatting requirement of this prompt.
+
+Keep the language clear and simple. If a concept is complex, explain it like I'm encountering it for the first time.
 
 Here is the transcript:
 
