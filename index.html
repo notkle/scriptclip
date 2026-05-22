@@ -1346,7 +1346,7 @@ window.authSignUp=async function(){
   if(password.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
   const {error}=await _sb.auth.signUp({email,password});
   if(error){err.textContent=error.message;err.style.display='block';}
-  else{err.style.color='#5cb85c';err.textContent='Account created! Check your email to confirm.';err.style.display='block';}
+  else{err.style.color='#5cb85c';err.textContent='Account created! Check your email to verify.';err.style.display='block';}
 };
 
 window.authSignOut=async function(){
