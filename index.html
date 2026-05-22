@@ -356,7 +356,7 @@
   #ytDescPopup{display:none;position:fixed;z-index:9999;background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:10px 14px;max-width:280px;max-height:180px;overflow-y:auto;pointer-events:none;font-size:13px;color:var(--accent);line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
 </style>
 </head>
-<body>
+<body id="appBody" style="opacity:0;transition:opacity 0.3s ease;">
 <div class="frame"></div>
 <div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;opacity:0;transition:opacity 0.6s ease;">
   <div style="width:100%;max-width:320px;">
@@ -378,7 +378,7 @@
 <div id="ytDescPopup"></div>
 <div id="kbBlocker" style="display:none;position:fixed;inset:0;z-index:9998;pointer-events:all;touch-action:none;background:transparent;" onclick="document.activeElement&&document.activeElement.blur()"></div>
 <div id="tabBlocker" style="display:none;position:fixed;top:0;left:0;right:0;height:120px;z-index:9998;pointer-events:all;touch-action:none;background:transparent;"></div>
-<div id="appContent" style="opacity:0;transition:opacity 0.3s ease;"><div class="topbar">
+<div class="topbar">
   <div class="logo" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" style="cursor:pointer">
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
@@ -1296,7 +1296,7 @@ window.doSave=function(){
   else if(saveFormat==='html'){
     const s=isDark?{bg:'#111210',ink:'#c8c4bc',h1:'#f0ece4',h2:'#d4a84b',h3:'#7a94a8',term:'#4ecdc4',romaji:'#c4907a',bulletMarker:'#e07b54',bullet:'#c8c4bc',sumBg:'#0f1a12',sumBorder:'#7dba84',sumText:'#7dba84',border:'#2a2926',thBg:'#1e1c1a',rowAlt:'#161412'}:{bg:'#f5f0e8',ink:'#1a1714',h1:'#2c4a6e',h2:'#2c4a6e',h3:'#5a6e8a',term:'#1a6b8a',romaji:'#7a5c8a',bulletMarker:'#2c4a6e',bullet:'#3a3530',sumBg:'#eef4f8',sumBorder:'#2c4a6e',sumText:'#2c4a6e',border:'#d4cfc4',thBg:'#e8e4dc',rowAlt:'#f0ece4'};
     const css='body{background:'+s.bg+';color:'+s.ink+';font-family:Georgia,serif;padding:40px;max-width:820px;margin:auto;line-height:1.8}h1{font-size:22px;font-weight:800;color:'+s.h1+';margin:36px 0 4px;border-bottom:2px solid '+s.border+';padding-bottom:8px}h2{font-size:17px;font-weight:700;color:'+s.h2+';margin:28px 0 4px}h3{font-size:14px;font-weight:700;color:'+s.h3+';margin:20px 0 4px}.term{color:'+s.term+';font-weight:600}.romaji{color:'+s.romaji+';font-style:italic;font-size:0.93em}.summary-block{border-left:3px solid '+s.sumBorder+';padding:16px 20px;background:'+s.sumBg+';color:'+s.sumText+';font-style:italic;border-radius:0 6px 6px 0;margin:10px 0}ul{margin:6px 0;padding:0}li{margin:4px 0;padding-left:20px;list-style:none;position:relative}li::before{content:"\u2022";position:absolute;left:0;color:'+s.bulletMarker+'}table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}th{background:'+s.thBg+';color:'+s.h2+';padding:8px 12px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase}td{padding:8px 12px;border-bottom:1px solid '+s.border+'}tr:nth-child(even) td{background:'+s.rowAlt+'}';
-    const blob=new Blob(['<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title><style>'+css+'</style></head><body>'+content.innerHTML+'</body></html>'],{type:'text/html'});
+    const blob=new Blob(['<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title><style>'+css+'</style></head><body id="appBody" style="opacity:0;transition:opacity 0.3s ease;">'+content.innerHTML+'</body></html>'],{type:'text/html'});
     triggerDownload(URL.createObjectURL(blob),title+'.html');
   }else{triggerDownload(URL.createObjectURL(new Blob([content.innerText],{type:'text/plain'})),title+'.txt');}
 };
@@ -1315,7 +1315,7 @@ function initSupabase(){
     _sb.auth.onAuthStateChange(function(event,session){
       _sbUser=session?session.user:null;
       if(_sbUser){
-        document.getElementById('authOverlay').style.display='none';var _ac=document.getElementById('appContent');if(_ac){_ac.style.opacity='1';}
+        document.getElementById('authOverlay').style.display='none';document.getElementById('appBody').style.opacity='1';
         document.getElementById('authUserEmail').textContent=_sbUser.email;
         if(event==='SIGNED_IN')window.syncFromCloud();
       } else {
@@ -1324,7 +1324,7 @@ function initSupabase(){
     });
     _sb.auth.getSession().then(function({data}){
       if(!data.session){var _ao=document.getElementById('authOverlay');_ao.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){_ao.style.opacity='1';});});}
-      else{var _ac=document.getElementById('appContent');if(_ac)_ac.style.opacity='1';}
+      else{document.getElementById('appBody').style.opacity='1';}
     });
   }
 }
@@ -2741,6 +2741,5 @@ if(_sbLib&&_sbLib.createClient){initSupabase();}else{window.addEventListener('lo
   </div>
   <div id="scrollToTopBtn"  onclick="window.scrollPageToTop()">&#8593;</div>
 
-</div><!-- /appContent -->
 </body>
 </html>
