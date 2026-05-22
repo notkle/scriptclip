@@ -382,7 +382,7 @@
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
-  <button onclick="window.authSignOut()" style="background:none;border:1px solid #3e3c38;border-radius:20px;padding:6px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--ink)';" onmouseout="this.style.borderColor='#3e3c38';this.style.color='var(--muted)';">Sign Out</button>
+  <button onclick="window.authSignOut()" style="background:var(--surface);border:1px solid #3e3c38;border-radius:6px;padding:7px 14px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--ink)';" onmouseout="this.style.borderColor='#3e3c38';this.style.color='var(--muted)';">Log Out</button>
 </div>
 <div class="tabs">
   <button class="tab" onclick="if(typeof window.switchTab==='function'){window.switchTab('search')}" id="tab-search">Search</button>
@@ -918,7 +918,6 @@ function stopScrollSave(){
   _scrollInterval=null;
 }
 // Save when app is backgrounded — save whichever view is active
-console.log('[SB] cp10: visibility');
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){
     const overlay=document.getElementById('scReaderOverlay');
@@ -1039,7 +1038,6 @@ function _stopBtnPulse(btnId,origHTML){
   var field=document.getElementById(fieldId);
   if(field){field.style.display='none';field.style.borderColor='#3e3c38';}
 }
-console.log('[SB] checkpoint 2: switchTab');
 window.switchTab=function(name){
   // Track tab history
   const currentTab=document.querySelector('.tab.active');
@@ -1108,7 +1106,6 @@ window.setBtn=function(state){
 };
 
 // PATCH 5: Get Transcript
-console.log('[SB] checkpoint 3: transcript');
 window.handleGetTranscript=async function(){
   if(window.innerWidth<=768){
     var btn=document.getElementById('transcriptBtn');
@@ -1303,7 +1300,6 @@ window.doSave=function(){
   }else{triggerDownload(URL.createObjectURL(new Blob([content.innerText],{type:'text/plain'})),title+'.txt');}
 };
 
-console.log('[SB] script start, supabase:', typeof window.supabase, typeof window.Supabase);
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
 const SUPABASE_URL='https://bbzikswisarzscqceoia.supabase.co';
@@ -1312,8 +1308,7 @@ var _sb=null;
 var _sbUser=null;
 
 function initSupabase(){
-  console.log('[SB] initSupabase called:', typeof window.supabase, typeof window.supabase?.createClient);
-  var sb=window.supabase||window.Supabase;
+    var sb=window.supabase||window.Supabase;
   if(sb&&sb.createClient){
     _sb=sb.createClient(SUPABASE_URL,SUPABASE_KEY);
     _sb.auth.onAuthStateChange(function(event,session){
@@ -1333,8 +1328,7 @@ function initSupabase(){
 }
 
 window.authSignIn=async function(){
-  console.log('[SB] signIn called, _sb:', !!_sb);
-  const email=document.getElementById('authEmail').value.trim();
+    const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
   err.style.display='none';
@@ -1343,8 +1337,7 @@ window.authSignIn=async function(){
 };
 
 window.authSignUp=async function(){
-  console.log('[SB] signUp called, _sb:', !!_sb);
-  const email=document.getElementById('authEmail').value.trim();
+    const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
   err.style.display='none';
@@ -1360,12 +1353,10 @@ window.authSignOut=async function(){
 };
 
 window.syncToCloud=async function(){
-  if(!_sbUser||!_sb){console.log('[SB] syncToCloud skipped, user:', !!_sbUser, 'sb:', !!_sb);return;}
+  if(!_sbUser||!_sb){return;}
   const data=localStorage.getItem('sc_notebooks')||'{}';
-  console.log('[SB] syncing to cloud...');
-  const {error}=await _sb.from('notebooks').upsert({user_id:_sbUser.id,data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
-  console.log('[SB] sync result:', error?error.message:'OK');
-};
+    const {error}=await _sb.from('notebooks').upsert({user_id:_sbUser.id,data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  };
 
 window.syncFromCloud=async function(silent){
   if(!_sbUser||!_sb)return;
@@ -1373,12 +1364,11 @@ window.syncFromCloud=async function(silent){
   if(data&&data.data){
     const cloud=JSON.parse(data.data);
     localStorage.setItem('sc_notebooks',JSON.stringify(cloud));
-    if(!silent){window.toast('Notebooks synced ✓');renderNotebookList();}
+    if(!silent){renderNotebookList();}
     else{renderNotebookList();}
   }
 };
 
-console.log('[SB] checkpoint 1: YT constants');
 const YT_SEARCH_URL='https://scriptclipyt.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
   el.innerHTML='Generating<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';
@@ -1544,7 +1534,6 @@ window.ytSearchRun=async function(){
   btn.disabled=false;btn.style.opacity='1';
 };
 
-console.log('[SB] checkpoint 5: DOMContentLoaded');
 document.addEventListener('DOMContentLoaded',function(){
 
   // Hide player and ToC on mobile when any input/textarea is focused (keyboard open)
@@ -1883,7 +1872,6 @@ function getContextSnippets(text,q,max){const snippets=[],lower=text.toLowerCase
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function highlightMatch(text,q){const idx=text.toLowerCase().indexOf(q);if(idx<0)return text;return text.slice(0,idx)+'<mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:inherit;border-radius:2px;padding:0 1px">'+text.slice(idx,idx+q.length)+'</mark>'+text.slice(idx+q.length);}
 
-console.log('[SB] checkpoint 4: nbSearch');
 window.nbSearch=function(query){
   const q=query.trim().toLowerCase(),clr=document.getElementById('nbSearchClear'),sts=document.getElementById('nbSearchStatus');
   if(clr)clr.style.display=q?'block':'none';if(!q){sts.textContent='';renderPagesList();return;}
@@ -1937,11 +1925,9 @@ window.nbFilterByPage=function(pageIdx){
   if(sts)sts.textContent=pageTotal+' match'+(pageTotal!==1?'es':'');
   window._nbRenderMatches(filtered);
 };
-console.log('[SB] cp6: nbClearSearch');
 window.nbClearSearch=function(){const inp=document.getElementById('nbSearchInput');if(inp){inp.value='';}document.getElementById('nbSearchClear').style.display='none';document.getElementById('nbSearchStatus').textContent='';renderPagesList();};
 
 // ── NOTEBOOK EXPORT/IMPORT ──
-console.log('[SB] cp7: exportModal');
 window.openExportModal=function(preselectId){
   const data=nbLoad(),ids=Object.keys(data);if(ids.length===0){window.toast('No notebooks to export.');return;}
   const sel=document.getElementById('nbExportSelect');sel.innerHTML='';ids.forEach(id=>{const opt=document.createElement('option');opt.value=id;opt.textContent=data[id].name;sel.appendChild(opt);});
@@ -2450,7 +2436,6 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
-console.log('[SB] cp9: mousedown');
 document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});});
   document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
@@ -2741,7 +2726,6 @@ history.replaceState({nbView:'list'},'');
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
 
 // Init Supabase
-console.log('[SB] end of script, supabase:', typeof window.supabase);
 var _sbLib=window.supabase||window.Supabase;
 if(_sbLib&&_sbLib.createClient){initSupabase();}else{window.addEventListener('load',function(){initSupabase();});}
 </script>
