@@ -1078,7 +1078,7 @@ window.switchTab=function(name){
       window.showNotebookList();
     }
   }
-  if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}
+  if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
   // Always reset prompt button state on any tab switch
   _storedTranscript=null;
@@ -1489,7 +1489,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){var p=document.getElementById('ytPlayerWrap'),t=document.getElementById('tocWrap');if(p){p.style.transition='none';p.style.opacity='0';p.style.pointerEvents='none';}if(t){t.style.transition='none';t.style.opacity='0';t.style.pointerEvents='none';}}
         if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='block';}
-        if(['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea'].includes(e.target.id)){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}
+        if(window.innerWidth<=768&&['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea'].includes(e.target.id)){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}
       }
     });
     document.addEventListener('focusout',function(e){
@@ -1498,7 +1498,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
         if(!hideExcluded.includes(e.target.id)){setTimeout(_kbShow,100);}
         if(!blockerExcluded.includes(e.target.id)){var kb=document.getElementById('kbBlocker');if(kb)kb.style.display='none';}
-        if(['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea'].includes(e.target.id)){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='none';}
+        if(window.innerWidth<=768&&['notesTextarea','ytSearchInput','nbSearchInput','quizPasteArea'].includes(e.target.id)){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='none';}
       }
     });
   }
