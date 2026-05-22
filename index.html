@@ -363,11 +363,11 @@
       <svg width="28" height="28" viewBox="0 0 40 40"><rect x="3" y="4" width="5" height="32" rx="2.5" fill="#c97c3a"/><rect x="11" y="10" width="5" height="26" rx="2.5" fill="#d4a84b"/><rect x="19" y="16" width="5" height="20" rx="2.5" fill="#b8602e"/><rect x="27" y="22" width="5" height="14" rx="2.5" fill="#c97c3a"/></svg>
       <span style="font-size:18px;font-weight:700;letter-spacing:2px;color:var(--ink);">SCRIPT<span style="color:#c97c3a">CLIP</span></span>
     </div>
-    <div id="authError" style="display:none;font-size:11px;color:#e05c5c;margin-bottom:12px;text-align:center;"></div>
     <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:10px;" />
     <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:16px;" />
     <button id="authSignInBtn" onclick="window.authSignIn()" style="width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;outline:none;">Sign In</button>
     <button id="authSignUpBtn" onclick="window.authSignUp()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;outline:none;">Create Account</button>
+    <div id="authError" style="font-size:11px;color:#e05c5c;margin-top:12px;text-align:center;min-height:16px;"></div>
     <div id="authUserBar" style="display:none;margin-top:24px;text-align:center;">
       <div id="authUserEmail" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
       <button onclick="window.authSignOut()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;">Sign out</button>
@@ -1365,20 +1365,20 @@ window.authSignIn=async function(){
     const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
-  err.style.display='none';
+  err.textContent='';err.style.color='#e05c5c';
   const {error}=await _sb.auth.signInWithPassword({email,password});
-  if(error){err.textContent=error.message;err.style.display='block';}
+  if(error){err.textContent=error.message;}
 };
 
 window.authSignUp=async function(){
     const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
-  err.style.display='none';
+  err.textContent='';err.style.color='#e05c5c';
   if(password.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
   const {error}=await _sb.auth.signUp({email,password});
-  if(error){err.textContent=error.message;err.style.display='block';}
-  else{err.style.color='#5cb85c';err.textContent='Account created! Check your email to verify.';err.style.display='block';}
+  if(error){err.textContent=error.message;}
+  else{err.style.color='#5cb85c';err.textContent='Account created! Check your email to verify.';}
 };
 
 window.toggleSettings=function(){
