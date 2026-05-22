@@ -1662,7 +1662,7 @@ function renderNotebookList(){
     const nb=data[id],card=document.createElement('div');
     card.className='nb-card'+(localStorage.getItem('sc_last_nb')===id?' nb-card-recent':'');
     const col=nb.color||'var(--muted)',icon=nb.icon||'\uD83D\uDCD3';
-    card.innerHTML='<span class="nb-card-icon" style="color:'+col+'">'+icon+'</span><div class="nb-card-info"><div class="nb-card-name">'+nb.name+'</div><div class="nb-card-meta">'+(nb.pages||[]).length+' page'+((nb.pages||[]).length!==1?'s':'')+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="nb-page-btn" title="Share" style="font-size:11px">&#8679;</button><button class="nb-page-btn" title="Rename" style="font-size:11px">\u270E</button><button class="nb-page-btn" title="Customize" style="font-size:11px;color:'+col+'">\u2B24</button></div>';
+    card.innerHTML='<span class="nb-card-icon" style="color:'+col+'">'+icon+'</span><div class="nb-card-info"><div class="nb-card-name">'+nb.name+'</div><div class="nb-card-meta">'+(nb.pages||[]).length+' page'+((nb.pages||[]).length!==1?'s':'')+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="nb-page-btn" title="Share" style="padding:4px 6px;line-height:0"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button><button class="nb-page-btn" title="Rename" style="font-size:11px">\u270E</button><button class="nb-page-btn" title="Customize" style="font-size:11px;color:'+col+'">\u2B24</button></div>';
     card.querySelector('[title="Share"]').onclick=function(e){e.stopPropagation();window.shareNotebook(id);};
     card.querySelector('[title="Rename"]').onclick=function(e){e.stopPropagation();window.renameNotebook(id);};
     card.querySelector('[title="Customize"]').onclick=function(e){e.stopPropagation();window.openNbColor(id,'notebook');};
@@ -1684,11 +1684,16 @@ window.importSharedNotebook=async function(shareId){
   local[newId]=nbData;
   nbSave(local);
   renderNotebookList();
-  window.toast('Notebook imported!');
+  window.toast('Notebook imported! You can rename and customize it now.');
+  // Open rename then color picker
+  window._postRenameColor=true;
+  setTimeout(function(){window.renameNotebook(newId);},400);
 };
 window.shareNotebook=async function(id){
   if(!_sbUser||!_sb){window.toast('Sign in to share notebooks.');return;}
   const data=nbLoad(),nb=data[id];if(!nb)return;
+  const confirmed=await window.scConfirm('Share "'+nb.name+'"? A link will be generated and copied to your clipboard. Link expires in 30 days.');
+  if(!confirmed)return;
   window.toast('Generating share link...');
   const shareId=Math.random().toString(36).slice(2,9)+Math.random().toString(36).slice(2,9);
   const {error}=await _sb.from('shared_notebooks').insert({id:shareId,data:JSON.stringify({[id]:nb}),name:nb.name});
@@ -1895,7 +1900,7 @@ window.renamePage=function(idx){const data=nbLoad(),nb=data[currentNotebookId];i
 window.confirmNbName=function(){
   const name=document.getElementById('nbNameInput').value.trim();if(!name)return;
   const mode=document.getElementById('nbNameInput').dataset.mode||'',inp=document.getElementById('nbNameInput');
-  if(mode==='rename-nb'){const id=inp.dataset.renameId,data=nbLoad();if(data[id]){data[id].name=name;nbSave(data);}inp.dataset.mode='';window.closeNbNameModal();renderNotebookList();return;}
+  if(mode==='rename-nb'){const id=inp.dataset.renameId,data=nbLoad();if(data[id]){data[id].name=name;nbSave(data);}inp.dataset.mode='';window.closeNbNameModal();renderNotebookList();if(window._postRenameColor){window._postRenameColor=false;setTimeout(function(){window.openNbColor(id,'notebook');},300);}return;}
   if(mode==='rename-page'){const idx=parseInt(inp.dataset.renameIdx),data=nbLoad(),nb=data[currentNotebookId];if(nb&&nb.pages[idx]){nb.pages[idx].name=name;nbSave(data);}inp.dataset.mode='';window.closeNbNameModal();renderPagesList();return;}
   window.closeNbNameModal();const data=nbLoad(),id='nb_'+Date.now();data[id]={name,pages:[],created:Date.now()};nbSave(data);
   if(mode==='quick'){const sel=document.getElementById('nbSelect');if(sel){const opt=document.createElement('option');opt.value=id;opt.textContent=name;sel.appendChild(opt);sel.value=id;}inp.dataset.mode='';}
