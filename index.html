@@ -358,7 +358,7 @@
 </head>
 <body>
 <div class="frame"></div>
-<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;">
+<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;opacity:0;transition:opacity 0.6s ease;">
   <div style="width:100%;max-width:320px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;">
       <svg width="28" height="28" viewBox="0 0 40 40"><rect x="3" y="4" width="5" height="32" rx="2.5" fill="#c97c3a"/><rect x="11" y="10" width="5" height="26" rx="2.5" fill="#d4a84b"/><rect x="19" y="16" width="5" height="20" rx="2.5" fill="#b8602e"/><rect x="27" y="22" width="5" height="14" rx="2.5" fill="#c97c3a"/></svg>
@@ -378,7 +378,7 @@
 <div id="ytDescPopup"></div>
 <div id="kbBlocker" style="display:none;position:fixed;inset:0;z-index:9998;pointer-events:all;touch-action:none;background:transparent;" onclick="document.activeElement&&document.activeElement.blur()"></div>
 <div id="tabBlocker" style="display:none;position:fixed;top:0;left:0;right:0;height:120px;z-index:9998;pointer-events:all;touch-action:none;background:transparent;"></div>
-<div class="topbar">
+<div id="appContent" style="opacity:0;transition:opacity 0.3s ease;"><div class="topbar">
   <div class="logo" onclick="if(typeof window.switchTab==='function'){window.switchTab('builder')}" style="cursor:pointer">
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
@@ -1315,15 +1315,16 @@ function initSupabase(){
     _sb.auth.onAuthStateChange(function(event,session){
       _sbUser=session?session.user:null;
       if(_sbUser){
-        document.getElementById('authOverlay').style.display='none';
+        document.getElementById('authOverlay').style.display='none';var _ac=document.getElementById('appContent');if(_ac){_ac.style.opacity='1';}
         document.getElementById('authUserEmail').textContent=_sbUser.email;
         if(event==='SIGNED_IN')window.syncFromCloud();
       } else {
-        document.getElementById('authOverlay').style.display='flex';
+        var _ao=document.getElementById('authOverlay');_ao.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){_ao.style.opacity='1';});});
       }
     });
     _sb.auth.getSession().then(function({data}){
-      if(!data.session)document.getElementById('authOverlay').style.display='flex';
+      if(!data.session){var _ao=document.getElementById('authOverlay');_ao.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){_ao.style.opacity='1';});});}
+      else{var _ac=document.getElementById('appContent');if(_ac)_ac.style.opacity='1';}
     });
   }
 }
@@ -2740,5 +2741,6 @@ if(_sbLib&&_sbLib.createClient){initSupabase();}else{window.addEventListener('lo
   </div>
   <div id="scrollToTopBtn"  onclick="window.scrollPageToTop()">&#8593;</div>
 
+</div><!-- /appContent -->
 </body>
 </html>
