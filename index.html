@@ -81,8 +81,7 @@
   .render-btn:active { transform:scale(0.98); }
   .notes-input-area { display:flex; flex-direction:column; gap:10px; flex:1; }
   .notes-textarea { width:100%; min-height:200px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px; font-size:13px; color:var(--ink); resize:vertical; outline:none; line-height:1.6; transition:border-color 0.2s,background 0.3s,color 0.3s; flex-shrink:0; }
-  @media (min-width:769px){#panel-notes{align-items:center;justify-content:center;}#panel-notes>*{width:100%;max-width:760px;}
-  #panel-quiz{align-items:center;justify-content:center;}#panel-quiz>*{width:100%;max-width:760px;}}
+  @media (min-width:769px){#panel-notes{align-items:center;}#panel-notes>*{width:100%;max-width:760px;}}
   .notes-textarea:focus { border-color:var(--n-heading); }
   .notes-textarea::placeholder { color:var(--muted); font-style:italic; font-size:12px; }
   .notes-rendered { display:none; flex-direction:column; flex:1; overflow:hidden; }
@@ -152,7 +151,7 @@
   .nb-panel{justify-content:flex-start;align-items:stretch;padding:0}
   .nb-view{display:none;flex-direction:column;flex:1;overflow-x:hidden;overflow-y:hidden;padding:24px 28px 28px}
   #nbPagesList{flex-shrink:0;display:block;}
-  @media (min-width:769px) { #nbPagesList { display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:start; } }
+  @media (min-width:769px) { #nbPagesList { display:grid; grid-template-columns:1fr 1fr; gap:0; align-items:start; } }
 
   #nbListView{display:flex}
   .nb-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-shrink:0}
