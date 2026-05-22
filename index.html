@@ -1323,7 +1323,10 @@ function initSupabase(){
       if(_sbUser){
         document.getElementById('authOverlay').style.display='none';document.getElementById('appBody').style.opacity='1';
         document.getElementById('authUserEmail').textContent=_sbUser.email;
-        if(event==='SIGNED_IN')window.syncFromCloud();
+        if(event==='SIGNED_IN'){
+          window.syncFromCloud();
+          if(window._pendingShareId)window.importSharedNotebook(window._pendingShareId);
+        }
       } else {
         var _ao=document.getElementById('authOverlay');_ao.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){_ao.style.opacity='1';});});
       }
@@ -1659,7 +1662,8 @@ function renderNotebookList(){
     const nb=data[id],card=document.createElement('div');
     card.className='nb-card'+(localStorage.getItem('sc_last_nb')===id?' nb-card-recent':'');
     const col=nb.color||'var(--muted)',icon=nb.icon||'\uD83D\uDCD3';
-    card.innerHTML='<span class="nb-card-icon" style="color:'+col+'">'+icon+'</span><div class="nb-card-info"><div class="nb-card-name">'+nb.name+'</div><div class="nb-card-meta">'+(nb.pages||[]).length+' page'+((nb.pages||[]).length!==1?'s':'')+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="nb-page-btn" title="Rename" style="font-size:11px">\u270E</button><button class="nb-page-btn" title="Customize" style="font-size:11px;color:'+col+'">\u2B24</button></div>';
+    card.innerHTML='<span class="nb-card-icon" style="color:'+col+'">'+icon+'</span><div class="nb-card-info"><div class="nb-card-name">'+nb.name+'</div><div class="nb-card-meta">'+(nb.pages||[]).length+' page'+((nb.pages||[]).length!==1?'s':'')+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="nb-page-btn" title="Share" style="font-size:11px">&#8679;</button><button class="nb-page-btn" title="Rename" style="font-size:11px">\u270E</button><button class="nb-page-btn" title="Customize" style="font-size:11px;color:'+col+'">\u2B24</button></div>';
+    card.querySelector('[title="Share"]').onclick=function(e){e.stopPropagation();window.shareNotebook(id);};
     card.querySelector('[title="Rename"]').onclick=function(e){e.stopPropagation();window.renameNotebook(id);};
     card.querySelector('[title="Customize"]').onclick=function(e){e.stopPropagation();window.openNbColor(id,'notebook');};
     card.addEventListener('click',()=>window.openNotebook(id));
@@ -1667,6 +1671,32 @@ function renderNotebookList(){
   });
 }
 
+window.importSharedNotebook=async function(shareId){
+  window._pendingShareId=null;
+  const {data,error}=await _sb.from('shared_notebooks').select('data,name').eq('id',shareId).single();
+  if(error||!data){window.toast('Share link not found or expired.');return;}
+  const confirmed=await window.scConfirm('Import notebook "'+data.name+'"?');
+  if(!confirmed)return;
+  const nb=JSON.parse(data.data);
+  const local=nbLoad();
+  const newId='nb_'+Date.now();
+  const nbData=Object.values(nb)[0];
+  local[newId]=nbData;
+  nbSave(local);
+  renderNotebookList();
+  window.toast('Notebook imported!');
+};
+window.shareNotebook=async function(id){
+  if(!_sbUser||!_sb){window.toast('Sign in to share notebooks.');return;}
+  const data=nbLoad(),nb=data[id];if(!nb)return;
+  window.toast('Generating share link...');
+  const shareId=Math.random().toString(36).slice(2,9)+Math.random().toString(36).slice(2,9);
+  const {error}=await _sb.from('shared_notebooks').insert({id:shareId,data:JSON.stringify({[id]:nb}),name:nb.name});
+  if(error){window.toast('Failed to create share link.');return;}
+  const link=window.location.origin+window.location.pathname+'?share='+shareId;
+  try{await navigator.clipboard.writeText(link);window.toast('Share link copied!');}
+  catch(e){window.toast('Link: '+link);}
+};
 window.createNotebook=function(){document.getElementById('nbNameInput').value='';document.getElementById('nbNameInput').dataset.mode='';document.getElementById('nbNameOverlay').querySelector('.modal-title').textContent='New Notebook';document.getElementById('nbNameOverlay').classList.add('open');setTimeout(()=>document.getElementById('nbNameInput').focus(),50);};
 window.triggerNbImport=function(){document.getElementById('nbImportInput').click();};
 
@@ -2743,6 +2773,16 @@ window.addEventListener('popstate',function(){
 history.replaceState({nbView:'list'},'');
 
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
+
+// Check for share link on load
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const shareId=params.get('share');
+  if(shareId){
+    window._pendingShareId=shareId;
+    window.history.replaceState({},'',window.location.pathname);
+  }
+})();
 
 // Init Supabase
 var _sbLib=window.supabase||window.Supabase;
