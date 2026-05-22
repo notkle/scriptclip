@@ -366,8 +366,8 @@
     <div id="authError" style="display:none;font-size:11px;color:#e05c5c;margin-bottom:12px;text-align:center;"></div>
     <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:10px;" />
     <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:16px;" />
-    <button id="authSignInBtn" onclick="window.authSignIn()" style="width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;">Sign In</button>
-    <button id="authSignUpBtn" onclick="window.authSignUp()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Create Account</button>
+    <button id="authSignInBtn" onclick="window.authSignIn()" style="width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;outline:none;">Sign In</button>
+    <button id="authSignUpBtn" onclick="window.authSignUp()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;outline:none;">Create Account</button>
     <div id="authUserBar" style="display:none;margin-top:24px;text-align:center;">
       <div id="authUserEmail" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
       <button onclick="window.authSignOut()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;">Sign out</button>
@@ -840,6 +840,7 @@
   <div id="scReaderContent" class="notes-content" style="padding:20px 20px 48px;flex:none;border:none;border-radius:0;-webkit-touch-callout:none;"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const NB_KEY='sc_notebooks';
 
@@ -917,6 +918,7 @@ function stopScrollSave(){
   _scrollInterval=null;
 }
 // Save when app is backgrounded — save whichever view is active
+console.log('[SB] cp10: visibility');
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){
     const overlay=document.getElementById('scReaderOverlay');
@@ -1052,6 +1054,7 @@ function _stopBtnPulse(btnId,origHTML){
   var field=document.getElementById(fieldId);
   if(field){field.style.display='none';field.style.borderColor='#3e3c38';}
 }
+console.log('[SB] checkpoint 2: switchTab');
 window.switchTab=function(name){
   // Track tab history
   const currentTab=document.querySelector('.tab.active');
@@ -1120,6 +1123,7 @@ window.setBtn=function(state){
 };
 
 // PATCH 5: Get Transcript
+console.log('[SB] checkpoint 3: transcript');
 window.handleGetTranscript=async function(){
   if(window.innerWidth<=768){
     var btn=document.getElementById('transcriptBtn');
@@ -1314,6 +1318,7 @@ window.doSave=function(){
   }else{triggerDownload(URL.createObjectURL(new Blob([content.innerText],{type:'text/plain'})),title+'.txt');}
 };
 
+console.log('[SB] script start, supabase:', typeof window.supabase, typeof window.Supabase);
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
 const SUPABASE_URL='https://bbzikswisarzscqceoia.supabase.co';
@@ -1322,8 +1327,10 @@ var _sb=null;
 var _sbUser=null;
 
 function initSupabase(){
-  if(window.supabase){
-    _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  console.log('[SB] initSupabase called:', typeof window.supabase, typeof window.supabase?.createClient);
+  var sb=window.supabase||window.Supabase;
+  if(sb&&sb.createClient){
+    _sb=sb.createClient(SUPABASE_URL,SUPABASE_KEY);
     _sb.auth.onAuthStateChange(function(event,session){
       _sbUser=session?session.user:null;
       if(_sbUser){
@@ -1341,6 +1348,7 @@ function initSupabase(){
 }
 
 window.authSignIn=async function(){
+  console.log('[SB] signIn called, _sb:', !!_sb);
   const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
@@ -1350,6 +1358,7 @@ window.authSignIn=async function(){
 };
 
 window.authSignUp=async function(){
+  console.log('[SB] signUp called, _sb:', !!_sb);
   const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const err=document.getElementById('authError');
@@ -1384,6 +1393,7 @@ window.syncFromCloud=async function(){
   }
 };
 
+console.log('[SB] checkpoint 1: YT constants');
 const YT_SEARCH_URL='https://scriptclipyt.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
   el.innerHTML='Generating<span id="_genDots" style="display:inline-block;width:1.5em;text-align:left;"></span>';
@@ -1549,6 +1559,7 @@ window.ytSearchRun=async function(){
   btn.disabled=false;btn.style.opacity='1';
 };
 
+console.log('[SB] checkpoint 5: DOMContentLoaded');
 document.addEventListener('DOMContentLoaded',function(){
 
   // Hide player and ToC on mobile when any input/textarea is focused (keyboard open)
@@ -1644,7 +1655,6 @@ window.showNotebookList=function(){
   if(sttBtn){sttBtn.style.transition='none';sttBtn.classList.remove('visible');setTimeout(function(){sttBtn.style.transition='';},50);}
   renderNotebookList();history.replaceState({nbView:'list'},'');
 history.pushState({sc:true},''); // sentinel so popstate fires on back
-
 
 };
 
@@ -1888,6 +1898,7 @@ function getContextSnippets(text,q,max){const snippets=[],lower=text.toLowerCase
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function highlightMatch(text,q){const idx=text.toLowerCase().indexOf(q);if(idx<0)return text;return text.slice(0,idx)+'<mark style="background:color-mix(in srgb,var(--n-h2) 35%,transparent);color:inherit;border-radius:2px;padding:0 1px">'+text.slice(idx,idx+q.length)+'</mark>'+text.slice(idx+q.length);}
 
+console.log('[SB] checkpoint 4: nbSearch');
 window.nbSearch=function(query){
   const q=query.trim().toLowerCase(),clr=document.getElementById('nbSearchClear'),sts=document.getElementById('nbSearchStatus');
   if(clr)clr.style.display=q?'block':'none';if(!q){sts.textContent='';renderPagesList();return;}
@@ -1941,9 +1952,11 @@ window.nbFilterByPage=function(pageIdx){
   if(sts)sts.textContent=pageTotal+' match'+(pageTotal!==1?'es':'');
   window._nbRenderMatches(filtered);
 };
+console.log('[SB] cp6: nbClearSearch');
 window.nbClearSearch=function(){const inp=document.getElementById('nbSearchInput');if(inp){inp.value='';}document.getElementById('nbSearchClear').style.display='none';document.getElementById('nbSearchStatus').textContent='';renderPagesList();};
 
 // ── NOTEBOOK EXPORT/IMPORT ──
+console.log('[SB] cp7: exportModal');
 window.openExportModal=function(preselectId){
   const data=nbLoad(),ids=Object.keys(data);if(ids.length===0){window.toast('No notebooks to export.');return;}
   const sel=document.getElementById('nbExportSelect');sel.innerHTML='';ids.forEach(id=>{const opt=document.createElement('option');opt.value=id;opt.textContent=data[id].name;sel.appendChild(opt);});
@@ -2452,6 +2465,7 @@ window.deletePin=async function(id){
   pinsSave(pins);renderPinsList();
 };
 
+console.log('[SB] cp9: mousedown');
 document.addEventListener('mousedown',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});});
   document.addEventListener('touchstart',function(e){const p=document.getElementById('aiHighlightPopup');if(p&&p.style.display!=='none'&&!p.contains(e.target))hideAiHighlightPopup();['transcriptPasteField','promptPasteField'].forEach(function(fid){var field=document.getElementById(fid);if(!field||field.style.display==='none')return;var btnId=fid==='transcriptPasteField'?'transcriptBtn':'mainBtn';var btn=document.getElementById(btnId);if(!btn)return;if(!field.contains(e.target)&&!btn.contains(e.target)){field.style.display='none';field.style.borderColor='#3e3c38';btn.style.borderColor='';btn.dataset.slideOpen='0';}});},{passive:true});
   const fco=document.getElementById('fcConfirmOverlay');if(fco)fco.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
@@ -2740,6 +2754,11 @@ window.addEventListener('popstate',function(){
 history.replaceState({nbView:'list'},'');
 
 // pull-to-refresh disabled via CSS overscroll-behavior-y:none
+
+// Init Supabase
+console.log('[SB] end of script, supabase:', typeof window.supabase);
+var _sbLib=window.supabase||window.Supabase;
+if(_sbLib&&_sbLib.createClient){initSupabase();}else{window.addEventListener('load',function(){initSupabase();});}
 </script>
   <!-- TABLE OF CONTENTS POPUP (PC) -->
   <div id="tocPopupOverlay">
