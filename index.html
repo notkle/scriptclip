@@ -382,7 +382,7 @@
     <div class="logo-bars"><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div><div class="logo-bar"></div></div>
     <div class="logo-name">Script<span>Clip</span></div>
   </div>
-  <button class="theme-toggle" onclick="if(typeof window.toggleTheme==='function'){window.toggleTheme()}" id="themeBtn">&#9790; Dark</button>
+  <button onclick="window.authSignOut()" style="background:none;border:1px solid #3e3c38;border-radius:20px;padding:6px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--ink)';" onmouseout="this.style.borderColor='#3e3c38';this.style.color='var(--muted)';">Sign Out</button>
 </div>
 <div class="tabs">
   <button class="tab" onclick="if(typeof window.switchTab==='function'){window.switchTab('search')}" id="tab-search">Search</button>
@@ -939,18 +939,7 @@ const THEMES={
 };
 let currentTheme='dusk';
 
-window.setTheme=function(name){
-  if(!THEMES[name])return;
-  currentTheme=name;
-  const th=THEMES[name],r=document.documentElement;
-  r.style.setProperty('--n-h1',th.h1);r.style.setProperty('--n-h2',th.h2);r.style.setProperty('--n-h3',th.h3);
-  r.style.setProperty('--n-term',th.term);r.style.setProperty('--n-romaji',th.romaji);
-  r.style.setProperty('--n-bullet-marker',th.bulletMarker);r.style.setProperty('--n-bullet',th.bullet);
-  r.style.setProperty('--n-summary-bg',th.sumBg);r.style.setProperty('--n-summary-border',th.sumBorder);r.style.setProperty('--n-summary-text',th.sumText);
-  ['themeSelectInput','themeSelectInline','themeSelectPage'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=name;});
-  const nc=document.getElementById('notesContent');
-  if(nc&&window._lastRawNotes){nc.innerHTML=parseMarkdown(window._lastRawNotes);}
-};
+
 
 window.scConfirmResolve=null;
 window.scConfirm=function(msg){
@@ -1016,11 +1005,7 @@ function detectLanguageLearning(text){
 }
 
 let isDark=true;
-window.toggleTheme=function(){
-  isDark=!isDark;
-  document.documentElement.setAttribute('data-theme',isDark?'dark':'');
-  document.getElementById('themeBtn').textContent=isDark?'\u263E Dark':'\u2600 Light';
-};
+
 
 var _storedTranscript=null;
 var _storedYtLink=null;
@@ -1082,7 +1067,7 @@ window.switchTab=function(name){
   document.getElementById('tab-'+name).classList.add('active');document.getElementById('tab-'+name).style.borderBottomColor='';
   document.getElementById('panel-'+name).classList.add('active');
   if(name!=='builder'){window.setBtn('default');const sl=document.getElementById('statusLine');if(sl){sl.textContent='';sl.className='status-line';}}
-  if(name==='notebook'){
+  if(name==='notebook'){if(_sbUser&&_sb)window.syncFromCloud(true);
     const alreadyOnPage=document.getElementById('nbPageView')&&document.getElementById('nbPageView').style.display!=='none';
     if(alreadyOnPage){
       window.showNotebookList();
@@ -1336,7 +1321,7 @@ function initSupabase(){
       if(_sbUser){
         document.getElementById('authOverlay').style.display='none';
         document.getElementById('authUserEmail').textContent=_sbUser.email;
-        window.syncFromCloud();
+        if(event==='SIGNED_IN')window.syncFromCloud();
       } else {
         document.getElementById('authOverlay').style.display='flex';
       }
@@ -1382,16 +1367,14 @@ window.syncToCloud=async function(){
   console.log('[SB] sync result:', error?error.message:'OK');
 };
 
-window.syncFromCloud=async function(){
+window.syncFromCloud=async function(silent){
   if(!_sbUser||!_sb)return;
   const {data,error}=await _sb.from('notebooks').select('data').eq('user_id',_sbUser.id).single();
   if(data&&data.data){
     const cloud=JSON.parse(data.data);
-    const local=JSON.parse(localStorage.getItem('sc_notebooks')||'{}');
-    // Merge: cloud wins for keys it has, local wins for new keys
-    const merged=Object.assign({},cloud,local);
-    localStorage.setItem('sc_notebooks',JSON.stringify(merged));
-    window.toast('Notebooks synced ✓');
+    localStorage.setItem('sc_notebooks',JSON.stringify(cloud));
+    if(!silent){window.toast('Notebooks synced ✓');renderNotebookList();}
+    else{renderNotebookList();}
   }
 };
 
