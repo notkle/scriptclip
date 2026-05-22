@@ -357,6 +357,23 @@
 </head>
 <body>
 <div class="frame"></div>
+<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;">
+  <div style="width:100%;max-width:320px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;">
+      <svg width="28" height="28" viewBox="0 0 40 40"><rect x="3" y="4" width="5" height="32" rx="2.5" fill="#c97c3a"/><rect x="11" y="10" width="5" height="26" rx="2.5" fill="#d4a84b"/><rect x="19" y="16" width="5" height="20" rx="2.5" fill="#b8602e"/><rect x="27" y="22" width="5" height="14" rx="2.5" fill="#c97c3a"/></svg>
+      <span style="font-size:18px;font-weight:700;letter-spacing:2px;color:var(--ink);">SCRIPT<span style="color:#c97c3a">CLIP</span></span>
+    </div>
+    <div id="authError" style="display:none;font-size:11px;color:#e05c5c;margin-bottom:12px;text-align:center;"></div>
+    <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:10px;" />
+    <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;margin-bottom:16px;" />
+    <button id="authSignInBtn" onclick="window.authSignIn()" style="width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;">Sign In</button>
+    <button id="authSignUpBtn" onclick="window.authSignUp()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Create Account</button>
+    <div id="authUserBar" style="display:none;margin-top:24px;text-align:center;">
+      <div id="authUserEmail" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
+      <button onclick="window.authSignOut()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;">Sign out</button>
+    </div>
+  </div>
+</div>
 <div id="ytDescPopup"></div>
 <div id="kbBlocker" style="display:none;position:fixed;inset:0;z-index:9998;pointer-events:all;touch-action:none;background:transparent;" onclick="document.activeElement&&document.activeElement.blur()"></div>
 <div id="tabBlocker" style="display:none;position:fixed;top:0;left:0;right:0;height:120px;z-index:9998;pointer-events:all;touch-action:none;background:transparent;"></div>
@@ -911,7 +928,7 @@ document.addEventListener('visibilitychange',function(){
   }
 });
 function nbLoad(){try{return JSON.parse(localStorage.getItem(NB_KEY)||'{}')}catch(e){return{}}}
-function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data))}
+function nbSave(data){localStorage.setItem(NB_KEY,JSON.stringify(data));if(window.syncToCloud)window.syncToCloud();}
 
 const THEMES={
   dusk:{h1:'#f0ece4',h2:'#d4a84b',h3:'#7a94a8',term:'#4ecdc4',romaji:'#c4907a',bulletMarker:'#e07b54',bullet:'#c8c4bc',sumBg:'color-mix(in srgb,#7dba84 8%,transparent)',sumBorder:'#7dba84',sumText:'#7dba84'},
@@ -1299,6 +1316,73 @@ window.doSave=function(){
 
 // ── YOUTUBE ──
 const WORKER_URL='https://scriptclip-proxy.sotempyhehe.workers.dev';
+const SUPABASE_URL='https://bbzikswisarzscqceoia.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJiemlrc3dpc2FyenNjcWNlb2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDc3NDksImV4cCI6MjA5NDk4Mzc0OX0.AyNvIiZnWRdbtBaJrMacILrX2hOC1Ch-MPWMs7q-M5s';
+var _sb=null;
+var _sbUser=null;
+
+function initSupabase(){
+  if(window.supabase){
+    _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    _sb.auth.onAuthStateChange(function(event,session){
+      _sbUser=session?session.user:null;
+      if(_sbUser){
+        document.getElementById('authOverlay').style.display='none';
+        document.getElementById('authUserEmail').textContent=_sbUser.email;
+        window.syncFromCloud();
+      } else {
+        document.getElementById('authOverlay').style.display='flex';
+      }
+    });
+    _sb.auth.getSession().then(function({data}){
+      if(!data.session)document.getElementById('authOverlay').style.display='flex';
+    });
+  }
+}
+
+window.authSignIn=async function(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const err=document.getElementById('authError');
+  err.style.display='none';
+  const {error}=await _sb.auth.signInWithPassword({email,password});
+  if(error){err.textContent=error.message;err.style.display='block';}
+};
+
+window.authSignUp=async function(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const err=document.getElementById('authError');
+  err.style.display='none';
+  if(password.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
+  const {error}=await _sb.auth.signUp({email,password});
+  if(error){err.textContent=error.message;err.style.display='block';}
+  else{err.style.color='#5cb85c';err.textContent='Account created! Check your email to confirm.';err.style.display='block';}
+};
+
+window.authSignOut=async function(){
+  await _sb.auth.signOut();
+  window.toast('Signed out');
+};
+
+window.syncToCloud=async function(){
+  if(!_sbUser||!_sb)return;
+  const data=localStorage.getItem('sc_notebooks')||'{}';
+  await _sb.from('notebooks').upsert({user_id:_sbUser.id,data,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+};
+
+window.syncFromCloud=async function(){
+  if(!_sbUser||!_sb)return;
+  const {data,error}=await _sb.from('notebooks').select('data').eq('user_id',_sbUser.id).single();
+  if(data&&data.data){
+    const cloud=JSON.parse(data.data);
+    const local=JSON.parse(localStorage.getItem('sc_notebooks')||'{}');
+    // Merge: cloud wins for keys it has, local wins for new keys
+    const merged=Object.assign({},cloud,local);
+    localStorage.setItem('sc_notebooks',JSON.stringify(merged));
+    window.toast('Notebooks synced ✓');
+  }
+};
 
 const YT_SEARCH_URL='https://scriptclipyt.sotempyhehe.workers.dev';
 function startGeneratingAnim(el){
@@ -1466,6 +1550,7 @@ window.ytSearchRun=async function(){
 };
 
 document.addEventListener('DOMContentLoaded',function(){
+  initSupabase();
 
   // Hide player and ToC on mobile when any input/textarea is focused (keyboard open)
   if(window.innerWidth<=768){
