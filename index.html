@@ -151,7 +151,7 @@
   .nb-panel{justify-content:flex-start;align-items:stretch;padding:0}
   .nb-view{display:none;flex-direction:column;flex:1;overflow-x:hidden;overflow-y:hidden;padding:24px 28px 28px}
   #nbPagesList{flex-shrink:0;display:block;}
-  @media (min-width:769px) { #nbPagesList { display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; outline:2px solid red; } #nbPagesList>div{margin-bottom:0 !important;outline:1px solid blue;} }
+  @media (min-width:769px) { #nbPagesList { display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; grid-auto-rows:min-content; } #nbPagesList>div{margin-bottom:0 !important;} }
 
   #nbListView{display:flex}
   .nb-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-shrink:0}
