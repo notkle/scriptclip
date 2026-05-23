@@ -217,11 +217,11 @@
   :root:not([data-theme="dark"]) .quiz-generate-btn{background:var(--ink);color:var(--bg);border-color:transparent}
   .quiz-generate-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
   @media (hover:hover) and (pointer:fine){
-    #quizNbPickerBtn:hover{border-color:var(--ink);color:var(--ink);}
-    .quiz-drop-area:hover{border-color:var(--ink);}
-    .quiz-drop-area:hover .quiz-drop-label{color:var(--ink);}
-    .quiz-drop-area:hover .quiz-drop-sub{color:var(--ink);}
-    .quiz-drop-area:hover .quiz-drop-btn{border-color:var(--ink);color:var(--ink);}
+    #quizNbPickerBtn:hover{border-color:var(--accent);color:var(--accent);}
+    .quiz-drop-area:hover{border-color:var(--accent);}
+    .quiz-drop-area:hover .quiz-drop-label{color:var(--accent);}
+    .quiz-drop-area:hover .quiz-drop-sub{color:var(--accent);}
+    .quiz-drop-area:hover .quiz-drop-btn{border-color:var(--accent);color:var(--accent);}
   }
   .quiz-generate-btn:disabled{opacity:0.5;cursor:not-allowed}
   .quiz-gen-status{margin-top:12px;font-size:11px;color:var(--muted);text-align:center;min-height:16px;font-style:italic}
@@ -546,7 +546,7 @@
         
         <button class="nb-page-btn" onclick="window.openQuizHistory()" style="flex-shrink:0">History</button>
       </div>
-      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" class="quiz-load-area" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;">&#128211; Load from Notebook</button>
+      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;">&#128211; Load from Notebook</button>
       <div id="quizDropArea" class="quiz-drop-area">
         <div id="quizDropInner">
           <div class="quiz-drop-label">Drag your saved HTML file here</div>
