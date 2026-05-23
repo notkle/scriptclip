@@ -70,7 +70,9 @@
   .step-num { width:20px; height:20px; border:1px solid var(--muted); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--ink); flex-shrink:0; transition:border-color 0.3s,color 0.3s; }
   @media (min-width:769px) { .step-num{width:26px;height:26px;font-size:11px;} .step-label{font-size:11px;} .step-connector{margin-top:13px;} }
   .step-label { font-size:9px; color:var(--ink); text-align:center; line-height:1.5; opacity:0.6; transition:color 0.3s,opacity 0.3s; }
-  .step-connector { height:1px; background:var(--muted); flex:1; margin-top:10px; max-width:20px; flex-shrink:0; opacity:0.4; transition:background 0.3s; }
+  .step { align-items:center; }
+  .step-num { flex-shrink:0; }
+  .step-connector { height:1px; background:var(--muted); flex:1; margin-top:13px; max-width:20px; flex-shrink:0; opacity:0.4; transition:background 0.3s; }
   .notes-panel { justify-content:flex-start; align-items:stretch; padding:24px 28px 28px; }
   .notes-toolbar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; flex-shrink:0; }
   .tool-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:8px 14px; font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all 0.2s; flex-shrink:0; }
@@ -463,18 +465,18 @@
     </div>
     <div class="steps-wrap" style="margin-top:24px;margin-bottom:0;">
       <div style="display:flex;align-items:flex-start;justify-content:center;gap:0;width:100%;">
-        <div class="step" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
+        <div class="step" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;min-width:70px;">
           <div class="step-num">5</div>
           <div class="step-label">Colorize<br>Notes</div>
         </div>
         <div class="step-connector"></div>
         <div class="step" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
-          <div class="step-num">6</div>
+          <div class="step-num" style="flex-shrink:0;">6</div>
           <div class="step-label">Make<br>Notebooks</div>
         </div>
         <div class="step-connector"></div>
         <div class="step" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
-          <div class="step-num">7</div>
+          <div class="step-num" style="flex-shrink:0;">7</div>
           <div class="step-label">Study<br>Hard</div>
         </div>
         <div class="step-connector"></div>
