@@ -171,14 +171,14 @@
   @media (min-width:769px){.nb-list{grid-template-columns:1fr 1fr;align-items:start;}}
   .nb-empty{font-size:12px;color:var(--muted);text-align:center;margin-top:40px;font-style:italic}
   .nb-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;cursor:pointer;transition:all 0.2s;user-select:none}
-  @media (hover:hover) and (pointer:fine){.nb-card:hover{border-color:var(--accent);color:var(--accent)}}
+  @media (hover:hover) and (pointer:fine){.nb-card:hover{border-color:var(--accent);color:var(--accent)}.nb-card:hover .nb-card-name{color:var(--accent)}}
   .nb-card-icon{font-size:20px;flex-shrink:0}
   .nb-card-info{flex:1;min-width:0}
   .nb-card-name{font-size:14px;font-weight:700;color:var(--ink);transition:color 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nb-card-meta{font-size:11px;color:var(--muted);margin-top:3px}
   .nb-pages-list{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;min-height:0}
   .nb-page-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:13px 16px;cursor:pointer;transition:all 0.2s;position:relative;user-select:none}
-  @media (hover:hover) and (pointer:fine){.nb-page-item:hover{border-color:var(--accent);color:var(--accent)}}
+  @media (hover:hover) and (pointer:fine){.nb-page-item:hover{border-color:var(--accent);color:var(--accent)}.nb-page-item:hover .nb-page-name{color:var(--accent)}}
   .nb-page-item.dragging{opacity:0.4;border-style:dashed}
   .nb-page-item.drag-over{border-color:var(--n-h2);background:color-mix(in srgb,var(--n-h2) 8%,transparent)}
   .nb-drag-handle{color:var(--muted);font-size:14px;cursor:grab;opacity:0;transition:opacity 0.2s;flex-shrink:0;touch-action:none}
