@@ -206,7 +206,7 @@
   .quiz-divider::before,.quiz-divider::after{content:'';flex:1;height:1px;background:var(--border)}
   .quiz-textarea{width:100%;min-height:160px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:13px;color:var(--ink);resize:vertical;outline:none;line-height:1.6;margin-bottom:14px;transition:border-color 0.2s,background 0.3s,color 0.3s}
   .quiz-textarea:focus{border-color:var(--n-h2)}
-  .quiz-drop-area{border:2px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;margin-bottom:14px;transition:border-color 0.2s,background 0.2s;cursor:pointer}
+  .quiz-drop-area{border:2px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;margin-bottom:14px;transition:border-color 0.2s,background 0.2s,color 0.2s;cursor:pointer}
   .quiz-drop-area.dragover{border-color:var(--n-h2);background:color-mix(in srgb,var(--n-h2) 8%,transparent)}
   .quiz-drop-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
   .quiz-drop-sub{font-size:10px;color:var(--muted);margin-bottom:10px}
@@ -216,6 +216,13 @@
   .quiz-generate-btn::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.28) 100%);pointer-events:none;}
   :root:not([data-theme="dark"]) .quiz-generate-btn{background:var(--ink);color:var(--bg);border-color:transparent}
   .quiz-generate-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  @media (hover:hover) and (pointer:fine){
+    #quizNbPickerBtn:hover{border-color:var(--ink);color:var(--ink);}
+    .quiz-drop-area:hover{border-color:var(--ink);}
+    .quiz-drop-area:hover .quiz-drop-label{color:var(--ink);}
+    .quiz-drop-area:hover .quiz-drop-sub{color:var(--ink);}
+    .quiz-drop-area:hover .quiz-drop-btn{border-color:var(--ink);color:var(--ink);}
+  }
   .quiz-generate-btn:disabled{opacity:0.5;cursor:not-allowed}
   .quiz-gen-status{margin-top:12px;font-size:11px;color:var(--muted);text-align:center;min-height:16px;font-style:italic}
   .quiz-active{display:flex;flex-direction:column;flex:1;overflow:hidden;padding:20px 28px 28px}
@@ -539,7 +546,7 @@
         
         <button class="nb-page-btn" onclick="window.openQuizHistory()" style="flex-shrink:0">History</button>
       </div>
-      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;">&#128211; Load from Notebook</button>
+      <button onclick="window.openNotebookPicker()" id="quizNbPickerBtn" class="quiz-load-area" style="margin-bottom:16px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:border-color 0.2s,color 0.2s;">&#128211; Load from Notebook</button>
       <div id="quizDropArea" class="quiz-drop-area">
         <div id="quizDropInner">
           <div class="quiz-drop-label">Drag your saved HTML file here</div>
