@@ -81,7 +81,7 @@
   .render-btn:active { transform:scale(0.98); }
   .notes-input-area { display:flex; flex-direction:column; gap:10px; flex:1; }
   .notes-textarea { width:100%; min-height:200px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px; font-size:13px; color:var(--ink); resize:vertical; outline:none; line-height:1.6; transition:border-color 0.2s,background 0.3s,color 0.3s; flex-shrink:0; }
-  @media (min-width:769px){#panel-notes{align-items:center;}#panel-notes>*{width:100%;max-width:760px;}}
+  @media (min-width:769px){#panel-notes{align-items:center;}#notesInputArea{width:100%;max-width:760px;}#notesRendered{width:100%;max-width:760px;}}
   .notes-textarea:focus { border-color:var(--n-heading); }
   .notes-textarea::placeholder { color:var(--muted); font-style:italic; font-size:12px; }
   .notes-rendered { display:none; flex-direction:column; flex:1; overflow:hidden; }
