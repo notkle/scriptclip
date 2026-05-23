@@ -346,6 +346,10 @@
     font-size:15px;color:rgba(255,255,255,0.85);
   }
   #scrollToTopBtn.visible{opacity:1;pointer-events:all;}
+  @keyframes stepFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes stepPulse{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+  .step-hidden{opacity:0;}
+  .step-fadein{animation:stepFadeIn 0.35s ease forwards;}
   @keyframes btnPulse{0%,100%{border-color:var(--accent);color:var(--ink);}50%{border-color:var(--border);color:var(--muted);}}
   .btn-pulse{animation:btnPulse 1.2s ease-in-out infinite;}
   @keyframes btnFadeIn{from{opacity:0;}to{opacity:1;}}
@@ -425,7 +429,7 @@
 <div class="panel active" id="panel-builder">
   <div class="builder-inner" id="builderInner">
     <div class="steps-wrap" style="margin-top:0;margin-bottom:32px;">
-      <div id="stepsRow" style="display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr;align-items:start;width:100%;">
+      <div id="stepsRow" style="display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr;align-items:start;width:100%;opacity:0;">
         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
           <div class="step-num" id="step1">1</div>
           <div class="step-label">Search<br>YouTube</div>
@@ -464,7 +468,7 @@
         placeholder="PASTE TRANSCRIPT"/>
     </div>
     <div class="steps-wrap" style="margin-top:24px;margin-bottom:0;">
-      <div style="display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr;align-items:start;width:100%;">
+      <div id="stepsRow2" style="display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr;align-items:start;width:100%;opacity:0;">
         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
           <div class="step-num">5</div>
           <div class="step-label">Colorize<br>Notes</div>
@@ -1390,6 +1394,7 @@ function initSupabase(){
         if(event==='SIGNED_IN'){
           window.syncFromCloud();
           if(window._pendingShareId)window.importSharedNotebook(window._pendingShareId);
+          setTimeout(window.runStepsAnim,300);
         }
       } else {
         document.getElementById('authOverlay').style.display='flex';setTimeout(function(){var ai=document.getElementById('authInner');if(ai)ai.style.opacity='1';},50);
@@ -2885,6 +2890,44 @@ history.replaceState({nbView:'list'},'');
     window.history.replaceState({},'',window.location.pathname);
   }
 })();
+
+// Steps reveal animation — session only
+window._stepsAnimDone=false;
+window.runStepsAnim=function(){
+  if(window._stepsAnimDone)return;
+  if(sessionStorage.getItem('sc_steps_shown'))return;
+  window._stepsAnimDone=true;
+  sessionStorage.setItem('sc_steps_shown','1');
+  var row1=document.getElementById('stepsRow');
+  var row2=document.getElementById('stepsRow2');
+  var step8num=row2?row2.querySelector('.step-num:last-of-type'):null;
+  // Find step 8 num specifically
+  var step8=null;
+  if(row2){var nums=row2.querySelectorAll('.step-num');if(nums.length>0)step8=nums[nums.length-1];}
+  // Fade in row 1
+  setTimeout(function(){
+    if(row1){row1.style.transition='opacity 0.35s ease, transform 0.35s ease';row1.style.transform='translateY(6px)';requestAnimationFrame(function(){row1.style.opacity='1';row1.style.transform='translateY(0)';});}
+  },400);
+  // Fade in row 2
+  setTimeout(function(){
+    if(row2){row2.style.transition='opacity 0.35s ease, transform 0.35s ease';row2.style.transform='translateY(6px)';requestAnimationFrame(function(){row2.style.opacity='1';row2.style.transform='translateY(0)';});}
+  },700);
+  // Pulse step 8 and highlight orange
+  setTimeout(function(){
+    if(step8){
+      step8.style.transition='transform 0.15s ease, border-color 0.2s ease, color 0.2s ease';
+      step8.style.transform='scale(1.18)';
+      setTimeout(function(){
+        step8.style.borderColor='var(--accent)';
+        step8.style.color='var(--accent)';
+        step8.style.transform='scale(1)';
+        // Also highlight the label
+        var labels=row2.querySelectorAll('.step-label');
+        if(labels.length>0){var last=labels[labels.length-1];last.style.transition='color 0.2s ease, opacity 0.2s ease';last.style.color='var(--accent)';last.style.opacity='1';}
+      },150);
+    }
+  },1050);
+};
 
 // Init Supabase
 var _sbLib=window.supabase||window.Supabase;
