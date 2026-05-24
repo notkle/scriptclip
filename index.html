@@ -75,9 +75,9 @@
   .steps-label { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:16px; transition:color 0.3s; }
   .steps-row { display:flex; align-items:flex-start; justify-content:center; }
   .step-item { display:flex; flex-direction:column; align-items:center; gap:7px; flex:1; max-width:90px; }
-  .step-num { width:20px; height:20px; border:1px solid var(--muted); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--ink); flex-shrink:0; transition:border-color 0.3s,color 0.3s; }
+  .step-num { width:20px; height:20px; border:1px solid var(--muted); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--muted); flex-shrink:0; transition:border-color 0.3s,color 0.3s; }
   @media (min-width:769px) { .step-num{width:26px;height:26px;font-size:11px;} .step-label{font-size:11px;} .step-connector{margin-top:13px;} }
-  .step-label { font-size:9px; color:var(--ink); text-align:center; line-height:1.5; opacity:0.6; transition:color 0.3s,opacity 0.3s; }
+  .step-label { font-size:9px; color:var(--muted); text-align:center; line-height:1.5; opacity:1; transition:color 0.3s,opacity 0.3s; }
   .step { align-items:center; }
   .step-num { flex-shrink:0; }
   .step-connector { height:1px; background:var(--muted); width:24px; min-width:24px; max-width:24px; margin-top:13px; flex-shrink:0; opacity:0.4; transition:background 0.3s; }
@@ -1989,6 +1989,7 @@ function activateReorder(){reorderActive=true;renderPagesList();}
 window.openPage=function(idx, snippet){
   const data=nbLoad(),page=data[currentNotebookId].pages[idx];if(!page)return;
   window._currentPageIdx=idx;document.getElementById('nbPageTitle').textContent=page.name;window._currentPageHtml=page.html;document.getElementById('nbPageContent').innerHTML=page.html;
+  var _ph=document.getElementById('pageZoomHint');if(_ph){_ph._scrollFaded=false;_ph.classList.remove('hidden');}
   window.setPageTheme(page.theme||currentTheme,false);
   document.getElementById('nbPagesView').style.display='none';
   var pageView=document.getElementById('nbPageView');
@@ -2546,9 +2547,7 @@ function setupScrollToTop(){
   if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
   // Fade zoom hint only on genuine user touch interaction
   var hint=document.getElementById('pageZoomHint');
-  if(hint){
-    hint._scrollFaded=false;
-    hint.classList.remove('hidden');
+  if(hint&&!hint._scrollFaded){
     // Wait for user touch before listening to scroll
     el.addEventListener('touchstart',function(){
       el.addEventListener('scroll',function(){
