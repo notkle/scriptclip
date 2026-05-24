@@ -787,6 +787,8 @@
 <div id="aiHighlightPopup" style="display:none;position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);pointer-events:all;white-space:nowrap;">
   <button onclick="window.aiAskOpen()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Ask</button>
   <span style="color:var(--border);margin:0 2px">|</span>
+  <button onclick="window.aiMemOpen()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Mem</button>
+  <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.aiGenerateFlashCards()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#10022; AI Cards</button>
   <span style="color:var(--border);margin:0 2px">|</span>
   <button onclick="window.pinCurrentLocation()" style="background:none;border:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--n-h2);cursor:pointer;padding:2px 4px;white-space:nowrap;">&#128204; Pin</button>
@@ -2345,6 +2347,25 @@ window.fcConfirmGenerate=function(){
   });
 };
 
+window.aiMemOpen=function(){
+  hideAiHighlightPopup();
+  var highlight=_aiHighlightText.trim();
+  var context=_aiHighlightContext.trim();
+  if(!highlight)return;
+  var prompt='Highlighted: "'+highlight+'"\n\nContext: "'+context+'"\n\nI am memorizing study notes. Give me a single, specific method to ingrain the highlighted term into long-term memory. One method only. No tools, no apps. Direct instructions, no preamble.';
+  var isMobile=window.innerWidth<=768;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(prompt).then(function(){
+      window.toast(isMobile?'Prompt copied — paste into Gemini':'Gemini opened — paste your prompt');
+      if(!isMobile){
+        var pw=500,ph=750,wl=window.screenX||window.screenLeft||0,ww=window.outerWidth||window.innerWidth;
+        var left=wl+Math.round((ww-pw)/2),top=(window.screenY||window.screenTop||0)+Math.round(((window.outerHeight||window.innerHeight)-ph)/2);
+        window.open('https://gemini.google.com/app','gemini_mem','width='+pw+',height='+ph+',left='+left+',top='+top+',resizable=yes');
+      }
+    });
+  }
+  window.getSelection().removeAllRanges();
+};
 window.aiAskOpen=function(){
   document.getElementById('aiHighlightPopup').style.display='none';
   const ask=document.getElementById('aiAskPopup');
