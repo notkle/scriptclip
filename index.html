@@ -50,6 +50,8 @@
   .tab.active { color:var(--ink); border-bottom-color:var(--accent); }
   @keyframes tabPulse{0%{opacity:1}40%{opacity:0.08}100%{opacity:1}}
   .tab-pulsing{animation:tabPulse 0.55s ease;}
+  @keyframes tabPulseMobile{0%{opacity:1}40%{opacity:0.08}100%{opacity:1}}
+  .tab-pulsing-mobile{animation:tabPulseMobile 0.55s ease;}
   .tab { position:relative; }
   .tab-hover-line { position:absolute; bottom:-2px; height:2px; background:#d4a84b; width:0; pointer-events:none; transition:none; }
   @media (max-width:430px) { .tab{font-size:10px;letter-spacing:0.5px;margin-right:14px} .tabs{padding:12px 16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap} .topbar{padding:12px 16px 0} .frame{display:none} }
@@ -179,6 +181,7 @@
   .nb-card-name{font-size:14px;font-weight:700;color:var(--ink);transition:color 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nb-card-meta{font-size:11px;color:var(--muted);margin-top:3px}
   .nb-pages-list{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;min-height:0}
+  @media (min-width:769px) { #nbPagesList { display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; grid-auto-rows:min-content; } #nbPagesList>div{margin-bottom:0 !important;} }
   .nb-page-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:13px 16px;cursor:pointer;transition:all 0.2s;position:relative;user-select:none}
   @media (hover:hover) and (pointer:fine){.nb-page-item:hover{border-color:var(--accent);color:var(--accent)}.nb-page-item:hover .nb-page-name{color:var(--accent)}}
   .nb-page-item.dragging{opacity:0.4;border-style:dashed}
@@ -212,7 +215,7 @@
   .quiz-drop-sub{font-size:10px;color:var(--muted);margin-bottom:10px}
   .quiz-drop-btn{display:inline-block;background:none;border:1px solid var(--border);border-radius:4px;padding:7px 16px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s}
   .quiz-source-status{font-size:11px;color:var(--n-h2);min-height:16px;margin-bottom:4px;font-style:italic}
-  .quiz-generate-btn{width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:4px;padding:16px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+  .quiz-generate-btn{width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:4px;padding:16px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;margin-top:16px;}
   .quiz-generate-btn::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.28) 100%);pointer-events:none;}
   :root:not([data-theme="dark"]) .quiz-generate-btn{background:var(--ink);color:var(--bg);border-color:transparent}
   .quiz-generate-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
@@ -555,7 +558,7 @@
         </div>
       </div>
       <div class="quiz-divider"><span>or paste notes directly</span></div>
-      <textarea id="quizPasteArea" class="quiz-textarea" placeholder="Paste your study notes here&#8230;"></textarea>
+      <textarea id="quizPasteArea" class="quiz-textarea" placeholder=""></textarea>
       <div id="quizSourceStatus" class="quiz-source-status"></div>
       <button class="quiz-generate-btn" id="quizGenerateBtn" onclick="if(typeof window.generateQuiz==='function'){window.generateQuiz()}"><span id="quizGenerateBtnInner">GENERATE QUIZ</span></button>
       <div class="quiz-gen-status" id="quizGenStatus"></div>
@@ -1063,7 +1066,7 @@ const PROMPT_GENERAL=`Here is a YouTube transcript. Transform it into structured
 
 CRITICAL FORMATTING RULES — these are non-negotiable and fundamental to how this output is processed. Failure to follow any of these will cause the entire output to be unformatted and unusable:
 - You MUST bold every single key term, concept, name, or important word using **double asterisks** throughout the ENTIRE document — not just in Key Terms, but inline throughout Detailed Notes as well. Every time a key term appears anywhere in the document, it must be bolded. No exceptions.
-- You MUST wrap ALL pronunciations, translations, romanizations, or parenthetical clarifications in parentheses immediately after the term they refer to.
+- You MUST wrap ALL pronunciations, translations, romanizations, or parenthetical clarifications in parentheses immediately after the term they refer to. If a word is FULLY or ALMOST FULLY in English characters and you think it should have pronunciation, only add pronunciation the FIRST time it appears.
 - You MUST use ## for every major section heading and ### for every sub-topic within sections. These headers are critical for rendering — a response without ## headers will have no visual structure whatsoever.
 - You MUST always include all four sections in this exact order: Key Terms, Core Ideas, Detailed Notes, Summary. No sections may be omitted or merged.
 
@@ -1130,6 +1133,16 @@ function _stopBtnPulse(btnId,origHTML){
   if(field){field.style.display='none';field.style.borderColor='#3e3c38';}
 }
 window.switchTab=function(name){
+  // Mobile tab pulse
+  if(window.innerWidth<=768){
+    var activeTab=document.getElementById('tab-'+name);
+    if(activeTab){
+      activeTab.classList.remove('tab-pulsing-mobile');
+      void activeTab.offsetWidth;
+      activeTab.classList.add('tab-pulsing-mobile');
+      activeTab.addEventListener('animationend',function(){activeTab.classList.remove('tab-pulsing-mobile');},{once:true});
+    }
+  }
   // Track tab history
   const currentTab=document.querySelector('.tab.active');
   const currentName=currentTab?currentTab.id.replace('tab-',''):null;
@@ -1172,7 +1185,8 @@ window.switchTab=function(name){
       window.showNotebookList();
     }
   }
-  if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
+  var _sbtn=document.getElementById('ytSearchBtn');if(_sbtn){_sbtn.style.borderColor='';_sbtn.style.color='';}
+if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
   // Always reset prompt button state on any tab switch
   _storedTranscript=null;
@@ -1580,6 +1594,9 @@ window.ytShowMain=function(){const op=document.getElementById('ytOptionsPanel');
 window.ytToggleLoop=function(){ytLoopPlaylist=!ytLoopPlaylist;const btn=document.getElementById('ytLoopBtn');if(btn){btn.style.color=ytLoopPlaylist?'var(--accent)':'var(--muted)';btn.style.borderColor=ytLoopPlaylist?'var(--accent)':'var(--border)';}};
 
 window.ytSearchRun=async function(){
+  // Mark search as active - orange border/color
+  var sbtn=document.getElementById('ytSearchBtn');
+  if(sbtn&&window.innerWidth<=768){sbtn.style.borderColor='var(--accent)';sbtn.style.color='var(--accent)';}
   const _raw=document.getElementById('ytSearchInput').value.trim();
   if(!_raw)return;
   const q=_raw.toLowerCase().startsWith('learn')?_raw:'learn '+_raw;
