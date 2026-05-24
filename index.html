@@ -215,7 +215,7 @@
   .quiz-drop-sub{font-size:10px;color:var(--muted);margin-bottom:10px}
   .quiz-drop-btn{display:inline-block;background:none;border:1px solid var(--border);border-radius:4px;padding:7px 16px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s}
   .quiz-source-status{font-size:11px;color:var(--n-h2);min-height:16px;margin-bottom:4px;font-style:italic}
-  .quiz-generate-btn{width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:4px;padding:16px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;margin-top:16px;}
+  .quiz-generate-btn{width:100%;background:#2e2c2a;color:#c8c4bc;border:1px solid #3e3c38;border-radius:4px;padding:16px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
   .quiz-generate-btn::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.28) 100%);pointer-events:none;}
   :root:not([data-theme="dark"]) .quiz-generate-btn{background:var(--ink);color:var(--bg);border-color:transparent}
   .quiz-generate-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
@@ -1185,7 +1185,7 @@ window.switchTab=function(name){
       window.showNotebookList();
     }
   }
-  var _sbtn=document.getElementById('ytSearchBtn');if(_sbtn){_sbtn.style.borderColor='';_sbtn.style.color='';}
+  var _sbtn=document.getElementById('ytSearchBtn');if(_sbtn){_sbtn.style.borderColor='#3e3c38';_sbtn.style.color='#c8c4bc';}
 if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
   // Always reset prompt button state on any tab switch
@@ -1596,7 +1596,7 @@ window.ytToggleLoop=function(){ytLoopPlaylist=!ytLoopPlaylist;const btn=document
 window.ytSearchRun=async function(){
   // Mark search as active - orange border/color
   var sbtn=document.getElementById('ytSearchBtn');
-  if(sbtn&&window.innerWidth<=768){sbtn.style.borderColor='var(--accent)';sbtn.style.color='var(--accent)';}
+  if(sbtn){sbtn.style.borderColor='var(--accent)';sbtn.style.color='var(--accent)';}
   const _raw=document.getElementById('ytSearchInput').value.trim();
   if(!_raw)return;
   const q=_raw.toLowerCase().startsWith('learn')?_raw:'learn '+_raw;
