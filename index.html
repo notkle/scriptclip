@@ -279,7 +279,7 @@
   .zoom-hint.hidden{opacity:0;}
   @media (max-width:768px){
     #ytPlayerWrap{position:fixed;bottom:326px;left:0;z-index:8888;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s,box-shadow 0.3s}
-    #ytPlayerWrap.open{box-shadow:2px 2px 18px 2px rgba(232,113,74,0.18),0 4px 24px rgba(0,0,0,0.5);}
+    #ytPlayerWrap.open{box-shadow:2px 2px 18px 4px rgba(232,113,74,0.36),0 4px 32px rgba(0,0,0,0.6);}
     #ytPlayerWrap.reader-hidden{display:none!important}
     #tocWrap.toc-hidden{display:none!important}
     #ytTab{width:18px;min-width:18px;max-width:18px;flex-shrink:0;flex-grow:0;flex-basis:18px;overflow:hidden;background:var(--surface);border:none;font-size:14px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;transition:color 0.2s}
@@ -312,7 +312,7 @@
   /* ── TABLE OF CONTENTS ── */
   @media (max-width:768px){
     #tocWrap{position:fixed;bottom:80px;left:0;z-index:8889;display:flex!important;flex-direction:row;align-items:stretch;pointer-events:none;border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;overflow:hidden;transition:border-color 0.2s,box-shadow 0.3s;height:238px;}
-    #tocWrap.toc-open{box-shadow:2px 2px 18px 2px rgba(212,168,75,0.18),0 4px 24px rgba(0,0,0,0.5);}
+    #tocWrap.toc-open{box-shadow:2px 2px 18px 4px rgba(232,113,74,0.36),0 4px 32px rgba(0,0,0,0.6);}
     #tocWrap.toc-open{border-color:var(--accent);}
     #tocTab{width:18px;min-width:18px;max-width:18px;flex-shrink:0;flex-grow:0;flex-basis:18px;overflow:hidden;background:var(--surface);border:none;font-size:14px;color:var(--muted);cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;transition:color 0.2s}
     #tocWrap.toc-open #tocTab{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);}
@@ -2544,12 +2544,16 @@ function setupScrollToTop(){
   var el=document.getElementById('nbPageContent');
   if(!el)return;
   if(el._sttHandler)el.removeEventListener('scroll',el._sttHandler);
-  // Fade zoom hint on scroll
+  // Fade zoom hint only on genuine user touch interaction
   var hint=document.getElementById('pageZoomHint');
-  if(hint&&!hint._scrollFaded){
+  if(hint){
     hint._scrollFaded=false;
-    el.addEventListener('scroll',function(){
-      if(!hint._scrollFaded){hint._scrollFaded=true;hint.classList.add('hidden');}
+    hint.classList.remove('hidden');
+    // Wait for user touch before listening to scroll
+    el.addEventListener('touchstart',function(){
+      el.addEventListener('scroll',function(){
+        if(!hint._scrollFaded){hint._scrollFaded=true;hint.classList.add('hidden');}
+      },{passive:true,once:true});
     },{passive:true,once:true});
   }
   _sttLastY=el.scrollTop||0;
