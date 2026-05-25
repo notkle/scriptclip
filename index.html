@@ -2310,7 +2310,7 @@ window.fcToggleDeleteMode=async function(){if(!await window.scConfirm('Delete al
 
 // ── AI HIGHLIGHT ──
 let _aiHighlightText='',_aiHighlightContext='';
-function getSelectionContext(sel){if(!sel||sel.isCollapsed)return'';const range=sel.getRangeAt(0),cont=range.commonAncestorContainer;let block=cont.nodeType===3?cont.parentElement:cont;while(block&&!['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName))block=block.parentElement;return block?(block.innerText||block.textContent):'';}
+function getSelectionContext(sel){if(!sel||sel.isCollapsed)return'';const selected=sel.toString();const range=sel.getRangeAt(0),cont=range.commonAncestorContainer;let block=cont.nodeType===3?cont.parentElement:cont;while(block&&!['P','DIV','LI','H1','H2','H3','H4','SECTION'].includes(block.tagName))block=block.parentElement;const full=block?(block.innerText||block.textContent):'';const idx=full.indexOf(selected);if(idx<0)return full.substring(0,800);return full.substring(Math.max(0,idx-400),idx+selected.length+400).trim();}
 function showAiHighlightPopup(x,y,selected,context){
   _aiHighlightText=selected;_aiHighlightContext=context;
   const popup=document.getElementById('aiHighlightPopup');
