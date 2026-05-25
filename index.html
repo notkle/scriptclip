@@ -530,7 +530,7 @@
   <div class="notes-rendered" id="notesRendered">
     <div class="notes-rendered-toolbar">
       <button class="tool-btn" onclick="if(typeof window.backToEdit==='function'){window.backToEdit()}">&#8592; Back</button>
-      <button class="tool-btn" onclick="if(typeof window.openSaveModal==='function'){window.openSaveModal()}">&#8595; Download</button>
+      <button class="tool-btn" id="notesDownloadBtn" onclick="if(typeof window.openSaveModal==='function'){window.openSaveModal()}">&#8595; Download</button>
       <button class="tool-btn" onclick="if(typeof window.openSaveToNotebook==='function'){window.openSaveToNotebook()}">&#65291; Notebook</button>
     </div>
     <div class="notes-theme-bar">
@@ -630,7 +630,7 @@
     <div class="nb-header" style="justify-content:flex-end;gap:10px">
       <input type="file" id="nbImportInput" accept=".json" style="display:none" onchange="if(this.files[0]){window.importNotebook(this.files[0])}"/>
       <button class="tool-btn" onclick="if(typeof window.openExportModal==='function'){window.openExportModal()}">&#8595; Export</button>
-      <button class="tool-btn" onclick="if(typeof window.triggerNbImport==='function'){window.triggerNbImport()}">&#8593; File</button>
+      <button class="tool-btn" id="nbFileImportBtn" onclick="if(typeof window.triggerNbImport==='function'){window.triggerNbImport()}">&#8593; File</button>
       <button class="tool-btn" onclick="if(typeof window.openPasteJson==='function'){window.openPasteJson()}">&#8593; JSON</button>
       <button onclick="window.createNotebook()" id="nbCreateBtn"><span style="margin-bottom:1px">+</span></button>
     </div>
