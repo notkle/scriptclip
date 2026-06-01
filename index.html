@@ -1194,6 +1194,15 @@ window.switchTab=function(name){
   var _sbtn=document.getElementById('ytSearchBtn');if(_sbtn){_sbtn.style.borderColor='#3e3c38';_sbtn.style.color='#c8c4bc';}
 if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
+  if(name==='builder'){
+    var r1=document.getElementById('stepsRow'),r2=document.getElementById('stepsRow2');
+    if(r1){r1.style.transition='none';r1.style.opacity='0';r1.style.transform='';}
+    if(r2){r2.style.transition='none';r2.style.opacity='0';r2.style.transform='';}
+    var s8=document.getElementById('step8num'),s8l=document.getElementById('step8label');
+    if(s8){s8.style.borderColor='';s8.style.color='';s8.style.transform='';}
+    if(s8l){s8l.style.color='';s8l.style.opacity='';}
+    setTimeout(window.runStepsAnim,100);
+  }
   // Always reset prompt button state on any tab switch
   _storedTranscript=null;
   var _nbs=document.getElementById('nbSearchInput');if(_nbs){_nbs.value='';if(typeof window.nbSearch==='function')window.nbSearch('');}
@@ -1430,7 +1439,6 @@ function initSupabase(){
         if(event==='SIGNED_IN'){
           window.syncFromCloud();
           if(window._pendingShareId)window.importSharedNotebook(window._pendingShareId);
-          setTimeout(window.runStepsAnim,300);
         }
       } else {
         document.getElementById('authOverlay').style.display='flex';setTimeout(function(){var ai=document.getElementById('authInner');if(ai)ai.style.opacity='1';},50);
@@ -3058,11 +3066,8 @@ history.replaceState({nbView:'list'},'');
 })();
 
 // Steps reveal animation — session only
-window._stepsAnimPlayed=false;
 window.runStepsAnim=function(){
   if(window._stepsAnimDone)return;
-  if(window._stepsAnimPlayed)return;
-  window._stepsAnimPlayed=true;
   var row1=document.getElementById('stepsRow');
   var row2=document.getElementById('stepsRow2');
   var step8num=row2?row2.querySelector('.step-num:last-of-type'):null;
