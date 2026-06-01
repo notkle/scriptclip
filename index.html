@@ -48,6 +48,8 @@
   .tabs { display:flex; justify-content:center; padding:20px 28px 0; border-bottom:1px solid var(--border); margin-top:16px; margin-left:14px; margin-right:14px; flex-shrink:0; transition:border-color 0.3s; }
   .tab { font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:0 0 14px; margin-right:32px; cursor:pointer; border-bottom:2px solid transparent; transition:color 0.2s,border-color 0.2s; background:none; border-top:none; border-left:none; border-right:none; display:inline-flex; align-items:center; gap:8px; }
   .tab.active { color:var(--ink); border-bottom-color:var(--accent); }
+  @keyframes tabUnderlinePulse{0%{border-bottom-color:var(--accent)}40%{border-bottom-color:transparent}100%{border-bottom-color:var(--accent)}}
+  .tab-underline-pulse{animation:tabUnderlinePulse 0.75s ease;}
   
   
   .tab { position:relative; }
@@ -1183,6 +1185,7 @@ window.switchTab=function(name){
   var _sbtn=document.getElementById('ytSearchBtn');if(_sbtn){_sbtn.style.borderColor='#3e3c38';_sbtn.style.color='#c8c4bc';}
 if(name==='search'){var _p=document.getElementById('ytPlayerWrap'),_t=document.getElementById('tocWrap');if(_p){_p.style.transition='none';_p.style.opacity='0';_p.style.pointerEvents='none';}if(_t){_t.style.transition='none';_t.style.opacity='0';_t.style.pointerEvents='none';}const si=document.getElementById('ytSearchInput');if(si&&!si.value.trim()){si.focus();if(window.innerWidth<=768){var tb=document.getElementById('tabBlocker');if(tb)tb.style.display='block';}}}
   if(name==='notes'){const nt=document.getElementById('notesTextarea');if(nt&&!nt.value.trim())nt.focus();}
+  if(window.innerWidth<=768){var _pt=document.getElementById('tab-'+name);if(_pt){_pt.classList.remove('tab-underline-pulse');void _pt.offsetWidth;_pt.classList.add('tab-underline-pulse');_pt.addEventListener('animationend',function(){_pt.classList.remove('tab-underline-pulse');},{once:true});}}
   if(name==='builder'){
     var r1=document.getElementById('stepsRow'),r2=document.getElementById('stepsRow2');
     if(r1){r1.style.transition='none';r1.style.opacity='0';r1.style.transform='';}
