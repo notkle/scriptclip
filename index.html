@@ -48,9 +48,9 @@
   .tabs { display:flex; justify-content:center; padding:20px 28px 0; border-bottom:1px solid var(--border); margin-top:16px; margin-left:14px; margin-right:14px; flex-shrink:0; transition:border-color 0.3s; }
   .tab { font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:0 0 14px; margin-right:32px; cursor:pointer; border-bottom:2px solid transparent; transition:color 0.2s,border-color 0.2s; background:none; border-top:none; border-left:none; border-right:none; display:inline-flex; align-items:center; gap:8px; }
   .tab.active { color:var(--ink); border-bottom-color:var(--accent); }
-  @keyframes tabPulse{0%{opacity:1}40%{opacity:0.08}100%{opacity:1}}
+  @keyframes tabPulse{0%{color:var(--ink)}40%{color:transparent}100%{color:var(--ink)}}
   .tab-pulsing{animation:tabPulse 1.1s ease;}
-  @keyframes tabPulseMobile{0%{opacity:1}40%{opacity:0.08}100%{opacity:1}}
+  @keyframes tabPulseMobile{0%{color:var(--ink)}40%{color:transparent}100%{color:var(--ink)}}
   .tab-pulsing-mobile{animation:tabPulseMobile 1.1s ease;}
   .tab { position:relative; }
   .tab-hover-line { position:absolute; bottom:-2px; height:2px; background:#d4a84b; width:0; pointer-events:none; transition:none; }
